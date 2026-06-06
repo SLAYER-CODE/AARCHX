@@ -47,6 +47,10 @@ static int create_subprocess(JNIEnv *env,
     unlockpt(ptm);
 
     devname = ptsname(ptm);
+    if (devname == nullptr) {
+        close(ptm);
+        return throw_runtime_exception(env, "ptsname() failed");
+    }
 
     // Enable UTF-8 mode and disable flow control to prevent Ctrl+S from locking up the display.
     struct termios tios;
@@ -110,7 +114,7 @@ static int create_subprocess(JNIEnv *env,
         // Show terminal output about failing exec() call:
         char *error_message;
         if (asprintf(&error_message, "exec(\"%s\")", cmd) == -1)
-            const_cast<char *>("exec()");;
+            error_message = const_cast<char *>("exec()");
         perror(error_message);
         exit(-1);
     }
