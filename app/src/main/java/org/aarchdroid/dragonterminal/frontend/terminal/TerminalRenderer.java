@@ -85,6 +85,7 @@ final class TerminalRenderer {
             }
 
             TerminalRow lineObject = screen.allocateFullLineIfNecessary(screen.externalToInternalRow(row));
+            if (lineObject == null) continue;
             final char[] line = lineObject.mText;
             final int charsUsedInLine = lineObject.getSpaceUsed();
 
@@ -97,10 +98,24 @@ final class TerminalRenderer {
             float measuredWidthForRun = 0.f;
 
             for (int column = 0; column < columns; ) {
+                if (currentCharIndex >= charsUsedInLine) {
+                    // No more characters — flush remaining run and fill rest with background
+                    if (lastRunStartColumn >= 0) {
+                        final int columnWidthSinceLastRun = columns - lastRunStartColumn;
+                        final int charsSinceLastRun = currentCharIndex - lastRunStartIndex;
+                        int cursorColor = lastRunInsideCursor ? mEmulator.mColors.mCurrentColors[TextStyle.COLOR_INDEX_CURSOR] : 0;
+                        drawTextRun(canvas, line, palette, heightOffset, lastRunStartColumn, columnWidthSinceLastRun,
+                            lastRunStartIndex, charsSinceLastRun, measuredWidthForRun,
+                            cursorColor, cursorShape, lastRunStyle, reverseVideo);
+                    }
+                    break;
+                }
                 final char charAtIndex = line[currentCharIndex];
                 final boolean charIsHighsurrogate = Character.isHighSurrogate(charAtIndex);
                 final int charsForCodePoint = charIsHighsurrogate ? 2 : 1;
-                final int codePoint = charIsHighsurrogate ? Character.toCodePoint(charAtIndex, line[currentCharIndex + 1]) : charAtIndex;
+                final int codePoint = charIsHighsurrogate ?
+                    (currentCharIndex + 1 < charsUsedInLine ? Character.toCodePoint(charAtIndex, line[currentCharIndex + 1]) : (int) charAtIndex)
+                    : charAtIndex;
                 final int codePointWcWidth = WcWidth.width(codePoint);
                 final boolean insideCursor = (column >= selx1 && column <= selx2) || (cursorX == column || (codePointWcWidth == 2 && cursorX == column + 1));
                 final long style = lineObject.getStyle(column);
@@ -137,7 +152,9 @@ final class TerminalRenderer {
                 while (currentCharIndex < charsUsedInLine && WcWidth.width(line, currentCharIndex) <= 0) {
                     // Eat combining chars so that they are treated as part of the last non-combining code point,
                     // instead of e.g. being considered inside the cursorColor in the next run.
-                    currentCharIndex += Character.isHighSurrogate(line[currentCharIndex]) ? 2 : 1;
+                    int step = Character.isHighSurrogate(line[currentCharIndex]) ? 2 : 1;
+                    if (currentCharIndex + step > charsUsedInLine) break;
+                    currentCharIndex += step;
                 }
             }
 

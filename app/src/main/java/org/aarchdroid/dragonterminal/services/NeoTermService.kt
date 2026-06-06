@@ -91,9 +91,14 @@ class NeoTermService : Service() {
     override fun onDestroy() {
         stopForeground(true)
 
-        for (i in mTerminalSessions.indices)
-            mTerminalSessions[i].finishIfRunning()
-        mTerminalSessions.clear()
+        val sessionsToFinish = synchronized(mTerminalSessions) {
+            ArrayList(mTerminalSessions)
+        }
+        for (s in sessionsToFinish)
+            s.finishIfRunning()
+        synchronized(mTerminalSessions) {
+            mTerminalSessions.clear()
+        }
     }
 
     val sessions: List<TerminalSession>
@@ -191,7 +196,11 @@ class NeoTermService : Service() {
         notifyIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val pendingIntent = PendingIntent.getActivity(this, 0, notifyIntent, PendingIntent.FLAG_IMMUTABLE)
 
-        val sessionCount = mTerminalSessions.size + mXSessions.size
+        val sessionCount = synchronized(mTerminalSessions) {
+            synchronized(mXSessions) {
+                mTerminalSessions.size + mXSessions.size
+            }
+        }
         val contentText = "Arch | $sessionCount sesión" + if (sessionCount != 1) "es" else ""
 
         val builder = NotificationCompat.Builder(this, DEFAULT_CHANNEL_ID)
