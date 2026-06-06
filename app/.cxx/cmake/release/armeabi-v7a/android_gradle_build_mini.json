@@ -1,0 +1,16 @@
+{
+  "buildFiles": [
+    "/home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/CMakeLists.txt"
+  ],
+  "cleanCommands": [
+    "/home/Tiopaz/Android/Sdk/cmake/3.6.4111459/bin/cmake --build /home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/.cxx/cmake/release/armeabi-v7a --target clean"
+  ],
+  "libraries": {
+    "neoterm-Release-armeabi-v7a": {
+      "artifactName": "neoterm",
+      "buildCommand": "/home/Tiopaz/Android/Sdk/cmake/3.6.4111459/bin/cmake --build /home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/.cxx/cmake/release/armeabi-v7a --target neoterm",
+      "abi": "armeabi-v7a",
+      "output": "/home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/build/intermediates/cmake/release/obj/armeabi-v7a/libneoterm.so"
+    }
+  }
+}

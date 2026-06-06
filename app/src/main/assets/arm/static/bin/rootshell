@@ -1,0 +1,22 @@
+#!/system/bin/sh
+# AArchDroid - Root Shell
+# Enters Arch Linux ARM chroot as root
+
+CHROOT_DIR="/data/local/aarchdroid"
+BUSYBOX="/data/data/org.aarchdroid/files/bin/busybox"
+
+if [ ! -d "${CHROOT_DIR}/bin" ]; then
+    echo "[AArchDroid] Rootfs no instalado. Abre la app primero."
+    exit 1
+fi
+
+${BUSYBOX} mount | ${BUSYBOX} grep -q "${CHROOT_DIR}/proc" || ${BUSYBOX} mount -t proc none "${CHROOT_DIR}/proc"
+${BUSYBOX} mount | ${BUSYBOX} grep -q "${CHROOT_DIR}/dev" || ${BUSYBOX} mount -o bind /dev "${CHROOT_DIR}/dev"
+
+if [ $# -gt 0 ]; then
+    unset TMP TEMP TMPDIR LD_PRELOAD LD_DEBUG
+    exec ${BUSYBOX} chroot "${CHROOT_DIR}" /bin/bash -c "source /root/.bashrc; $@"
+else
+    unset TMP TEMP TMPDIR LD_PRELOAD LD_DEBUG
+    exec ${BUSYBOX} chroot "${CHROOT_DIR}" /bin/bash --rcfile /root/.bashrc
+fi

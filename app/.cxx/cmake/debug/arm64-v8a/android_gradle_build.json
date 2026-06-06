@@ -1,0 +1,41 @@
+
+{
+	"buildFiles" : 
+	[
+		"/home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/CMakeLists.txt"
+	],
+	"cleanCommands" : 
+	[
+		"/home/Tiopaz/Android/Sdk/cmake/3.6.4111459/bin/cmake --build /home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/.cxx/cmake/debug/arm64-v8a --target clean"
+	],
+	"cppFileExtensions" : [ "cpp" ],
+	"libraries" : 
+	{
+		"neoterm-Debug-arm64-v8a" : 
+		{
+			"abi" : "arm64-v8a",
+			"artifactName" : "neoterm",
+			"buildCommand" : "/home/Tiopaz/Android/Sdk/cmake/3.6.4111459/bin/cmake --build /home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/.cxx/cmake/debug/arm64-v8a --target neoterm",
+			"buildType" : "debug",
+			"files" : 
+			[
+				
+				{
+					"flags" : "  --target=aarch64-none-linux-android21 --gcc-toolchain=/home/Tiopaz/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64 --sysroot=/home/Tiopaz/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/sysroot  -Dneoterm_EXPORTS  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++11 -O0 -fno-limit-debug-info  -fPIC    -c ",
+					"src" : "/home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/src/main/cpp/neoterm.cpp",
+					"workingDirectory" : "/home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/.cxx/cmake/debug/arm64-v8a"
+				}
+			],
+			"output" : "/home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/build/intermediates/cmake/debug/obj/arm64-v8a/libneoterm.so",
+			"toolchain" : "11629594643844717235"
+		}
+	},
+	"toolchains" : 
+	{
+		"11629594643844717235" : 
+		{
+			"cCompilerExecutable" : "/home/Tiopaz/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/clang",
+			"cppCompilerExecutable" : "/home/Tiopaz/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"
+		}
+	}
+}

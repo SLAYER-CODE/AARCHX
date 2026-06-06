@@ -1,0 +1,85 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+
+android {
+    namespace 'org.aarchdroid'
+    compileSdk 34
+
+    aaptOptions {
+        noCompress 'gz', 'tgz', 'tar'
+    }
+    ndkVersion "27.2.12479018"
+
+    defaultConfig {
+        applicationId "org.aarchdroid"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName '1.0-BLACKARCH [ 1 ]'
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        vectorDrawables.useSupportLibrary = true
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11"
+                abiFilters 'armeabi-v7a', 'arm64-v8a'
+            }
+        }
+        sourceSets {
+            main {
+                jniLibs.srcDirs = ['src/main/jniLibs']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            zipAlignEnabled true
+            shrinkResources false
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+repositories {
+    maven { url 'https://maven.google.com' }
+    mavenCentral()
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'com.github.bumptech.glide:glide:3.7.0'
+    testImplementation 'junit:junit:4.12'
+    implementation project(':codehack')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation 'org.greenrobot:eventbus:3.0.0'
+    implementation 'com.simplecityapps:recyclerview-fastscroll:1.0.16'
+    implementation 'com.github.GrenderG:Color-O-Matic:1.1.5'
+    implementation project(':chrome-tabs')
+    implementation project(':NeoLang')
+    implementation project(':NeoTermBridge')
+}

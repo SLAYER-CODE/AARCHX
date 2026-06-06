@@ -1,0 +1,27 @@
+# AArchDroid - .bashrc
+
+# Clean stale pacman lock (only if no pacman is running)
+if [ -f /var/lib/pacman/db.lck ] && ! pgrep -x pacman >/dev/null 2>&1; then
+    rm -f /var/lib/pacman/db.lck
+fi
+trap 'rm -f /var/lib/pacman/db.lck' EXIT
+
+# Fix HOME to chroot root home (host sets it to app data dir)
+export HOME=/root
+[ "$PWD" = "/" ] && cd
+
+# Persistent aliases
+alias ls='ls --color=auto'
+alias ll='ls -la'
+alias la='ls -A'
+alias grep='grep --color=auto'
+
+# Set terminal title to current directory
+PROMPT_COMMAND='echo -ne "\033]0;${PWD/#$HOME/~}\007"'
+
+# PS1 prompt
+PS1='\[\033[1;33m\]\u@\h\[\033[0m\]:\[\033[1;36m\]\w\[\033[0m\]\$ '
+
+# PATH
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl"
+export EDITOR=nano

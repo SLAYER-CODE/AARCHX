@@ -1,0 +1,3 @@
+/home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/.cxx/cmake/release/armeabi-v7a/CMakeFiles/edit_cache.dir
+/home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/.cxx/cmake/release/armeabi-v7a/CMakeFiles/rebuild_cache.dir
+/home/Tiopaz/FIN/andrax-hackers-platform-v5-2/ANDRAX-OS/app/.cxx/cmake/release/armeabi-v7a/CMakeFiles/neoterm.dir

@@ -1,0 +1,1 @@
+/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a

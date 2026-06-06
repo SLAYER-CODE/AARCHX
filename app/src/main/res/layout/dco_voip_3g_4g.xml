@@ -1,0 +1,1546 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/myrl"
+    tools:context="org.aarchdroid.Dco_exploitation"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/layout_for_dco">
+
+
+    <ScrollView
+        android:id="@+id/mysv"
+        android:background="@drawable/worldbackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="2dp"
+        android:scrollbars="vertical"
+        android:scrollbarStyle="insideOverlay"
+        android:fadeScrollbars="true"
+        android:scrollbarTrackVertical="@drawable/scrollbar_track_vertical"
+        android:scrollbarThumbVertical="@drawable/scrollbar_thumb_vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="5dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingTop="5dp">
+
+            <TextView
+                android:id="@+id/textView39"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="3dp"
+                android:layout_marginTop="3dp"
+                android:gravity="center"
+                android:text="11 Voip/3G/4G/UMTS/LTE"
+                android:textColor="@color/whitefull"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-condensed-medium" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/imageView_banner_05"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:layout_marginBottom="3dp"
+                android:src="@drawable/andrax_banner" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_enodebhack"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_enodebhack"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/lte" />
+
+                    <TextView
+                        android:id="@+id/textView_enodebhack_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_enodebhack"
+                        android:gravity="center"
+                        android:text="eNodeB"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_enodebhack_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_enodebhack_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_enodebhack"
+                        android:gravity="center"
+                        android:text="Evolved Node B for LTE Hacking and 5G Downgrade"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_mmeenodebhack"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_mmeenodebhack"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/lte" />
+
+                    <TextView
+                        android:id="@+id/textView_mmeenodebhack_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_mmeenodebhack"
+                        android:gravity="center"
+                        android:text="MME-eNodeB"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_mmeenodebhack_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_mmeenodebhack_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_mmeenodebhack"
+                        android:gravity="center"
+                        android:text="MME enhanced with eNodeB"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_sgwhack"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_sgwhack"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/cellphonetower" />
+
+                    <TextView
+                        android:id="@+id/textView_sgwhack_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_sgwhack"
+                        android:gravity="center"
+                        android:text="SGW"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_sgwhack_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_sgwhack_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_sgwhack"
+                        android:gravity="center"
+                        android:text="Serving Gateway"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_pgwhack"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_pgwhack"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/cellphonetower" />
+
+                    <TextView
+                        android:id="@+id/textView_pgwhack_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_pgwhack"
+                        android:gravity="center"
+                        android:text="PGW"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_pgwhack_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_pgwhack_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_pgwhack"
+                        android:gravity="center"
+                        android:text="Packet Data Network Gateway"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_diameterenum"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_diameterenum"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/diametertower" />
+
+                    <TextView
+                        android:id="@+id/textView_diameterenum_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_diameterenum"
+                        android:gravity="center"
+                        android:text="Diameter-Enum"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_diameterenum_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_diameterenum_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_diameterenum"
+                        android:gravity="center"
+                        android:text="Diameter Scanner"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_s1apenum"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_s1apenum"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/diametertower" />
+
+                    <TextView
+                        android:id="@+id/textView_s1apenum_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_s1apenum"
+                        android:gravity="center"
+                        android:text="S1AP-Enum"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_s1apenum_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_s1apenum_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_s1apenum"
+                        android:gravity="center"
+                        android:text="S1SetupRequest PDU to MME"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_gtpscan"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_gtpscan"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/diametertower" />
+
+                    <TextView
+                        android:id="@+id/textView_gtpscan_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_gtpscan"
+                        android:gravity="center"
+                        android:text="GTP-Scan"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_gtpscan_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_gtpscan_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_gtpscan"
+                        android:gravity="center"
+                        android:text="GTP Scanner"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_cryptomobile"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_cryptomobile"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/cryptomobile" />
+
+                    <TextView
+                        android:id="@+id/textView_cryptomobile_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_cryptomobile"
+                        android:gravity="center"
+                        android:text="CryptoMobile"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_cryptomobile_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_cryptomobile_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_cryptomobile"
+                        android:gravity="center"
+                        android:text="Rape mobile Crypto"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_enumiax"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_enumiax"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/andraxicon_svg" />
+
+                    <TextView
+                        android:id="@+id/textView_enumiax_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_enumiax"
+                        android:gravity="center"
+                        android:text="ENUMIAX"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_enumiax_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_enumiax_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_enumiax"
+                        android:gravity="center"
+                        android:text="Asterisk Exchange protocol"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_svmap"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_svmap"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/sipvicious" />
+
+                    <TextView
+                        android:id="@+id/textView_svmap_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_svmap"
+                        android:gravity="center"
+                        android:text="SVMap"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_svmap_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_svmap_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_svmap"
+                        android:gravity="center"
+                        android:text="SIP Scanner"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_isip"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_isip"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/sip" />
+
+                    <TextView
+                        android:id="@+id/textView_isip_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_isip"
+                        android:gravity="center"
+                        android:text="iSIP"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_isip_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_isip_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_isip"
+                        android:gravity="center"
+                        android:text="Interactive sip toolkit for packet manipulations"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_sipsak"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_sipsak"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/andraxicon_svg" />
+
+                    <TextView
+                        android:id="@+id/textView_sipsak_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_sipsak"
+                        android:gravity="center"
+                        android:text="SIPSAK"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_sipsak_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_sipsak_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_sipsak"
+                        android:gravity="center"
+                        android:text="For developers and administrators of SIP"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_vsaudit"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_vsaudit"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/andraxicon_svg" />
+
+                    <TextView
+                        android:id="@+id/textView_vsaudit_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_vsaudit"
+                        android:gravity="center"
+                        android:text="VSAudit"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_vsaudit_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_vsaudit_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_vsaudit"
+                        android:gravity="center"
+                        android:text="Perform attacks to general voip services"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_protostestsuite"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_protostestsuite"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/sip" />
+
+                    <TextView
+                        android:id="@+id/textView_protostestsuite_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_protostestsuite"
+                        android:gravity="center"
+                        android:text="PROTOS Test Suite"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_protostestsuite_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_protostestsuite_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_protostestsuite"
+                        android:gravity="center"
+                        android:text="Fuck SIP protocol like a motherfucker"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_iaxflood"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_iaxflood"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/andraxicon_svg" />
+
+                    <TextView
+                        android:id="@+id/textView_iaxflood_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_iaxflood"
+                        android:gravity="center"
+                        android:text="IAXFLOOD"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_iaxflood_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_iaxflood_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_iaxflood"
+                        android:gravity="center"
+                        android:text="A UDP Inter-Asterisk_eXchange"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_inviteflood"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_inviteflood"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/andraxicon_svg" />
+
+                    <TextView
+                        android:id="@+id/textView_inviteflood_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_inviteflood"
+                        android:gravity="center"
+                        android:text="INVITEFLOOD"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_inviteflood_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_inviteflood_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_inviteflood"
+                        android:gravity="center"
+                        android:text="Perform SIP/SDP INVITE flooding over UDP/IP"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_rtpflood"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_rtpflood"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/andraxicon_svg" />
+
+                    <TextView
+                        android:id="@+id/textView_rtpflood_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_rtpflood"
+                        android:gravity="center"
+                        android:text="RTPFLOOD"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_rtpflood_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_rtpflood_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_rtpflood"
+                        android:gravity="center"
+                        android:text="Flood any device that is processing RTP"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_udpfloodVLAN"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_udpfloodVLAN"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/andraxicon_svg" />
+
+                    <TextView
+                        android:id="@+id/textView_udpfloodVLAN_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_udpfloodVLAN"
+                        android:gravity="center"
+                        android:text="UDPFloodVLAN"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_udpfloodVLAN_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_udpfloodVLAN_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_udpfloodVLAN"
+                        android:gravity="center"
+                        android:text="Flood UDP VLAN packets"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_rtpbreak"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_rtpbreak"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/andraxicon_svg" />
+
+                    <TextView
+                        android:id="@+id/textView_rtpbreak_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_rtpbreak"
+                        android:gravity="center"
+                        android:text="RTPBREAK"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_rtpbreak_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_rtpbreak_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_rtpbreak"
+                        android:gravity="center"
+                        android:text="Detects, reconstructs, and analyzes RTP sessions"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_sipcracker"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_sipcracker"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/sip" />
+
+                    <TextView
+                        android:id="@+id/textView_sipcracker_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_sipcracker"
+                        android:gravity="center"
+                        android:text="SipCRACKER"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_sipcracker_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_sipcracker_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_sipcracker"
+                        android:gravity="center"
+                        android:text="Remote password cracker for SIP"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_view_rtpinsertsound"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:theme="@style/Theme.AppCompat"
+                android:foreground="@drawable/bg_card"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="2dp"
+                app:contentPadding="4dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/imageView_rtpinsertsound"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_centerHorizontal="false"
+                        android:layout_centerVertical="true"
+                        android:scaleType="fitXY"
+                        android:tint="@color/colorAccent"
+                        android:src="@drawable/andraxicon_svg" />
+
+                    <TextView
+                        android:id="@+id/textView_rtpinsertsound_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_rtpinsertsound"
+                        android:gravity="center"
+                        android:text="RTPINSERTSOUND"
+                        android:textColor="@color/tool_title_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed-medium" />
+
+                    <TextView
+                        android:id="@+id/textView_rtpinsertsound_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/textView_rtpinsertsound_title"
+                        android:layout_centerVertical="false"
+                        android:layout_toStartOf="@+id/install_btn"
+                        android:layout_toEndOf="@+id/imageView_rtpinsertsound"
+                        android:gravity="center"
+                        android:text="Insert audio into a specified audio RTP stream"
+                        android:textColor="@color/tool_desc_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/install_btn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="2dp"
+                            android:src="@drawable/ic_install"
+                            android:tint="#006400"
+                            android:onClick="onInstallClick"
+                            android:tag="install" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </ScrollView>
+</RelativeLayout>

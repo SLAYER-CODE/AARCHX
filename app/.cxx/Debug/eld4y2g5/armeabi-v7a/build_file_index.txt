@@ -1,0 +1,1 @@
+/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/CMakeLists.txt

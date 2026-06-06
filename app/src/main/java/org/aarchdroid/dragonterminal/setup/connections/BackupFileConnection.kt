@@ -1,0 +1,10 @@
+package org.aarchdroid.dragonterminal.setup.connections
+
+import android.content.Context
+import android.net.Uri
+
+/**
+ * @author kiva
+ */
+
+class BackupFileConnection(context: Context, uri: Uri) : LocalFileConnection(context, uri)

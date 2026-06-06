@@ -1,0 +1,69 @@
+# AArchDroid - .bashrc for auto-install on demand
+# When a command is not found, auto-install via pacman
+
+# Pacman sandbox not supported on this kernel
+export PACMAN_DISABLE_SANDBOX=1
+
+# Auto-install handler for Arch Linux + BlackArch
+command_not_found_handle() {
+    local cmd="$1"
+    shift
+    local args="$@"
+
+    # Fallback if /dev/null doesn't exist inside chroot
+    local NULL_DEV=/dev/null
+    [ -c "$NULL_DEV" ] 2>/dev/null || NULL_DEV=/tmp/.null-dev
+    > "$NULL_DEV" 2>/dev/null || true
+
+    echo -e "\033[1;34m[AArchDroid]\033[0m \033[1;33m'${cmd}'\033[0m no está instalado."
+    echo -e "\033[1;34m[AArchDroid]\033[0m Buscando paquete que lo contiene..."
+
+    # Try direct package name first
+    if pacman -Si "${cmd}" > "$NULL_DEV" 2>&1; then
+        echo -e "\033[1;34m[AArchDroid]\033[0m Instalando \033[1;32m${cmd}\033[0m..."
+        pacman -Sy --noconfirm "${cmd}" 2>&1 | tail -5
+        if command -v "${cmd}" > "$NULL_DEV" 2>&1; then
+            exec "${cmd}" ${args}
+            return $?
+        fi
+    fi
+
+    # Try BlackArch repo
+    if pacman -Si blackarch/"${cmd}" > "$NULL_DEV" 2>&1; then
+        echo -e "\033[1;34m[AArchDroid]\033[0m Instalando \033[1;32mblackarch/${cmd}\033[0m..."
+        pacman -Sy --noconfirm blackarch/"${cmd}" 2>&1 | tail -5
+        if command -v "${cmd}" > "$NULL_DEV" 2>&1; then
+            exec "${cmd}" ${args}
+            return $?
+        fi
+    fi
+
+    # Search with pacman -F (find which package owns this file)
+    local pkg
+    pkg=$(pacman -F "${cmd}" 2>/dev/null | head -1 | cut -d' ' -f1)
+    if [ -n "${pkg}" ]; then
+        echo -e "\033[1;34m[AArchDroid]\033[0m El archivo está en \033[1;32m${pkg}\033[0m. Instalando..."
+        pacman -Sy --noconfirm "${pkg}" 2>&1 | tail -5
+        if command -v "${cmd}" > "$NULL_DEV" 2>&1; then
+            exec "${cmd}" ${args}
+            return $?
+        fi
+    fi
+
+    echo -e "\033[1;31m[AArchDroid]\033[0m No se pudo instalar '${cmd}' automáticamente."
+    echo -e "\033[1;34m[AArchDroid]\033[0m Buscalo manualmente: pacman -Ss ${cmd}"
+    return 127
+}
+
+# Persistent aliases
+alias ls='ls --color=auto'
+alias ll='ls -la'
+alias la='ls -A'
+alias grep='grep --color=auto'
+
+# PS1 prompt with Arch branding
+PS1='\[\033[1;34m\][AArchDroid]\[\033[0m\] \[\033[1;33m\]\u@\h\[\033[0m\]:\[\033[1;36m\]\w\[\033[0m\]\$ '
+
+# PATH
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl"
+export EDITOR=nano

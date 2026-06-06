@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:height="200dp"
+    android:width="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <path
+        android:fillColor="#ff000000"
+        android:pathData="M38.75,13.158C33.903,13.158 30,17.101 30,22l0,159.158c0,4.895 3.903,8.842 8.75,8.842l122.5,0C166.094,190 170,186.053 170,181.158L170,70L125.455,57.368 112.727,13.158Z"
+        android:strokeAlpha="0.2"
+        android:fillAlpha="0.2"/>
+    <path
+        android:fillColor="#e4e4e4"
+        android:pathData="M38.75,10C33.903,10 30,13.944 30,18.842l0,159.158c0,4.895 3.903,8.842 8.75,8.842l122.5,0C166.094,186.842 170,182.895 170,178L170,66.842L125.455,54.211 112.727,10Z"/>
+    <path
+        android:fillColor="#ff000000"
+        android:pathData="M170,70 L112.727,13.158L112.727,61.118C112.727,66.042 116.722,70 121.676,70Z"
+        android:strokeAlpha="0.2"
+        android:fillAlpha="0.2"/>
+    <path
+        android:fillColor="#fafafa"
+        android:pathData="M170,66.842 L112.727,10L112.727,57.961C112.727,62.884 116.722,66.842 121.676,66.842Z"/>
+    <path
+        android:fillColor="#ffffff"
+        android:pathData="M38.75,10C33.903,10 30,13.946 30,18.845l0,3.158C30,17.104 33.903,13.158 38.75,13.158L112.727,13.158L112.727,10Z"
+        android:strokeAlpha="0.2"
+        android:fillAlpha="0.2"/>
+    <path
+        android:fillColor="#1e62b2"
+        android:pathData="m118.421,132.528c0,0 2.408,-0.071 4.81,1.174 0.833,0.429 2.275,1.296 3.315,2.429 1.019,1.11 1.515,2.235 1.515,2.235L144.545,167.895l-30.479,0c-5.103,-9.916 -9.44,-21.26 -15.945,-30.089 -1.293,-1.074 -2.37,-1.546 -3.649,-1.49L87.271,136.316l0.004,31.561L61.818,167.877l0,-88.403l47.137,0c5.11,0 28.471,4.421 29.226,26.526 -0.756,22.105 -19.763,26.526 -19.763,26.526zM87.274,95.257L87.274,120.526l18.084,0C105.358,120.526 109.545,119.264 109.545,107.349 109.545,97.159 105.358,95.269 105.358,95.269Z"
+        android:fillType="evenOdd"/>
+</vector>

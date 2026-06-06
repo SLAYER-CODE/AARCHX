@@ -1,0 +1,3 @@
+/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/.cxx/Debug/eld4y2g5/armeabi-v7a/CMakeFiles/neoterm.dir
+/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/.cxx/Debug/eld4y2g5/armeabi-v7a/CMakeFiles/edit_cache.dir
+/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/.cxx/Debug/eld4y2g5/armeabi-v7a/CMakeFiles/rebuild_cache.dir
