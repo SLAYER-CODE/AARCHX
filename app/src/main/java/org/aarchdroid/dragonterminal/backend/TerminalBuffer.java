@@ -112,7 +112,7 @@ public final class TerminalBuffer {
      * @return The row corresponding to the input argument in the private coordinate system.
      */
     public int externalToInternalRow(int externalRow) {
-        if (externalRow < -mActiveTranscriptRows || externalRow > mScreenRows)
+        if (externalRow < -mActiveTranscriptRows || externalRow >= mScreenRows)
             throw new IllegalArgumentException("extRow=" + externalRow + ", mScreenRows=" + mScreenRows + ", mActiveTranscriptRows=" + mActiveTranscriptRows);
         final int internalRow = mScreenFirstRow + externalRow;
         return (internalRow < 0) ? (mTotalRows + internalRow) : (internalRow % mTotalRows);

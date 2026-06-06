@@ -42,7 +42,7 @@ public final class TerminalRow {
         int latestNonCombiningWidth = 0;
         for (int i = x1; i < x2; i++) {
             char sourceChar = sourceChars[i];
-            int codePoint = Character.isHighSurrogate(sourceChar) ? Character.toCodePoint(sourceChar, sourceChars[++i]) : sourceChar;
+            int codePoint = (i + 1 < sourceChars.length && Character.isHighSurrogate(sourceChar)) ? Character.toCodePoint(sourceChar, sourceChars[++i]) : sourceChar;
             if (startingFromSecondHalfOfWideChar) {
                 // Just treat copying second half of wide char as copying whitespace.
                 codePoint = ' ';
@@ -70,9 +70,9 @@ public final class TerminalRow {
         int currentCharIndex = 0;
         while (true) { // 0<2 1 < 2
             int newCharIndex = currentCharIndex;
-            char c = mText[newCharIndex++]; // cci=1, cci=2
+            char c = newCharIndex < mSpaceUsed ? mText[newCharIndex++] : ' ';
             boolean isHigh = Character.isHighSurrogate(c);
-            int codePoint = isHigh ? Character.toCodePoint(c, mText[newCharIndex++]) : c;
+            int codePoint = isHigh && newCharIndex < mSpaceUsed ? Character.toCodePoint(c, mText[newCharIndex++]) : (int) c;
             int wcwidth = WcWidth.width(codePoint); // 1, 2
             if (wcwidth > 0) {
                 currentColumn += wcwidth;
@@ -224,7 +224,9 @@ public final class TerminalRow {
             } else {
                 // Overwrite the contents of the next column, which mean we actually remove java characters. Due to the
                 // check at the beginning of this method we know that we are not overwriting a wide char.
-                int newNextNextColumnIndex = newNextColumnIndex + (Character.isHighSurrogate(mText[newNextColumnIndex]) ? 2 : 1);
+                boolean hasNextCol = newNextColumnIndex < mSpaceUsed;
+                int nextCharSize = hasNextCol && Character.isHighSurrogate(mText[newNextColumnIndex]) ? 2 : 1;
+                int newNextNextColumnIndex = newNextColumnIndex + nextCharSize;
                 int nextLen = newNextNextColumnIndex - newNextColumnIndex;
 
                 // Shift the array leftwards.
