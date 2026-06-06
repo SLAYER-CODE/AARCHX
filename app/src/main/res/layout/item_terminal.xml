@@ -3,17 +3,18 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:paddingTop="6dp"
-    android:paddingBottom="2dp"
-    android:paddingStart="24dp"
-    android:paddingEnd="12dp">
+    android:paddingVertical="1dp"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
 
     <TextView
         android:id="@+id/terminalType"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="12sp" />
+        android:fontFamily="monospace"
+        android:textSize="12sp"
+        android:typeface="normal" />
 
     <TextView
         android:id="@+id/terminalRelanzar"
@@ -22,6 +23,7 @@
         android:clickable="true"
         android:focusable="true"
         android:paddingHorizontal="4dp"
-        android:textSize="11sp" />
+        android:textSize="11sp"
+        android:fontFamily="monospace" />
 
 </LinearLayout>

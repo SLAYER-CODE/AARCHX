@@ -3,26 +3,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:paddingTop="6dp"
-    android:paddingBottom="2dp"
-    android:paddingStart="12dp"
-    android:paddingEnd="12dp">
+    android:paddingTop="4dp"
+    android:paddingBottom="1dp"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
 
     <TextView
         android:id="@+id/crashText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#660000"
-        android:textSize="13sp" />
-
-    <TextView
-        android:id="@+id/crashReason"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:layout_marginStart="4dp"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:textSize="11sp" />
+        android:fontFamily="monospace"
+        android:textSize="12sp" />
 
 </LinearLayout>

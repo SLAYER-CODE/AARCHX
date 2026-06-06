@@ -3,15 +3,17 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_horizontal"
-    android:paddingVertical="16dp">
+    android:paddingVertical="12dp"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
 
     <TextView
         android:id="@+id/restoreAllText"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clickable="true"
         android:focusable="true"
-        android:paddingHorizontal="12dp"
-        android:textSize="13sp" />
+        android:fontFamily="monospace"
+        android:textSize="12sp" />
 
 </LinearLayout>
