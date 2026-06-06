@@ -78,6 +78,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     val fullscreen = NeoPreference.isFullScreenEnabled()
     var tshow = false
 
+    @Volatile
     var rootAvailable = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -404,7 +405,11 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             }
             termService = null
         }
-        unbindService(this)
+        try {
+            unbindService(this)
+        } catch (e: Exception) {
+            Log.w("AArchDroid", "NeoTermActivity: unbindService failed — " + e.message)
+        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -495,7 +500,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 Log.d("AArchDroid", "NeoTermActivity: testing root via `su`")
                 val pb = ProcessBuilder("su")
                 pb.directory(File(AArchDroidApp.get().applicationInfo.dataDir))
-                pb.redirectErrorStream(false)
+                pb.redirectErrorStream(true)
                 val process: Process = pb.start()
                 stdin = process.outputStream
                 stdout = process.inputStream
@@ -523,7 +528,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                     testmsg += msg
                 }
 
-                if (process.waitFor() == 0) result = true
+                if (process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS) && process.exitValue() == 0) result = true
                 Log.d("AArchDroid", "NeoTermActivity: su test result=" + result + " output=" + testmsg.take(200))
             } catch (e: Exception) {
                 result = false
@@ -1082,8 +1087,12 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         val scriptPath = AArchDroidApp.get().filesDir.absolutePath + "/bin/checkmount.sh"
         Log.d("AArchDroid", "NeoTermActivity: checkinstallterm — running " + scriptPath)
         try {
-            val tempcmd = Runtime.getRuntime().exec("su -c " + scriptPath + " " + AArchDroidApp.get().applicationInfo.dataDir)
-            tempcmd.waitFor()
+            val tempcmd = Runtime.getRuntime().exec(arrayOf("su", "-c", scriptPath + " " + AArchDroidApp.get().applicationInfo.dataDir))
+            val stderrReader = Thread { try { tempcmd.errorStream.use { it.readBytes() } } catch (_: Exception) {} }
+            stderrReader.start()
+            tempcmd.inputStream.use { it.readBytes() }
+            stderrReader.join(1000)
+            tempcmd.waitFor(30, java.util.concurrent.TimeUnit.SECONDS)
             val exitVal = tempcmd.exitValue()
             Log.d("AArchDroid", "NeoTermActivity: checkmount.sh exit code = " + exitVal)
 
@@ -1100,30 +1109,39 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     }
 
     private fun extractEmbeddedRootfs() {
-        try {
-            val CHROOT_DIR = "/data/local/aarchdroid"
-            val BUSYBOX_DST = "/data/data/org.aarchdroid/files/bin/busybox"
+        Thread {
+            try {
+                val CHROOT_DIR = "/data/local/aarchdroid"
+                val BUSYBOX_DST = "/data/data/org.aarchdroid/files/bin/busybox"
 
-            Runtime.getRuntime().exec("su -c mkdir -p $CHROOT_DIR").waitFor()
-            val p = Runtime.getRuntime().exec("su -c \"$BUSYBOX_DST tar -xzf - -C $CHROOT_DIR\"")
-            val stdin = p.outputStream
-            val assets = assets.open("rootfs.tgz")
-            val buf = ByteArray(8192)
-            var len: Int
-            while (assets.read(buf).also { len = it } != -1) {
-                stdin.write(buf, 0, len)
+                val mkdir = Runtime.getRuntime().exec(arrayOf("su", "-c", "mkdir -p $CHROOT_DIR"))
+                mkdir.inputStream.use { it.readBytes() }
+                mkdir.errorStream.use { it.readBytes() }
+                mkdir.waitFor(10, java.util.concurrent.TimeUnit.SECONDS)
+
+                val p = Runtime.getRuntime().exec(arrayOf("su", "-c", "\"$BUSYBOX_DST\" tar -xzf - -C $CHROOT_DIR"))
+                val stderrReader = Thread { try { p.errorStream.use { it.readBytes() } } catch (_: Exception) {} }
+                stderrReader.start()
+                val stdin = p.outputStream
+                val assets = assets.open("rootfs.tgz")
+                val buf = ByteArray(8192)
+                var len: Int
+                while (assets.read(buf).also { len = it } != -1) {
+                    stdin.write(buf, 0, len)
+                }
+                assets.close()
+                stdin.flush()
+                stdin.close()
+                stderrReader.join(1000)
+                val exitCode = if (p.waitFor(120, java.util.concurrent.TimeUnit.SECONDS)) p.exitValue() else -1
+                Log.d("AArchDroid", "NeoTermActivity: embedded rootfs extracted, exit=$exitCode")
+                if (exitCode != 0) {
+                    Log.w("AArchDroid", "NeoTermActivity: tar exited with code $exitCode")
+                }
+            } catch (e: Exception) {
+                Log.e("AArchDroid", "NeoTermActivity: extractEmbeddedRootfs failed — " + e.message)
             }
-            assets.close()
-            stdin.flush()
-            stdin.close()
-            val exitCode = p.waitFor()
-            Log.d("AArchDroid", "NeoTermActivity: embedded rootfs extracted, exit=$exitCode")
-            if (exitCode != 0) {
-                Log.w("AArchDroid", "NeoTermActivity: tar exited with code $exitCode")
-            }
-        } catch (e: Exception) {
-            Log.e("AArchDroid", "NeoTermActivity: extractEmbeddedRootfs failed — " + e.message)
-        }
+        }.start()
     }
 
 
@@ -1133,8 +1151,16 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             return
         }
         try {
-            val p = Runtime.getRuntime().exec("su -c " + cmd)
-            p.waitFor()
+            val p = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
+            // Consume stdout and stderr to prevent pipe buffer deadlock
+            val stdoutReader = Thread { try { p.inputStream.use { it.readBytes() } } catch (_: Exception) {} }
+            val stderrReader = Thread { try { p.errorStream.use { it.readBytes() } } catch (_: Exception) {} }
+            stdoutReader.start(); stderrReader.start()
+            if (!p.waitFor(10, java.util.concurrent.TimeUnit.SECONDS)) {
+                Log.w("AArchDroid", "suRun timed out: " + cmd.take(100))
+                p.destroyForcibly()
+            }
+            stdoutReader.join(1000); stderrReader.join(1000)
         } catch (e: Exception) {
             Log.w("AArchDroid", "suRun failed: " + cmd.take(100) + " — " + e.message)
         }
@@ -1170,9 +1196,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         if (!rootAvailable) return null
         return try {
             val p = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
-            p.inputStream.bufferedReader().readText().trim().also {
-                p.waitFor()
-            }
+            // Consume stderr in background to prevent deadlock
+            val stderrReader = Thread { try { p.errorStream.use { it.readBytes() } } catch (_: Exception) {} }
+            stderrReader.start()
+            val result = p.inputStream.bufferedReader().readText().trim()
+            stderrReader.join(1000)
+            p.waitFor(10, java.util.concurrent.TimeUnit.SECONDS)
+            result
         } catch (e: Exception) {
             Log.w("AArchDroid", "suRunOutput failed: $cmd — ${e.message}")
             null
@@ -1224,8 +1254,12 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     fun changehostname(hostnameprovided: String) {
         try {
-            val proc = Runtime.getRuntime().exec("su -c hostname $hostnameprovided")
-            proc.waitFor()
+            val proc = Runtime.getRuntime().exec(arrayOf("su", "-c", "hostname $hostnameprovided"))
+            val stderrReader = Thread { try { proc.errorStream.use { it.readBytes() } } catch (_: Exception) {} }
+            stderrReader.start()
+            proc.inputStream.use { it.readBytes() }
+            stderrReader.join(1000)
+            proc.waitFor(10, java.util.concurrent.TimeUnit.SECONDS)
         } catch (e: Exception) {
             Log.w("AArchDroid", "changehostname: hostname not set — " + e.message)
         }
@@ -1276,7 +1310,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         try {
             val pb = ProcessBuilder("su")
             pb.directory(File(AArchDroidApp.get().applicationInfo.dataDir))
-            pb.redirectErrorStream(false)
+            pb.redirectErrorStream(true)
             val process: Process = pb.start()
             stdin = process.outputStream
             stdout = process.inputStream
@@ -1325,10 +1359,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         var result = false
         var stdin: OutputStream? = null
         var stdout: InputStream? = null
+        var process: Process? = null
 
         try {
-
-            val process = Runtime.getRuntime().exec("su")
+            process = Runtime.getRuntime().exec("su")
             stdin = process.getOutputStream()
             stdout = process.getInputStream()
             var os: DataOutputStream? = null
@@ -1377,6 +1411,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         finally {
             stdout?.close()
             stdin?.close()
+            process?.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)
+            process?.destroy()
         }
 
         if (!result) {
