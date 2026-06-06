@@ -151,15 +151,8 @@ class NeoTermService : Service() {
     }
 
     private fun checkStopSelf() {
-        synchronized(mTerminalSessions) {
-            synchronized(mXSessions) {
-                if (mTerminalSessions.isEmpty() && mXSessions.isEmpty()) {
-                    Log.d("AArchDroid", "NeoTermService: no sessions left, stopping self")
-                    stopSelf()
-                    return
-                }
-            }
-        }
+        // Do NOT stop the service — it must stay alive to accept new terminals.
+        // User kills it via the "Exit" button in the notification.
         updateNotification()
     }
 

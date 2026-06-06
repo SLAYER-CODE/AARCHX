@@ -360,6 +360,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                     } else if (tab is XSessionTab) {
                         SessionRemover.removeXSession(termService, tab)
                     }
+                    if (termService?.sessions?.isEmpty() == true) {
+                        Toast.makeText(this@NeoTermActivity, "Sin terminales", Toast.LENGTH_SHORT).show()
+                    }
                 }
 
                 override fun onAllTabsRemoved(tabSwitcher: TabSwitcher, tabs: Array<out Tab>, animation: Animation) {
@@ -400,9 +403,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 .unregisterOnSharedPreferenceChangeListener(this)
 
         if (termService != null) {
-            if (termService!!.sessions.isEmpty()) {
-                termService!!.stopSelf()
-            }
             termService = null
         }
         try {
