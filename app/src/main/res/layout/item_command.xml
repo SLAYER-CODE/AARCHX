@@ -3,15 +3,14 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:paddingVertical="2dp"
-    android:paddingStart="24dp"
-    android:paddingEnd="8dp">
+    android:paddingVertical="1dp"
+    android:paddingStart="36dp"
+    android:paddingEnd="12dp">
 
     <TextView
         android:id="@+id/commandText"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:ellipsize="end"
         android:maxLines="1"
         android:textSize="11sp"

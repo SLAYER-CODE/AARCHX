@@ -91,8 +91,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d("AArchDroid", "NeoTermActivity: onCreate() — entering terminal activity")
-        super.onCreate(savedInstanceState)
-        Log.d("AArchDroid", "NeoTermActivity: onCreate() — entering terminal activity")
         Log.d("AArchDroid", "NeoTermActivity: intent action=" + (intent?.action ?: "null") +
                 " extras=" + (intent?.extras?.keySet()?.joinToString() ?: "null"))
 
@@ -718,6 +716,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             val lastSession = getStoredCurrentSessionOrLast()
             Log.d("AArchDroid", "NeoTermActivity: restoring " + termService!!.sessions.size + " existing sessions")
 
+            // Start session history for restored sessions
+            currentSessionId = SessionHistory.startSession(this).id
+
             for (session in termService!!.sessions) {
                 addNewSessionFromExisting(session)
             }
@@ -1160,7 +1161,11 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             placeholder.visibility = if (tabSwitcher.count == 0) View.VISIBLE else View.GONE
         }
         if (tabSwitcher.count == 0) {
-            sessionHistoryAdapter?.rebuild()
+            // Reload data from disk and rebuild
+            sessionHistoryAdapter?.let { adapter ->
+                val freshData = SessionHistory.getHistory(this@NeoTermActivity)
+                adapter.updateData(freshData)
+            }
         }
     }
 

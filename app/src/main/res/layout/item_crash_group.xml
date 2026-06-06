@@ -3,25 +3,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:paddingTop="8dp"
-    android:paddingBottom="4dp"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp">
-
-    <TextView
-        android:id="@+id/crashIcon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="⚠"
-        android:textColor="#FF4444"
-        android:textSize="14sp" />
+    android:paddingTop="6dp"
+    android:paddingBottom="2dp"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp">
 
     <TextView
         android:id="@+id/crashText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:textColor="#FF4444"
+        android:textColor="#660000"
         android:textSize="13sp" />
 
     <TextView
@@ -29,10 +20,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginStart="6dp"
+        android:layout_marginStart="4dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="#FF6666"
         android:textSize="11sp" />
 
 </LinearLayout>
