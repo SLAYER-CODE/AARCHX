@@ -1,9 +1,8 @@
 package org.aarchdroid.dragonterminal.data
 
+import android.content.ContentValues
 import android.content.Context
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.File
+import org.aarchdroid.dragonterminal.data.room.HistoryDatabase
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -12,53 +11,14 @@ data class CommandRecord(
     val path: String,
     val cmd: String,
     val status: Int = 0
-) {
-    fun toJson(): JSONObject = JSONObject().apply {
-        put("path", path)
-        put("cmd", cmd)
-        put("status", status)
-    }
-
-    companion object {
-        fun fromJson(obj: JSONObject): CommandRecord =
-            CommandRecord(
-                path = obj.optString("path", ""),
-                cmd = obj.optString("cmd", ""),
-                status = obj.optInt("status", 0)
-            )
-    }
-}
+)
 
 data class TerminalRecord(
     val id: String,
     val created: Long,
     val type: String,
     val commands: MutableList<CommandRecord> = mutableListOf()
-) {
-    fun toJson(): JSONObject = JSONObject().apply {
-        put("id", id)
-        put("created", created)
-        put("type", type)
-        put("commands", JSONArray().apply {
-            commands.forEach { put(it.toJson()) }
-        })
-    }
-
-    companion object {
-        fun fromJson(obj: JSONObject): TerminalRecord =
-            TerminalRecord(
-                id = obj.optString("id", ""),
-                created = obj.optLong("created", System.currentTimeMillis()),
-                type = obj.optString("type", "terminal"),
-                commands = mutableListOf<CommandRecord>().apply {
-                    val arr = obj.optJSONArray("commands") ?: return@apply
-                    for (i in 0 until arr.length()) {
-                        add(CommandRecord.fromJson(arr.getJSONObject(i)))
-                    }
-                }
-            )
-    }
-}
+)
 
 data class SessionRecord(
     val id: String,
@@ -66,219 +26,208 @@ data class SessionRecord(
     var closedNormally: Boolean? = null,
     var crashReason: String? = null,
     val terminals: MutableList<TerminalRecord> = mutableListOf()
-) {
-    fun toJson(): JSONObject = JSONObject().apply {
-        put("id", id)
-        put("created", created)
-        closedNormally?.let { put("closedNormally", it) }
-        crashReason?.let { put("crashReason", it) }
-        put("terminals", JSONArray().apply {
-            terminals.forEach { put(it.toJson()) }
-        })
-    }
-
-    companion object {
-        fun fromJson(obj: JSONObject): SessionRecord =
-            SessionRecord(
-                id = obj.optString("id", ""),
-                created = obj.optLong("created", System.currentTimeMillis()),
-                closedNormally = if (obj.has("closedNormally")) obj.optBoolean("closedNormally") else null,
-                crashReason = obj.optString("crashReason", null),
-                terminals = mutableListOf<TerminalRecord>().apply {
-                    val arr = obj.optJSONArray("terminals") ?: return@apply
-                    for (i in 0 until arr.length()) {
-                        add(TerminalRecord.fromJson(arr.getJSONObject(i)))
-                    }
-                }
-            )
-    }
-}
+)
 
 data class CrashGroup(
     var sessionCount: Int,
     val terminals: MutableList<TerminalRecord> = mutableListOf()
-) {
-    fun toJson(): JSONObject = JSONObject().apply {
-        put("sessionCount", sessionCount)
-        put("terminals", JSONArray().apply {
-            terminals.forEach { put(it.toJson()) }
-        })
-    }
-
-    companion object {
-        fun fromJson(obj: JSONObject): CrashGroup =
-            CrashGroup(
-                sessionCount = obj.optInt("sessionCount", 0),
-                terminals = mutableListOf<TerminalRecord>().apply {
-                    val arr = obj.optJSONArray("terminals") ?: return@apply
-                    for (i in 0 until arr.length()) {
-                        add(TerminalRecord.fromJson(arr.getJSONObject(i)))
-                    }
-                }
-            )
-    }
-}
+)
 
 data class SessionHistoryData(
     val date: String,
     var flagActive: Boolean = false,
     val sessions: MutableList<SessionRecord> = mutableListOf(),
     var crashGroup: CrashGroup? = null
-) {
-    fun toJson(): JSONObject = JSONObject().apply {
-        put("date", date)
-        put("flagActive", flagActive)
-        put("sessions", JSONArray().apply {
-            sessions.forEach { put(it.toJson()) }
-        })
-        crashGroup?.let { put("crashGroup", it.toJson()) }
-    }
-
-    companion object {
-        fun fromJson(obj: JSONObject): SessionHistoryData =
-            SessionHistoryData(
-                date = obj.optString("date", ""),
-                flagActive = obj.optBoolean("flagActive", false),
-                sessions = mutableListOf<SessionRecord>().apply {
-                    val arr = obj.optJSONArray("sessions") ?: return@apply
-                    for (i in 0 until arr.length()) {
-                        add(SessionRecord.fromJson(arr.getJSONObject(i)))
-                    }
-                },
-                crashGroup = if (obj.has("crashGroup")) CrashGroup.fromJson(obj.getJSONObject("crashGroup")) else null
-            )
-    }
-}
+)
 
 object SessionHistory {
-    private const val FILE_NAME = "sessions_today.json"
+    private const val PREFS_NAME = "session_history_prefs"
+    private const val KEY_FLAG_ACTIVE = "flagActive"
+    private const val KEY_CURRENT_DATE = "currentDate"
+
     private var current: SessionHistoryData? = null
     private var currentSession: SessionRecord? = null
     private var terminalIdCounter = 0
+    private var db: HistoryDatabase? = null
+    private var prefs: android.content.SharedPreferences? = null
+
+    private fun init(context: Context) {
+        if (db == null) {
+            db = HistoryDatabase.getInstance(context)
+            prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        }
+    }
 
     fun ensure(context: Context): SessionHistoryData {
         current?.let { return it }
-        val data = load(context)
-        current = data
-        return data
+        return getHistory(context)
     }
 
     fun getCurrentSession(): SessionRecord? = currentSession
 
     fun startSession(context: Context): SessionRecord {
-        ensure(context)
+        init(context)
         val session = SessionRecord(
             id = java.util.UUID.randomUUID().toString(),
             created = System.currentTimeMillis()
         )
+        runCatching {
+            val cv = ContentValues().apply {
+                put("id", session.id)
+                put("created", session.created)
+            }
+            db?.writableDatabase?.insert("session", null, cv)
+            current?.sessions?.add(0, session)
+        }
         currentSession = session
-        current?.sessions?.add(0, session)
-        current?.flagActive = true
-        save(context)
+        prefs?.edit()?.putBoolean(KEY_FLAG_ACTIVE, true)?.apply()
         return session
     }
 
     fun startTerminal(context: Context, sessionId: String, type: String = "terminal"): TerminalRecord {
-        ensure(context)
-        val session = current?.sessions?.find { it.id == sessionId } ?: return TerminalRecord(
-            id = "orphan_${++terminalIdCounter}",
-            created = System.currentTimeMillis(),
-            type = type
-        )
+        init(context)
         val term = TerminalRecord(
             id = "term_${++terminalIdCounter}",
             created = System.currentTimeMillis(),
             type = type
         )
-        session.terminals.add(term)
-        save(context)
+        runCatching {
+            val cv = ContentValues().apply {
+                put("id", term.id)
+                put("created", term.created)
+                put("type", term.type)
+                put("sessionId", sessionId)
+            }
+            db?.writableDatabase?.insert("terminal", null, cv)
+            current?.sessions?.find { it.id == sessionId }?.terminals?.add(term)
+        }
         return term
     }
 
     fun logCommand(context: Context, sessionId: String, terminalId: String, path: String, cmd: String) {
-        ensure(context)
-        val truncatedPath = truncatePath(path, 10)
-        val record = CommandRecord(path = truncatedPath, cmd = cmd)
+        init(context)
+        val record = CommandRecord(path = path, cmd = cmd)
         current?.sessions?.find { it.id == sessionId }?.terminals?.find { it.id == terminalId }?.commands?.let { cmds ->
             cmds.add(record)
-            if (cmds.size > 5) {
-                cmds.subList(0, cmds.size - 5).clear()
-            }
+            if (cmds.size > 5) cmds.subList(0, cmds.size - 5).clear()
         }
-    }
-
-    fun closeTerminal(context: Context, sessionId: String, terminalId: String) {
-        ensure(context)
-        val session = current?.sessions?.find { it.id == sessionId } ?: return
-        val term = session.terminals.find { it.id == terminalId } ?: return
+        runCatching {
+            var order = 0
+            db?.readableDatabase?.rawQuery(
+                "SELECT COUNT(*) FROM command WHERE terminalId = ?", arrayOf(terminalId)
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) order = cursor.getInt(0)
+            }
+            val cv = ContentValues().apply {
+                put("path", path)
+                put("cmd", cmd)
+                put("status", 0)
+                put("terminalId", terminalId)
+                put("ord", order)
+            }
+            db?.writableDatabase?.insert("command", null, cv)
+        }
     }
 
     fun closeSession(context: Context, sessionId: String, crashReason: String? = null) {
-        ensure(context)
+        init(context)
         val session = current?.sessions?.find { it.id == sessionId } ?: return
-        val hasActiveSessions = current?.sessions?.any { s ->
-            s.closedNormally == null && s.id != sessionId
-        } ?: false
-
         session.closedNormally = crashReason == null
         session.crashReason = crashReason
 
+        runCatching {
+            val cv = ContentValues().apply {
+                put("closedNormally", if (crashReason == null) 1 else 0)
+                put("crashReason", crashReason)
+            }
+            db?.writableDatabase?.update("session", cv, "id = ?", arrayOf(sessionId))
+        }
+
+        val hasActiveSessions = current?.sessions?.any { s -> s.closedNormally == null && s.id != sessionId } ?: false
         if (!hasActiveSessions && current?.sessions?.all { it.closedNormally != null } == true) {
-            current?.flagActive = false
+            prefs?.edit()?.putBoolean(KEY_FLAG_ACTIVE, false)?.apply()
             currentSession = null
         }
-        save(context)
     }
 
     fun getHistory(context: Context): SessionHistoryData {
-        return ensure(context)
-    }
+        init(context)
+        val flagActive = prefs?.getBoolean(KEY_FLAG_ACTIVE, false) ?: false
+        val data = SessionHistoryData(
+            date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()),
+            flagActive = flagActive,
+            sessions = mutableListOf(),
+            crashGroup = null
+        )
 
-    private fun load(context: Context): SessionHistoryData {
-        val file = File(context.filesDir, FILE_NAME)
-        if (!file.exists()) {
-            val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-            return SessionHistoryData(date = today)
-        }
-        return try {
-            val json = JSONObject(file.readText())
-            SessionHistoryData.fromJson(json)
-        } catch (e: Exception) {
-            val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-            SessionHistoryData(date = today)
-        }
-    }
+        runCatching {
+            val readDb = db?.readableDatabase ?: return@runCatching
+            readDb.rawQuery("SELECT * FROM session ORDER BY created DESC", null).use { sCursor ->
+                while (sCursor.moveToNext()) {
+                    val id = sCursor.getString(sCursor.getColumnIndexOrThrow("id"))
+                    val created = sCursor.getLong(sCursor.getColumnIndexOrThrow("created"))
+                    val closed = if (sCursor.isNull(sCursor.getColumnIndexOrThrow("closedNormally"))) null
+                        else sCursor.getInt(sCursor.getColumnIndexOrThrow("closedNormally")) == 1
+                    val crash = sCursor.getString(sCursor.getColumnIndexOrThrow("crashReason"))
+                    val record = SessionRecord(id = id, created = created, closedNormally = closed, crashReason = crash, terminals = mutableListOf())
 
-    private fun save(context: Context) {
-        val data = current ?: return
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        if (data.date != today) {
-            current = SessionHistoryData(date = today)
-            val file = File(context.filesDir, FILE_NAME)
-            file.writeText(current!!.toJson().toString())
-            return
+                    readDb.rawQuery("SELECT * FROM terminal WHERE sessionId = ? ORDER BY created ASC", arrayOf(id)).use { tCursor ->
+                        while (tCursor.moveToNext()) {
+                            val tId = tCursor.getString(tCursor.getColumnIndexOrThrow("id"))
+                            val tCreated = tCursor.getLong(tCursor.getColumnIndexOrThrow("created"))
+                            val tType = tCursor.getString(tCursor.getColumnIndexOrThrow("type"))
+                            val tRecord = TerminalRecord(id = tId, created = tCreated, type = tType, commands = mutableListOf())
+
+                            readDb.rawQuery("SELECT * FROM command WHERE terminalId = ? ORDER BY ord ASC", arrayOf(tId)).use { cCursor ->
+                                while (cCursor.moveToNext()) {
+                                    val path = cCursor.getString(cCursor.getColumnIndexOrThrow("path"))
+                                    val cmd = cCursor.getString(cCursor.getColumnIndexOrThrow("cmd"))
+                                    val status = cCursor.getInt(cCursor.getColumnIndexOrThrow("status"))
+                                    tRecord.commands.add(CommandRecord(path = path, cmd = cmd, status = status))
+                                }
+                            }
+                            if (tRecord.commands.isNotEmpty()) record.terminals.add(tRecord)
+                        }
+                    }
+                    if (record.terminals.isNotEmpty()) data.sessions.add(record)
+                }
+            }
         }
-        try {
-            val file = File(context.filesDir, FILE_NAME)
-            file.writeText(data.toJson().toString())
-        } catch (_: Exception) {}
+
+        // Build crash group from sessions that weren't closed normally
+        runCatching {
+            val unclosedTerms = mutableListOf<TerminalRecord>()
+            var unclosedCount = 0
+            for (s in data.sessions) {
+                if (s.closedNormally == null) {
+                    unclosedCount++
+                    s.terminals.filter { it.commands.isNotEmpty() }.forEach { unclosedTerms.add(it) }
+                }
+            }
+            if (unclosedTerms.isNotEmpty()) data.crashGroup = CrashGroup(sessionCount = unclosedCount, terminals = unclosedTerms)
+        }
+
+        current = data
+        return data
     }
 
     fun saveNow(context: Context) {
-        save(context)
+        // SQLite persists immediately — no-op needed
     }
 
     fun verifyDateAndReset(context: Context) {
-        val data = ensure(context)
+        init(context)
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        if (data.date != today) {
-            current = SessionHistoryData(date = today)
-            save(context)
+        val storedDate = prefs?.getString(KEY_CURRENT_DATE, "")
+        if (storedDate != today) {
+            current = null
+            currentSession = null
+            runCatching {
+                db?.writableDatabase?.execSQL("DELETE FROM command")
+                db?.writableDatabase?.execSQL("DELETE FROM terminal")
+                db?.writableDatabase?.execSQL("DELETE FROM session")
+            }
+            prefs?.edit()?.putString(KEY_CURRENT_DATE, today)?.putBoolean(KEY_FLAG_ACTIVE, false)?.apply()
         }
-    }
-
-    private fun truncatePath(path: String, maxLen: Int): String {
-        if (path.length <= maxLen) return path
-        return ".." + path.takeLast(maxLen - 2)
     }
 }

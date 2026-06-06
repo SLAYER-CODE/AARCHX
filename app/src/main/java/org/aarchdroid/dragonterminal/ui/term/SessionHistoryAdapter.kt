@@ -1,6 +1,5 @@
 package org.aarchdroid.dragonterminal.ui.term
 
-import android.graphics.Typeface
 import android.text.SpannableString
 import android.text.style.UnderlineSpan
 import android.view.LayoutInflater
@@ -20,21 +19,19 @@ import java.util.Locale
 
 class SessionHistoryAdapter(
     private var data: SessionHistoryData,
-    private val onRestoreTerminal: (TerminalRecord) -> Unit,
+    private val onRestoreSession: (SessionRecord) -> Unit,
     private val onRestoreAll: () -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_SESSION = 0
-        private const val VIEW_TYPE_CRASH_GROUP = 1
-        private const val VIEW_TYPE_TERMINAL = 2
-        private const val VIEW_TYPE_COMMAND = 3
-        private const val VIEW_TYPE_RESTORE_ALL = 4
+        private const val VIEW_TYPE_SESSION_FOOTER = 1
+        private const val VIEW_TYPE_CRASH_GROUP = 2
+        private const val VIEW_TYPE_TERMINAL = 3
+        private const val VIEW_TYPE_COMMAND = 4
+        private const val VIEW_TYPE_RESTORE_ALL = 5
+        private const val MAX_PATH_TAIL = 16
     }
-
-    private var expandedSessions = mutableSetOf<String>()
-    private var expandedCrash = false
-    private var activeTerminals = mutableSetOf<String>() // terminal IDs with relanzar available
 
     private data class FlatItem(
         val type: Int,
@@ -44,7 +41,9 @@ class SessionHistoryAdapter(
         val command: CommandRecord? = null,
         val sessionId: String? = null,
         val line: String = "",
-        val timeColor: Int = 0xFF888888.toInt()
+        val lineColor: Int = 0xFF888888.toInt(),
+        val statusLabel: String = "",
+        val statusColor: Int = 0xFF888888.toInt()
     )
 
     private val flatItems = mutableListOf<FlatItem>()
@@ -58,106 +57,111 @@ class SessionHistoryAdapter(
         rebuild()
     }
 
+    private fun shortenPath(path: String): String {
+        if (path.length <= 20) return path
+        return "(..." + path.takeLast(MAX_PATH_TAIL) + ")"
+    }
+
     fun rebuild() {
         flatItems.clear()
         val timeFmt = SimpleDateFormat("h:mm a", Locale.US)
         val now = System.currentTimeMillis()
 
-        for (sIdx in data.sessions.indices) {
-            val session = data.sessions[sIdx]
+        for (session in data.sessions) {
+            val visibleTerms = session.terminals.filter { it.commands.isNotEmpty() }
+            if (visibleTerms.isEmpty()) continue
+
             val elapsed = now - session.created
-            val timeColor = when {
-                elapsed < 3600000 -> 0xFF88FF88.toInt()
-                elapsed < 14400000 -> 0xFFFF8800.toInt()
-                else -> 0xFFFF6666.toInt()
+            val statusLabel: String
+            val statusColor: Int
+            when {
+                elapsed < 3600000 -> { statusLabel = "Ahora"; statusColor = 0xFF226622.toInt() }
+                elapsed < 14400000 -> { statusLabel = "Reciente"; statusColor = 0xFF664400.toInt() }
+                else -> { statusLabel = "Antiguo"; statusColor = 0xFF662222.toInt() }
             }
             val timeStr = timeFmt.format(Date(session.created))
+            val isCrash = session.closedNormally == false
+            val sessionLabel = if (isCrash) "[$timeStr] *"
+                else "[$timeStr] $statusLabel"
+            val sessionColor = if (isCrash) 0xFF883333.toInt()
+                else 0xFF66DD66.toInt()
 
             flatItems.add(FlatItem(
                 VIEW_TYPE_SESSION, session = session, sessionId = session.id,
-                line = "  $timeStr",
-                timeColor = timeColor
+                line = sessionLabel, lineColor = sessionColor,
+                statusLabel = statusLabel, statusColor = statusColor
             ))
 
-            if (expandedSessions.contains(session.id)) {
-                val terms = session.terminals
-                for (tIdx in terms.indices) {
-                    val term = terms[tIdx]
-                    val isLastTerm = tIdx == terms.lastIndex
-                    val termLine = if (isLastTerm) "  ╚═ " else "  ╠═ "
+            for (tIdx in visibleTerms.indices) {
+                val term = visibleTerms[tIdx]
+                val isLanz = term.type == "lanzador"
+                val typeLabel = if (isLanz) "Lanzador" else "Terminal"
+                val termColor = if (isLanz) 0xFF557755.toInt() else 0xFF338833.toInt()
+
+                flatItems.add(FlatItem(
+                    VIEW_TYPE_TERMINAL, terminal = term, sessionId = session.id,
+                    line = "-$typeLabel", lineColor = termColor
+                ))
+
+                var cdDepth = 0
+                for (cmd in term.commands) {
+                    val isCd = cmd.cmd.trimStart().startsWith("cd ")
+                    val prefix = " ".repeat(2 + cdDepth * 2) + "|-(comando) "
+                    val shortPath = shortenPath(cmd.path)
+                    val cmdLine = "$prefix${shortPath}# ${cmd.cmd}"
 
                     flatItems.add(FlatItem(
-                        VIEW_TYPE_TERMINAL, terminal = term, sessionId = session.id,
-                        line = termLine
+                        VIEW_TYPE_COMMAND, command = cmd, sessionId = session.id,
+                        line = cmdLine, lineColor = 0xFFFFFFFF.toInt()
                     ))
 
-                    val cmds = term.commands
-                    for (cIdx in cmds.indices) {
-                        val cmd = cmds[cIdx]
-                        val isLastCmd = cIdx == cmds.lastIndex
-                        val cmdLine = when {
-                            isLastTerm && isLastCmd -> "      "
-                            else -> if (isLastTerm) "     " else "  ║  "
-                        }
-                        flatItems.add(FlatItem(
-                            VIEW_TYPE_COMMAND, command = cmd, sessionId = session.id,
-                            line = cmdLine
-                        ))
-                    }
+                    if (isCd) cdDepth++
                 }
             }
+
+            flatItems.add(FlatItem(
+                VIEW_TYPE_SESSION_FOOTER, session = session, sessionId = session.id,
+                line = "Relanzar", lineColor = 0xFF338833.toInt()
+            ))
         }
 
         val cg = data.crashGroup
-        if (cg != null && cg.terminals.isNotEmpty()) {
+        if (cg != null && cg.terminals.any { it.commands.isNotEmpty() }) {
             val s = if (cg.sessionCount > 1) "s" else ""
             flatItems.add(FlatItem(
                 VIEW_TYPE_CRASH_GROUP, crashGroup = cg,
-                line = "  ╔═ Crash ${cg.sessionCount} session$s"
+                line = "[Crash ${cg.sessionCount} session$s]", lineColor = 0xFF883333.toInt()
             ))
 
-            if (expandedCrash) {
-                val terms = cg.terminals
-                for (tIdx in terms.indices) {
-                    val term = terms[tIdx]
-                    val isLastTerm = tIdx == terms.lastIndex
-                    val termLine = if (isLastTerm) "  ╚═ " else "  ╠═ "
+            val terms = cg.terminals.filter { it.commands.isNotEmpty() }
+            for (tIdx in terms.indices) {
+                val term = terms[tIdx]
+                val isLanz = term.type == "lanzador"
+                val typeLabel = if (isLanz) "Lanzador" else "Terminal"
+                val termColor = if (isLanz) 0xFF557755.toInt() else 0xFF338833.toInt()
 
-                    flatItems.add(FlatItem(
-                        VIEW_TYPE_TERMINAL, terminal = term,
-                        line = termLine
-                    ))
+                flatItems.add(FlatItem(VIEW_TYPE_TERMINAL, terminal = term, line = "-$typeLabel", lineColor = termColor))
 
-                    val cmds = term.commands
-                    for (cIdx in cmds.indices) {
-                        val cmd = cmds[cIdx]
-                        val cmdLine = if (isLastTerm) "     " else "  ║  "
-                        flatItems.add(FlatItem(
-                            VIEW_TYPE_COMMAND, command = cmd,
-                            line = cmdLine
-                        ))
-                    }
+                var cdDepth = 0
+                for (cmd in term.commands) {
+                    val isCd = cmd.cmd.trimStart().startsWith("cd ")
+                    val prefix = " ".repeat(2 + cdDepth * 2) + "|-(comando) "
+                    val shortPath = shortenPath(cmd.path)
+                    val cmdLine = "$prefix${shortPath}# ${cmd.cmd}"
+
+                    flatItems.add(FlatItem(VIEW_TYPE_COMMAND, command = cmd, line = cmdLine, lineColor = 0xFFFFFFFF.toInt()))
+
+                    if (isCd) cdDepth++
                 }
             }
         }
 
-        val hasAny = data.sessions.isNotEmpty() || (cg != null && cg.terminals.isNotEmpty())
+        val hasAny = flatItems.any { it.type == VIEW_TYPE_SESSION || it.type == VIEW_TYPE_CRASH_GROUP }
         if (hasAny) {
-            flatItems.add(FlatItem(VIEW_TYPE_RESTORE_ALL, line = "  ╚═ Restaurar Todo"))
+            flatItems.add(FlatItem(VIEW_TYPE_RESTORE_ALL, line = "Restaurar Todo", lineColor = 0xFF338888.toInt()))
         }
 
         notifyDataSetChanged()
-    }
-
-    fun toggleSession(sessionId: String) {
-        if (expandedSessions.contains(sessionId)) expandedSessions.remove(sessionId)
-        else expandedSessions.add(sessionId)
-        rebuild()
-    }
-
-    fun toggleCrash() {
-        expandedCrash = !expandedCrash
-        rebuild()
     }
 
     override fun getItemCount(): Int = flatItems.size
@@ -167,6 +171,7 @@ class SessionHistoryAdapter(
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
             VIEW_TYPE_SESSION -> SessionHolder(inflater.inflate(R.layout.item_session_header, parent, false))
+            VIEW_TYPE_SESSION_FOOTER -> SessionFooterHolder(inflater.inflate(R.layout.item_session_footer, parent, false))
             VIEW_TYPE_CRASH_GROUP -> CrashHolder(inflater.inflate(R.layout.item_crash_group, parent, false))
             VIEW_TYPE_TERMINAL -> TerminalHolder(inflater.inflate(R.layout.item_terminal, parent, false))
             VIEW_TYPE_COMMAND -> CommandHolder(inflater.inflate(R.layout.item_command, parent, false))
@@ -179,6 +184,7 @@ class SessionHistoryAdapter(
         val item = flatItems[position]
         when (holder) {
             is SessionHolder -> bindSession(holder, item)
+            is SessionFooterHolder -> bindSessionFooter(holder, item)
             is CrashHolder -> bindCrash(holder, item)
             is TerminalHolder -> bindTerminal(holder, item)
             is CommandHolder -> bindCommand(holder, item)
@@ -191,57 +197,48 @@ class SessionHistoryAdapter(
         val isCrash = session.closedNormally == false
 
         holder.time.text = item.line
-        holder.time.setTextColor(item.timeColor)
+        holder.time.setTextColor(item.lineColor)
 
         if (isCrash) {
             holder.reason.visibility = View.VISIBLE
             holder.reason.text = if (session.crashReason != null) session.crashReason else "Crash"
-            holder.reason.setTextColor(0xFFFF6666.toInt())
+            holder.reason.setTextColor(0xFF883333.toInt())
         } else {
-            holder.reason.visibility = View.GONE
+            holder.reason.visibility = View.VISIBLE
+            holder.reason.text = item.statusLabel
+            holder.reason.setTextColor(item.statusColor)
         }
+    }
 
-        holder.itemView.setOnClickListener { toggleSession(session.id) }
+    private fun bindSessionFooter(holder: SessionFooterHolder, item: FlatItem) {
+        holder.text.text = item.line
+        holder.text.setTextColor(item.lineColor)
+        holder.text.tag = item.session
+        holder.text.setOnClickListener { v ->
+            (v.tag as? SessionRecord)?.let { onRestoreSession(it) }
+        }
     }
 
     private fun bindCrash(holder: CrashHolder, item: FlatItem) {
         holder.text.text = item.line
-        holder.text.setTextColor(0xFFFF6666.toInt())
-        holder.itemView.setOnClickListener { toggleCrash() }
+        holder.text.setTextColor(item.lineColor)
     }
 
     private fun bindTerminal(holder: TerminalHolder, item: FlatItem) {
-        val term = item.terminal ?: return
-        val isLanz = term.type == "lanzador"
-        val typeLabel = if (isLanz) "Lanzador" else "Terminal"
-        holder.type.text = "${item.line}$typeLabel"
-        holder.type.setTextColor(if (isLanz) 0xFF88AA88.toInt() else 0xFF88FF88.toInt())
-
-        val spannable = SpannableString("Relanzar")
-        spannable.setSpan(UnderlineSpan(), 0, spannable.length, 0)
-        holder.relanzar.text = spannable
-        holder.relanzar.setTextColor(0xFF88FF88.toInt())
-        holder.relanzar.tag = term
-        holder.relanzar.setOnClickListener { v ->
-            (v.tag as? TerminalRecord)?.let { onRestoreTerminal(it) }
-        }
+        holder.type.text = item.line
+        holder.type.setTextColor(item.lineColor)
     }
 
     private fun bindCommand(holder: CommandHolder, item: FlatItem) {
-        val cmd = item.command ?: return
-        holder.text.text = cmd.cmd
-        holder.text.setTextColor(
-            when (cmd.status) {
-                1 -> 0xFFFF6666.toInt()
-                -1 -> 0xFFFFAA44.toInt()
-                else -> 0xFFAAAAAA.toInt()
-            }
-        )
+        holder.text.text = item.line
+        holder.text.setTextColor(item.lineColor)
     }
 
     private fun bindRestoreAll(holder: RestoreAllHolder) {
-        holder.text.text = "  ╚═ Restaurar Todo"
-        holder.text.setTextColor(0xFF88FFFF.toInt())
+        val spannable = SpannableString("Restaurar Todo")
+        spannable.setSpan(UnderlineSpan(), 0, spannable.length, 0)
+        holder.text.text = spannable
+        holder.text.setTextColor(0xFF338888.toInt())
         holder.text.setOnClickListener { onRestoreAll() }
     }
 
@@ -250,13 +247,16 @@ class SessionHistoryAdapter(
         val reason: TextView = view.findViewById(R.id.sessionReason)
     }
 
+    class SessionFooterHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val text: TextView = view.findViewById(R.id.sessionFooterText)
+    }
+
     class CrashHolder(view: View) : RecyclerView.ViewHolder(view) {
         val text: TextView = view.findViewById(R.id.crashText)
     }
 
     class TerminalHolder(view: View) : RecyclerView.ViewHolder(view) {
         val type: TextView = view.findViewById(R.id.terminalType)
-        val relanzar: TextView = view.findViewById(R.id.terminalRelanzar)
     }
 
     class CommandHolder(view: View) : RecyclerView.ViewHolder(view) {

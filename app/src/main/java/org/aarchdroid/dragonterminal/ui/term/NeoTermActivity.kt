@@ -86,7 +86,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     var rootAvailable = false
 
     private var sessionHistoryAdapter: SessionHistoryAdapter? = null
-    private var currentSessionId: String? = null
+    private val tabSessionMap = HashMap<String, String>() // TerminalSession.handle -> sessionId
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -173,8 +173,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         historyList.setHasFixedSize(true)
         val adapter = SessionHistoryAdapter(
             data = history,
-            onRestoreTerminal = { term ->
-                Log.d("AArchDroid", "Restore terminal: $term")
+            onRestoreSession = { session ->
+                Log.d("AArchDroid", "Restore session: ${session.id}")
                 // TODO: implement restore
             },
             onRestoreAll = {
@@ -404,11 +404,15 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 override fun onTabRemoved(tabSwitcher: TabSwitcher, index: Int, tab: Tab, animation: Animation) {
                     if (tab is TermTab) {
                         val session = tab.termData.termSession
-                        SessionRemover.removeSession(termService, tab)
-                        // Log command history cleanup
+                        // Close this tab's session history
                         if (session != null) {
+                            val sid = tabSessionMap.remove(session.mHandle)
+                            if (sid != null) {
+                                SessionHistory.closeSession(this@NeoTermActivity, sid)
+                            }
                             CommandInterceptor.unregisterSession(session.mHandle)
                         }
+                        SessionRemover.removeSession(termService, tab)
                     } else if (tab is XSessionTab) {
                         SessionRemover.removeXSession(termService, tab)
                     }
@@ -416,12 +420,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 }
 
                 override fun onAllTabsRemoved(tabSwitcher: TabSwitcher, tabs: Array<out Tab>, animation: Animation) {
-                    // All tabs removed — close the session
-                    currentSessionId?.let {
-                        SessionHistory.closeSession(this@NeoTermActivity, it)
-                        SessionHistory.saveNow(this@NeoTermActivity)
-                    }
-                    currentSessionId = null
+                    // Reload session history from disk after all tabs closed
+                    val h = SessionHistory.getHistory(this@NeoTermActivity)
+                    sessionHistoryAdapter?.updateData(h)
                     updatePlaceholderVisibility()
                 }
             })
@@ -459,8 +460,11 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this)
 
-        // Save session history before destroying
-        currentSessionId?.let { SessionHistory.closeSession(this, it) }
+        // Close all remaining session history records
+        tabSessionMap.forEach { (_, sid) ->
+            SessionHistory.closeSession(this, sid)
+        }
+        tabSessionMap.clear()
         SessionHistory.saveNow(this)
 
         if (termService != null) {
@@ -716,9 +720,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             val lastSession = getStoredCurrentSessionOrLast()
             Log.d("AArchDroid", "NeoTermActivity: restoring " + termService!!.sessions.size + " existing sessions")
 
-            // Start session history for restored sessions
-            currentSessionId = SessionHistory.startSession(this).id
-
             for (session in termService!!.sessions) {
                 addNewSessionFromExisting(session)
             }
@@ -738,8 +739,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
         } else {
             Log.d("AArchDroid", "NeoTermActivity: no existing sessions — creating first session")
-            // Start a new session history
-            currentSessionId = SessionHistory.startSession(this).id
             toggleSwitcher(showSwitcher = true, easterEgg = false)
 
             try {
@@ -857,10 +856,12 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         Log.d("AArchDroid", "NeoTermActivity: session created — name=" + session.mSessionName +
                 " handle=" + session.mHandle)
 
-        // Register with session history
-        CommandInterceptor.registerSession(session.mHandle, currentSessionId ?: "")
-        val term = SessionHistory.startTerminal(this, currentSessionId ?: "", "terminal")
+        // Create a new session history record for this tab
+        val sessionId = SessionHistory.startSession(this).id
+        CommandInterceptor.registerSession(session.mHandle, sessionId)
+        val term = SessionHistory.startTerminal(this, sessionId, "terminal")
         CommandInterceptor.setTerminalId(session.mHandle, term.id)
+        tabSessionMap[session.mHandle] = sessionId
 
         val tab = createTab(session.mSessionName) as TermTab
         tab.termData.initializeSessionWith(session, sessionCallback, viewClient)

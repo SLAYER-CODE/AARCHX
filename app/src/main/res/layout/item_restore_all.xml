@@ -11,9 +11,10 @@
         android:id="@+id/restoreAllText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         android:clickable="true"
         android:focusable="true"
         android:fontFamily="monospace"
-        android:textSize="12sp" />
+        android:textSize="10sp" />
 
 </LinearLayout>

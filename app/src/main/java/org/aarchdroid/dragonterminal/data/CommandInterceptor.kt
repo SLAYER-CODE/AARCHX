@@ -48,6 +48,15 @@ object CommandInterceptor {
             ctx.currentDir = normalizePath(ctx.currentDir)
         }
         Log.d("AArchDroid", "CommandInterceptor: cmd='$cmd' dir='${ctx.currentDir}'")
+
+        // Save to session history
+        SessionHistory.logCommand(
+            org.aarchdroid.AArchDroidApp.get(),
+            ctx.sessionId,
+            ctx.terminalId,
+            ctx.currentDir,
+            cmd
+        )
     }
 
     fun unregisterSession(mHandle: String) {
