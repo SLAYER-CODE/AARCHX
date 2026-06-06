@@ -8,6 +8,7 @@ import android.system.Os;
 import android.system.OsConstants;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -85,6 +86,9 @@ public class TerminalSession extends TerminalOutput {
     private final ByteQueue mTerminalToProcessIOQueue = new ByteQueue(4096);
     /** Buffer to write translate code points into utf8 before writing to mTerminalToProcessIOQueue */
     private final byte[] mUtf8InputBuffer = new byte[5];
+
+    private final ByteArrayOutputStream mCommandBuffer = new ByteArrayOutputStream(256);
+    public String mCurrentDir = "~";
 
     public SessionChangedCallback getSessionChangedCallback() {
         return mChangeCallback;
@@ -224,6 +228,39 @@ public class TerminalSession extends TerminalOutput {
     @Override
     public void write(byte[] data, int offset, int count) {
         if (mShellPid > 0) mTerminalToProcessIOQueue.write(data, offset, count);
+        // Command interception — accumulate until newline
+        for (int i = offset; i < offset + count; i++) {
+            byte b = data[i];
+            if (b == 0x0A || b == 0x0D) {
+                byte[] buf = mCommandBuffer.toByteArray();
+                String cmd = new String(buf, StandardCharsets.UTF_8).trim();
+                if (!cmd.isEmpty()) {
+                    org.aarchdroid.dragonterminal.data.CommandInterceptor.onCommand(this, cmd);
+                }
+                mCommandBuffer.reset();
+            } else if (b == 0x7F || b == 0x08) {
+                int len = mCommandBuffer.size();
+                if (len > 0) {
+                    // Remove last UTF-8 character
+                    byte[] buf = mCommandBuffer.toByteArray();
+                    int remove = 1;
+                    if (len > 1 && (buf[len-1] & 0xC0) == 0x80 && (buf[len-2] & 0xE0) == 0xC0)
+                        remove = 2;
+                    else if (len > 2 && (buf[len-1] & 0xC0) == 0x80 && (buf[len-2] & 0xC0) == 0x80 && (buf[len-3] & 0xF0) == 0xE0)
+                        remove = 3;
+                    else if (len > 3 && (buf[len-1] & 0xC0) == 0x80 && (buf[len-2] & 0xC0) == 0x80 && (buf[len-3] & 0xC0) == 0x80 && (buf[len-4] & 0xF8) == 0xF0)
+                        remove = 4;
+                    byte[] nbuf = new byte[len - remove];
+                    System.arraycopy(buf, 0, nbuf, 0, nbuf.length);
+                    mCommandBuffer.reset();
+                    try { mCommandBuffer.write(nbuf); } catch (Exception ignored) {}
+                }
+            } else if (b >= 0x20 && b <= 0x7E) {
+                mCommandBuffer.write(b);
+            } else if ((b & 0xFF) >= 0xC0) {
+                mCommandBuffer.write(b);
+            }
+        }
     }
 
     /** Write the Unicode code point to the terminal encoded in UTF-8. */
