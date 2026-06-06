@@ -1,9 +1,11 @@
 package org.aarchdroid.dragonterminal.services
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.Binder
 import android.os.Build
@@ -11,6 +13,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.backend.EmulatorDebug
 import org.aarchdroid.dragonterminal.backend.TerminalSession
@@ -20,6 +23,7 @@ import org.aarchdroid.dragonterminal.frontend.session.xorg.XParameter
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XSession
 import org.aarchdroid.dragonterminal.ui.term.NeoTermActivity
 import org.aarchdroid.dragonterminal.utils.TerminalUtils
+import java.util.Collections
 
 
 /**
@@ -32,8 +36,8 @@ class NeoTermService : Service() {
     }
 
     private val serviceBinder = NeoTermBinder()
-    private val mTerminalSessions = ArrayList<TerminalSession>()
-    private val mXSessions = ArrayList<XSession>()
+    private val mTerminalSessions = Collections.synchronizedList(ArrayList<TerminalSession>())
+    private val mXSessions = Collections.synchronizedList(ArrayList<XSession>())
     private var mWakeLock: PowerManager.WakeLock? = null
     private var mWifiLock: WifiManager.WifiLock? = null
 
@@ -41,6 +45,18 @@ class NeoTermService : Service() {
         super.onCreate()
         Log.d("AArchDroid", "NeoTermService: onCreate() — service starting")
         createNotificationChannel()
+        tryStartForeground()
+    }
+
+    private fun tryStartForeground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                Log.w("AArchDroid", "NeoTermService: POST_NOTIFICATIONS not granted, starting without foreground notification")
+                return
+            }
+        }
         try {
             startForeground(NOTIFICATION_ID, createNotification())
             Log.d("AArchDroid", "NeoTermService: startForeground succeeded")
@@ -69,7 +85,7 @@ class NeoTermService : Service() {
             ACTION_RELEASE_LOCK -> releaseLock()
         }
 
-        return Service.START_NOT_STICKY
+        return Service.START_STICKY
     }
 
     override fun onDestroy() {
@@ -93,38 +109,53 @@ class NeoTermService : Service() {
     }
 
     fun removeTermSession(sessionToRemove: TerminalSession): Int {
-        val indexOfRemoved = mTerminalSessions.indexOf(sessionToRemove)
-        if (indexOfRemoved >= 0) {
-            mTerminalSessions.removeAt(indexOfRemoved)
-            if (mTerminalSessions.isEmpty() && mXSessions.isEmpty()) {
-                Log.d("AArchDroid", "NeoTermService: no sessions left, stopping self")
-                stopSelf()
-            } else {
-                updateNotification()
+        val indexOfRemoved: Int
+        synchronized(mTerminalSessions) {
+            indexOfRemoved = mTerminalSessions.indexOf(sessionToRemove)
+            if (indexOfRemoved >= 0) {
+                mTerminalSessions.removeAt(indexOfRemoved)
             }
+        }
+        if (indexOfRemoved >= 0) {
+            checkStopSelf()
         }
         return indexOfRemoved
     }
 
     fun createXSession(activity: Activity, parameter: XParameter): XSession {
         val session = TerminalUtils.createSession(activity, parameter)
-        mXSessions.add(session)
+        synchronized(mXSessions) {
+            mXSessions.add(session)
+        }
         updateNotification()
         return session
     }
 
     fun removeXSession(sessionToRemove: XSession): Int {
-        val indexOfRemoved = mXSessions.indexOf(sessionToRemove)
-        if (indexOfRemoved >= 0) {
-            mXSessions.removeAt(indexOfRemoved)
-            if (mTerminalSessions.isEmpty() && mXSessions.isEmpty()) {
-                Log.d("AArchDroid", "NeoTermService: no sessions left, stopping self")
-                stopSelf()
-            } else {
-                updateNotification()
+        val indexOfRemoved: Int
+        synchronized(mXSessions) {
+            indexOfRemoved = mXSessions.indexOf(sessionToRemove)
+            if (indexOfRemoved >= 0) {
+                mXSessions.removeAt(indexOfRemoved)
             }
         }
+        if (indexOfRemoved >= 0) {
+            checkStopSelf()
+        }
         return indexOfRemoved
+    }
+
+    private fun checkStopSelf() {
+        synchronized(mTerminalSessions) {
+            synchronized(mXSessions) {
+                if (mTerminalSessions.isEmpty() && mXSessions.isEmpty()) {
+                    Log.d("AArchDroid", "NeoTermService: no sessions left, stopping self")
+                    stopSelf()
+                    return
+                }
+            }
+        }
+        updateNotification()
     }
 
     private fun createOrFindSession(parameter: ShellParameter): TerminalSession {
@@ -132,15 +163,18 @@ class NeoTermService : Service() {
             Log.d("AArchDroid", "NeoTermService: createOrFindSession — creating new session")
             val session = TerminalUtils.createSession(this, parameter)
             Log.d("AArchDroid", "NeoTermService: session created, handle=" + session.mHandle)
-            mTerminalSessions.add(session)
+            synchronized(mTerminalSessions) {
+                mTerminalSessions.add(session)
+            }
             return session
         }
 
         val sessionId = parameter.sessionId!!
         Log.d("AArchDroid", "NeoTermService: createOrFindSession — finding session by id $sessionId")
 
-        val session = mTerminalSessions.find { it.mHandle == sessionId.getSessionId() }
-                ?: throw IllegalArgumentException("cannot find session by given id")
+        val session = synchronized(mTerminalSessions) {
+            mTerminalSessions.find { it.mHandle == sessionId.getSessionId() }
+        } ?: throw IllegalArgumentException("cannot find session by given id")
 
         session.write(parameter.initialCommand + "\n")
         return session
@@ -189,32 +223,34 @@ class NeoTermService : Service() {
         manager.createNotificationChannel(channel)
     }
 
+    @Synchronized
     @SuppressLint("WakelockTimeout")
     private fun acquireLock() {
-        if (mWakeLock == null) {
-            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-            mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                    EmulatorDebug.LOG_TAG + ":")
-            mWakeLock!!.acquire()
+        if (mWakeLock != null) return
 
-            val wm = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-            mWifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, EmulatorDebug.LOG_TAG)
-            mWifiLock!!.acquire()
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                EmulatorDebug.LOG_TAG + ":")
+        mWakeLock!!.acquire()
 
-            updateNotification()
-        }
+        val wm = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        mWifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, EmulatorDebug.LOG_TAG)
+        mWifiLock!!.acquire()
+
+        updateNotification()
     }
 
+    @Synchronized
     private fun releaseLock() {
-        if (mWakeLock != null) {
-            mWakeLock!!.release()
+        mWakeLock?.let {
+            it.release()
             mWakeLock = null
-
-            mWifiLock!!.release()
-            mWifiLock = null
-
-            updateNotification()
         }
+        mWifiLock?.let {
+            it.release()
+            mWifiLock = null
+        }
+        updateNotification()
     }
 
     companion object {
