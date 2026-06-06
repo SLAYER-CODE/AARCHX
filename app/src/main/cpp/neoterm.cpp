@@ -163,7 +163,7 @@ extern "C" JNIEXPORT jint JNICALL Java_org_aarchdroid_dragonterminal_backend_JNI
     char const *cmd_utf8 = env->GetStringUTFChars(cmd, NULL);
     int ptm = create_subprocess(env, cmd_utf8, cmd_cwd, argv, envp, &procId, rows, columns);
     env->ReleaseStringUTFChars(cmd, cmd_utf8);
-    env->ReleaseStringUTFChars(cmd, cmd_cwd);
+    env->ReleaseStringUTFChars(cwd, cmd_cwd);
 
     if (argv) {
         for (char **tmp = argv; *tmp; ++tmp) free(*tmp);
