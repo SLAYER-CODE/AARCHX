@@ -352,6 +352,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
                 override fun onTabAdded(tabSwitcher: TabSwitcher, index: Int, tab: Tab, animation: Animation) {
                     update_colors()
+                    updatePlaceholderVisibility()
                 }
 
                 override fun onTabRemoved(tabSwitcher: TabSwitcher, index: Int, tab: Tab, animation: Animation) {
@@ -360,12 +361,11 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                     } else if (tab is XSessionTab) {
                         SessionRemover.removeXSession(termService, tab)
                     }
-                    if (termService?.sessions?.isEmpty() == true) {
-                        Toast.makeText(this@NeoTermActivity, "Sin terminales", Toast.LENGTH_SHORT).show()
-                    }
+                    updatePlaceholderVisibility()
                 }
 
                 override fun onAllTabsRemoved(tabSwitcher: TabSwitcher, tabs: Array<out Tab>, animation: Animation) {
+                    updatePlaceholderVisibility()
                 }
             })
             val tab = tabSwitcher.selectedTab as NeoTab?
@@ -582,6 +582,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 enterMain()
 
                 update_colors()
+
+                updatePlaceholderVisibility()
 
                 get_motherfucker_battery()
 
@@ -1080,6 +1082,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
         }, 500)
 
+    }
+
+    private fun updatePlaceholderVisibility() {
+        val placeholder = findViewById<View>(R.id.placeholder_empty)
+        if (::tabSwitcher.isInitialized) {
+            placeholder.visibility = if (tabSwitcher.count == 0) View.VISIBLE else View.GONE
+        }
     }
 
 

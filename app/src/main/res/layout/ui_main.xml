@@ -14,16 +14,47 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark"
         android:visibility="visible" />
 
-
-    <de.mrapp.android.tabswitcher.TabSwitcher
-        android:id="@+id/tab_switcher"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layoutPolicy="auto"
-        app:tabBackgroundColor="@color/tab_background_color"
-        app:tabCloseButtonIcon="@drawable/ic_close_tab_18dp"
-        app:tabIcon="@drawable/ic_tab_icon"
-        app:tabTitleTextColor="@color/tab_title_text_color"
-        app:toolbarMenu="@menu/menu_main" />
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <de.mrapp.android.tabswitcher.TabSwitcher
+            android:id="@+id/tab_switcher"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutPolicy="auto"
+            app:tabBackgroundColor="@color/tab_background_color"
+            app:tabCloseButtonIcon="@drawable/ic_close_tab_18dp"
+            app:tabIcon="@drawable/ic_tab_icon"
+            app:tabTitleTextColor="@color/tab_title_text_color"
+            app:toolbarMenu="@menu/menu_main" />
+
+        <LinearLayout
+            android:id="@+id/placeholder_empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sin actividades"
+                android:textColor="@color/tool_title_gray"
+                android:textSize="20sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Recientes"
+                android:textColor="@color/tool_desc_gray"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
 
 </LinearLayout>
