@@ -37,8 +37,6 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.TextView;
 
 import java.util.Collections;
 
@@ -1011,76 +1009,6 @@ public class PhoneTabSwitcherLayout extends AbstractTabSwitcherLayout
     }
 
     /**
-     * Shows the tab switcher with tabs arranged in a 2-column grid.
-     */
-    private void animateGridSwitcher() {
-        int count = getModel().getCount();
-        if (count == 0) return;
-
-        int cols = 2;
-        float spacing = tabInset * 2f;
-        float parentWidth = getTabSwitcher().getWidth();
-        float cellSize = (parentWidth - spacing * (cols + 1)) / cols;
-
-        AbstractTabItemIterator iterator =
-                new TabItemIterator.Builder(getTabSwitcher(), viewRecycler).create();
-        TabItem tabItem;
-        while ((tabItem = iterator.next()) != null) {
-            if (!tabItem.isInflated()) {
-                inflateAndUpdateView(tabItem, null);
-            }
-            View view = tabItem.getView();
-            if (view == null) continue;
-
-            // Style title bar
-            View titleContainer = view.findViewById(R.id.tab_title_container);
-            if (titleContainer != null) {
-                titleContainer.setBackgroundColor(0xFF001800);
-                titleContainer.setVisibility(View.VISIBLE);
-            }
-            TextView titleView = view.findViewById(R.id.tab_title_text_view);
-            if (titleView != null) {
-                titleView.setText(tabItem.getTab().getTitle());
-                titleView.setTextColor(0xFF08FF00);
-                titleView.setTextSize(12);
-            }
-
-            // Wire close button
-            ImageButton closeBtn = view.findViewById(R.id.close_tab_button);
-            if (closeBtn != null) {
-                Tab tabForClose = tabItem.getTab();
-                closeBtn.setOnClickListener(v ->
-                        getTabSwitcher().removeTab(tabForClose));
-                closeBtn.setVisibility(View.VISIBLE);
-            }
-
-            // Make child_container clickable to select tab
-            View childContainer = view.findViewById(R.id.child_container);
-            if (childContainer != null) {
-                Tab tabForSelect = tabItem.getTab();
-                childContainer.setOnClickListener(v ->
-                        getTabSwitcher().selectTab(tabForSelect));
-                childContainer.setClickable(true);
-            }
-
-            int col = tabItem.getIndex() % cols;
-            int row = tabItem.getIndex() / cols;
-            float x = spacing + col * (cellSize + spacing);
-            float y = spacing + row * (cellSize + spacing);
-
-            float scale = cellSize / Math.max(view.getWidth(), 1);
-            view.setScaleX(scale);
-            view.setScaleY(scale);
-            view.setX(x + (cellSize - view.getWidth() * scale) / 2f);
-            view.setY(y + (cellSize - view.getHeight() * scale) / 2f);
-            view.setAlpha(1f);
-            view.setVisibility(View.VISIBLE);
-        }
-
-        animateToolbarVisibility(getModel().areToolbarsShown(), toolbarVisibilityAnimationDelay);
-    }
-
-    /**
      * Shows the tab switcher in an animated manner.
      */
     private void animateShowSwitcher() {
@@ -1358,34 +1286,6 @@ public class PhoneTabSwitcherLayout extends AbstractTabSwitcherLayout
      * Hides the tab switcher in an animated manner.
      */
     private void animateHideSwitcher() {
-        if (getTabSwitcher().isGridMode()) {
-            dragHandler.setCallback(null);
-            TabItemIterator iterator =
-                    new TabItemIterator.Builder(getTabSwitcher(), viewRecycler).create();
-            TabItem tabItem;
-            while ((tabItem = iterator.next()) != null) {
-                if (tabItem.isInflated()) {
-                    View view = tabItem.getView();
-                    if (view == null) continue;
-                    int index = tabItem.getIndex();
-                    boolean selected = index == getModel().getSelectedTabIndex();
-                    if (selected) {
-                        view.animate().scaleX(1f).scaleY(1f).translationX(0).translationY(0)
-                                .setDuration(hideSwitcherAnimationDuration)
-                                .setInterpolator(new AccelerateDecelerateInterpolator())
-                                .setListener(selected ? createHideSwitcherAnimationListener() : null)
-                                .start();
-                    } else {
-                        view.setVisibility(View.GONE);
-                        viewRecycler.remove(tabItem);
-                    }
-                } else if (tabItem.getTab() == getModel().getSelectedTab()) {
-                    inflateAndUpdateView(tabItem, createHideSwitcherLayoutListener(tabItem));
-                }
-            }
-            animateToolbarVisibility(getModel().areToolbarsShown() && getModel().isEmpty(), 0);
-            return;
-        }
         dragHandler.setCallback(null);
         TabItemIterator iterator =
                 new TabItemIterator.Builder(getTabSwitcher(), viewRecycler).create();
@@ -3528,11 +3428,7 @@ public class PhoneTabSwitcherLayout extends AbstractTabSwitcherLayout
     @Override
     public final void onSwitcherShown() {
         getLogger().logInfo(getClass(), "Showed tab switcher");
-        if (getTabSwitcher().isGridMode()) {
-            animateGridSwitcher();
-        } else {
-            animateShowSwitcher();
-        }
+        animateShowSwitcher();
     }
 
     @Override
@@ -3562,11 +3458,6 @@ public class PhoneTabSwitcherLayout extends AbstractTabSwitcherLayout
                                   @NonNull final Animation animation) {
         getLogger().logInfo(getClass(),
                 "Added tab at index " + index + " using a " + animation.getClass().getSimpleName());
-
-        if (getTabSwitcher().isGridMode() && getModel().isSwitcherShown()) {
-            animateGridSwitcher();
-            return;
-        }
 
         if (animation instanceof PeekAnimation && !getModel().isEmpty()) {
             ensureTrue(switcherVisibilityChanged, animation.getClass().getSimpleName() +
@@ -3603,14 +3494,6 @@ public class PhoneTabSwitcherLayout extends AbstractTabSwitcherLayout
                 animation.getClass().getSimpleName() + " not supported for removing tabs");
         getLogger().logInfo(getClass(), "Removed tab at index " + index + " using a " +
                 animation.getClass().getSimpleName());
-
-        if (getTabSwitcher().isGridMode() && getModel().isSwitcherShown()) {
-            viewRecycler.remove(TabItem.create(viewRecycler, index, tab));
-            if (!getModel().isEmpty()) {
-                animateGridSwitcher();
-            }
-            return;
-        }
 
         TabItem removedTabItem = TabItem.create(viewRecycler, index, tab);
 

@@ -135,7 +135,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
         tabSwitcher = findViewById(R.id.tab_switcher)
         tabSwitcher.decorator = NeoTabDecorator(this)
-        tabSwitcher.setGridMode(true)
         ViewCompat.setOnApplyWindowInsetsListener(tabSwitcher, createWindowInsetsListener())
         tabSwitcher.showToolbars(false)
 

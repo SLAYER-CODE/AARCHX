@@ -184,11 +184,6 @@ public class TabSwitcher extends FrameLayout implements TabSwitcherLayout, Model
     private TabSwitcherModel model;
 
     /**
-     * Whether the tab switcher should show tabs in a 2-column grid.
-     */
-    private boolean gridMode;
-
-    /**
      * The layout, which is used by the tab switcher, depending on whether the device is a
      * smartphone or tablet and the set layout policy.
      */
@@ -935,17 +930,6 @@ public class TabSwitcher extends FrameLayout implements TabSwitcherLayout, Model
     /**
      * Sets whether to show tabs in a 2-column grid.
      */
-    public final void setGridMode(final boolean gridMode) {
-        this.gridMode = gridMode;
-    }
-
-    /**
-     * Returns whether the tab switcher shows tabs in a 2-column grid.
-     */
-    public final boolean isGridMode() {
-        return gridMode;
-    }
-
     /**
      * Returns the layout of the tab switcher.
      *
