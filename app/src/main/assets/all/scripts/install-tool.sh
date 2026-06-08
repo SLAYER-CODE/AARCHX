@@ -70,6 +70,19 @@ case "$SOURCE" in
         chmod +x "/opt/$TOOL_NAME/$TOOL_NAME"
         echo "[AArchDroid] ✓ $TOOL_NAME descargado en /opt/$TOOL_NAME"
         ;;
+    local)
+        BIN_SRC="/data/data/org.aarchdroid/files/bins/$TOOL_NAME"
+        BIN_DST="/opt/ANDRAX/bin/$TOOL_NAME"
+        echo "[AArchDroid] Instalando binario local: $TOOL_NAME"
+        if [ -f "$BIN_SRC" ]; then
+            cp "$BIN_SRC" "$BIN_DST" 2>&1
+            chmod +x "$BIN_DST"
+            echo "[AArchDroid] ✓ $TOOL_NAME instalado en $BIN_DST"
+        else
+            echo "[AArchDroid] ERROR: Binario no encontrado en $BIN_SRC"
+            exit 1
+        fi
+        ;;
     ubuntu_only)
         echo "[AArchDroid] ⚠ $NOTE"
         echo "[AArchDroid] Busca alternativas en: pacman -Ss $TOOL_NAME"

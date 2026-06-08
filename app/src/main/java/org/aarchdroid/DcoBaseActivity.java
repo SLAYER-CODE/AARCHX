@@ -116,6 +116,7 @@ public class DcoBaseActivity extends Activity {
                     case "go":
                         return "go install " + pkg;
                     case "github":
+                    case "local":
                         return "sh /data/data/org.aarchdroid/files/scripts/install-tool.sh " + normalized;
                     case "url":
                         if (!url.isEmpty()) {

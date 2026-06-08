@@ -1796,11 +1796,11 @@
     "description": "A tool to find and exploit servers vulnerable to Shellshock."
   },
   "udpfloodvlan": {
-    "source": "blackarch",
+    "source": "local",
     "pkg": "udpfloodvlan",
     "category": "voip_3g_4g",
-    "available": false,
-    "description": ""
+    "available": true,
+    "description": "UDP flood tool for VLAN/VoIP stress testing"
   },
   "uncover": {
     "source": "blackarch",
@@ -1860,11 +1860,11 @@
     "description": "Brute force attack against Wifi Protected Setup"
   },
   "wbk": {
-    "source": "blackarch",
+    "source": "local",
     "pkg": "wbk",
     "category": "bug_bounty",
-    "available": false,
-    "description": ""
+    "available": true,
+    "description": "Wayback Machine URL fetcher - extrae URLs del Internet Archive para recon"
   },
   "wfuzz": {
     "source": "blackarch",
