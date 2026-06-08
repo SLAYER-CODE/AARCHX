@@ -1536,11 +1536,12 @@
     "url": "https://github.com/yanhayes78/S7Scan"
   },
   "scada-tools": {
-    "source": "blackarch",
+    "source": "github",
     "pkg": "scada-tools",
+    "url": "https://github.com/atimorin/scada-tools",
     "category": "ics_scada_iot",
-    "available": false,
-    "description": ""
+    "available": true,
+    "description": "SCADA security assessment and exploitation toolkit"
   },
   "scapy": {
     "source": "blackarch",

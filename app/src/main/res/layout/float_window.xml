@@ -20,48 +20,64 @@
         android:gravity="center_vertical"
         android:padding="2dp">
 
-        <ImageButton
+        <TextView
             android:id="@+id/resize_button"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:background="@null"
-            android:src="@drawable/ic_float_resize"
-            android:contentDescription="@string/float_resize"
-            android:scaleType="center" />
+            android:text="+"
+            android:textColor="#00FF00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/float_resize" />
 
         <View
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_weight="1" />
 
-        <ImageButton
+        <TextView
             android:id="@+id/minimize_button"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:background="@null"
-            android:src="@drawable/ic_minimize"
-            android:contentDescription="@string/float_minimize"
+            android:text="-"
+            android:textColor="#00FF00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:gravity="center"
             android:layout_marginEnd="4dp"
-            android:scaleType="center" />
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/float_minimize" />
 
-        <ImageButton
+        <TextView
             android:id="@+id/keyboard_button"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:background="@null"
-            android:src="@drawable/ic_keyboard_black_24dp"
-            android:contentDescription="@string/toggle_ime"
+            android:text="@"
+            android:textColor="#00FF00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:gravity="center"
             android:layout_marginEnd="4dp"
-            android:scaleType="center" />
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/toggle_ime" />
 
-        <ImageButton
+        <TextView
             android:id="@+id/exit_button"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:background="@null"
-            android:src="@drawable/ic_float_close"
-            android:contentDescription="@string/float_exit"
-            android:scaleType="center" />
+            android:text="X"
+            android:textColor="#00FF00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/float_exit" />
 
     </LinearLayout>
 

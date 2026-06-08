@@ -16,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.util.AttributeSet
-import android.widget.ImageButton
 import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.frontend.terminal.TerminalView
 
@@ -52,10 +51,10 @@ class FloatWindowView @JvmOverloads constructor(
     lateinit var terminalView: TerminalView
         private set
     private var windowControls: ViewGroup? = null
-    private var keyboardButton: ImageButton? = null
-    private var minimizeButton: ImageButton? = null
-    private var resizeButton: ImageButton? = null
-    private var exitButton: ImageButton? = null
+    private var keyboardButton: View? = null
+    private var minimizeButton: View? = null
+    private var resizeButton: View? = null
+    private var exitButton: View? = null
 
     lateinit var bubbleManager: BubbleManager
         private set
@@ -292,7 +291,7 @@ class FloatWindowView @JvmOverloads constructor(
     fun loseFocus() {
         overlayFocused = false
         layoutParams.flags = computeFlags(false)
-        windowControls?.background = ColorDrawable(Color.TRANSPARENT)
+        windowControls?.background = ColorDrawable(Color.parseColor("#FF444444"))
         updateLayout()
         alpha = ALPHA_NO_FOCUS
     }
