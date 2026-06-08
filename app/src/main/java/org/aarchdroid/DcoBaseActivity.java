@@ -28,6 +28,7 @@ public class DcoBaseActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        overridePendingTransition(0, 0);
         getWindow().setGravity(Gravity.CENTER);
         getWindow().setDimAmount(0.25f);
         setFinishOnTouchOutside(true);
