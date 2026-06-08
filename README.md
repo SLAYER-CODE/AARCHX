@@ -13,7 +13,7 @@ Andrax is a Linux chroot environment for Android that runs a full Kali-like tool
 
 <table>
   <tr>
-    <td width="50%"><img src="AArchDroid/Screenshot/1.png" width="100%"></td>
+    <td width="50%"><img src="Screenshot/1.png" width="100%"></td>
     <td width="50%">
       <b>FLOATING TERMINAL OVERLAY</b><br><br>
       Terminal flotante que se superpone a cualquier aplicación. Soporte completo de shell, teclado, redimensionamiento y minimización. Acceso instantáneo desde cualquier lugar.
@@ -24,10 +24,10 @@ Andrax is a Linux chroot environment for Android that runs a full Kali-like tool
       <b>OVERLAY CONTROLS</b><br><br>
       Barra de control con botones ASCII: <code>+</code> redimensionar, <code>-</code> minimizar, <code>@</code> teclado, <code>X</code> cerrar. Arrastre desde la barra para mover la ventana.
     </td>
-    <td width="50%"><img src="AArchDroid/Screenshot/2.png" width="100%"></td>
+    <td width="50%"><img src="Screenshot/2.png" width="100%"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="AArchDroid/Screenshot/3.png" width="100%"></td>
+    <td width="50%"><img src="Screenshot/3.png" width="100%"></td>
     <td width="50%">
       <b>NMAP & NETWORK TOOLS</b><br><br>
       Nmap, tcpdump, netcat, y todas las herramientas de red funcionando nativamente en el chroot. Escaneo de puertos, enumeración de servicios, análisis de tráfico.
@@ -38,10 +38,10 @@ Andrax is a Linux chroot environment for Android that runs a full Kali-like tool
       <b>SECURITY TOOLKIT</b><br><br>
       Más de 600 herramientas preinstaladas: Metasploit, Hydra, John the Ripper, Aircrack-ng, SQLmap, Burp Suite, y muchas más. Organizadas por categorías.
     </td>
-    <td width="50%"><img src="AArchDroid/Screenshot/4.png" width="100%"></td>
+    <td width="50%"><img src="Screenshot/4.png" width="100%"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="AArchDroid/Screenshot/6.png" width="100%"></td>
+    <td width="50%"><img src="Screenshot/6.png" width="100%"></td>
     <td width="50%">
       <b>TERMINAL & LOGGING</b><br><br>
       Terminal completa con soporte de shell Bash/Zsh, logging de sesiones, y depuración en tiempo real. Acceso al sistema de archivos del chroot y al dispositivo.
@@ -52,7 +52,7 @@ Andrax is a Linux chroot environment for Android that runs a full Kali-like tool
       <b>STORAGE ACCESS</b><br><br>
       Monta tanto la tarjeta <b>interna</b> como la <b>externa (SD)</b> directamente desde el chroot. Accede a tus archivos, scripts y herramientas desde cualquier directorio.
     </td>
-    <td width="50%"><img src="AArchDroid/Screenshot/7.png" width="100%"></td>
+    <td width="50%"><img src="Screenshot/7.png" width="100%"></td>
   </tr>
 </table>
 
