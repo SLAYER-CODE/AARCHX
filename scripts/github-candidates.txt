@@ -1,0 +1,77 @@
+# GitHub candidates for review
+# Formato: tool_key -> URL1, URL2, ...
+
+apple-bleee -> https://github.com/RAI-cyber/Apple-BLEEE  [KNOWN]
+aron -> https://github.com/danaugns/aron  [KNOWN]
+bgp-cli -> https://github.com/sandelu/mpls-tools  [KNOWN]
+bgp-leak -> https://github.com/bgp-leak/bgp-leak; https://github.com/bgp-leak/bgp-leaktool; https://github.com/bgp-leak/bgp-leaktools; https://github.com/bgp-leak/bgp-leakframework; https://github.com/bgp-leak/bgp-leak-tool; https://github.com/bgp-leak/bgp-leak-tools; https://github.com/xer0dayz/bgp-leak; https://github.com/s0md3v/bgp-leak
+bitb -> https://github.com/hikame/bitb  [KNOWN]
+blescan -> https://github.com/omriiluz/BLEScan  [KNOWN]
+cicspwn -> https://github.com/Malcrove/cicspwn  [KNOWN]
+cicsshot -> https://github.com/Coalfire-Research/nih_cics_emulator  [KNOWN]
+cryptomobile -> https://github.com/RUB-SysSec/cryptomobile  [KNOWN]
+diameter-enum -> https://github.com/networkedsystems/NAPH  [KNOWN]
+enodeb -> https://github.com/lmangani/enodeb  [KNOWN]
+expliot -> https://github.com/tcrs/expliot_framework  [KNOWN]
+fake-advertise6 -> [PART OF] thc-ipv6
+fake-dhcps6 -> [PART OF] thc-ipv6
+fake-mld26 -> [PART OF] thc-ipv6
+fake-mld6 -> [PART OF] thc-ipv6
+fake-mldrouter6 -> [PART OF] thc-ipv6
+fake-router26 -> [PART OF] thc-ipv6
+fake-router6 -> [PART OF] thc-ipv6
+fake-solicitate6 -> [PART OF] thc-ipv6
+find-all-links -> https://github.com/tomnomnom/hacks  [KNOWN]
+flood-advertise6 -> [PART OF] thc-ipv6
+flood-dhcpc6 -> [PART OF] thc-ipv6
+flood-mld26 -> [PART OF] thc-ipv6
+flood-mld6 -> [PART OF] thc-ipv6
+flood-mldrouter6 -> [PART OF] thc-ipv6
+flood-redir6 -> [PART OF] thc-ipv6
+flood-router26 -> [PART OF] thc-ipv6
+flood-router6 -> [PART OF] thc-ipv6
+flood-rs6 -> [PART OF] thc-ipv6
+flood-solicitate6 -> [PART OF] thc-ipv6
+flood-unreach6 -> [PART OF] thc-ipv6
+fuzz-ip6 -> [PART OF] thc-ipv6
+godoh -> https://github.com/crosbymichael/godoh  [KNOWN]
+hashboy -> https://github.com/k4m1k4/hashboy  [KNOWN]
+inverse-lookup6 -> [PART OF] thc-ipv6
+ismtp -> https://github.com/neffuzz/ismtp  [KNOWN]
+js-alert -> https://github.com/js-alert/js-alert; https://github.com/js-alert/js-alerttool; https://github.com/js-alert/js-alerttools; https://github.com/js-alert/js-alertframework; https://github.com/js-alert/js-alert-tool; https://github.com/js-alert/js-alert-tools; https://github.com/xer0dayz/js-alert; https://github.com/s0md3v/js-alert
+kill-router6 -> [PART OF] thc-ipv6
+ldp-cli -> https://github.com/ldp-cli/ldp-cli; https://github.com/ldp-cli/ldp-clitool; https://github.com/ldp-cli/ldp-clitools; https://github.com/ldp-cli/ldp-cliframework; https://github.com/ldp-cli/ldp-cli-tool; https://github.com/ldp-cli/ldp-cli-tools; https://github.com/xer0dayz/ldp-cli; https://github.com/s0md3v/ldp-cli
+mainframe-bruter -> https://github.com/ChrisPritchard/mainframe-bruter  [KNOWN]
+maintp -> https://github.com/networkedsystems/NAPH  [KNOWN]
+mbtget -> [PART OF] mbtget
+mfdos -> https://github.com/Coalfire-Research/nih_cics_emulator  [KNOWN]
+mfterm -> https://github.com/nfc-tools/mfterm  [KNOWN]
+mme-enodeb -> https://github.com/emrekindir/MME-eNodeB-Simulator  [KNOWN]
+mpls-tun -> https://github.com/sandelu/mpls-tools  [KNOWN]
+netebcdicat -> https://github.com/mikeandwan/NetEbcdicat  [KNOWN]
+nimcrypt2 -> https://github.com/icyguider/Nimcrypt2  [KNOWN]
+nodexp -> https://github.com/0xedward/nodexp  [KNOWN]
+nomore403 -> https://github.com/devploit/nomore403  [KNOWN]
+on-the-fly -> https://github.com/on-the-fly/on-the-fly; https://github.com/on-the-fly/on-the-flytool; https://github.com/on-the-fly/on-the-flytools; https://github.com/on-the-fly/on-the-flyframework; https://github.com/on-the-fly/on-the-fly-tool; https://github.com/on-the-fly/on-the-fly-tools; https://github.com/xer0dayz/on-the-fly; https://github.com/s0md3v/on-the-fly
+pgw -> https://github.com/marcosRavelo/LTE-5G-Security-Tools  [KNOWN]
+phatso -> https://github.com/evilsocket/phatso  [KNOWN]
+protos-test-suite -> https://github.com/emrebdr/Protos-Test-Suite  [KNOWN]
+psikotik -> https://github.com/psikotik/psikotik; https://github.com/psikotik/psikotiktool; https://github.com/psikotik/psikotiktools; https://github.com/psikotik/psikotikframework; https://github.com/psikotik/psikotik-tool; https://github.com/psikotik/psikotik-tools; https://github.com/xer0dayz/psikotik; https://github.com/s0md3v/psikotik
+psk-crack -> [PART OF] reaver
+rbcd -> https://github.com/tothi/rbcd-attack  [KNOWN]
+rtpflood -> https://github.com/telefonica/RTPFlood  [KNOWN]
+s1ap-enum -> https://github.com/networkedsystems/NAPH  [KNOWN]
+s7scan -> https://github.com/yanhayes78/S7Scan  [KNOWN]
+scada-tools -> https://github.com/scada-tools/scada-tools; https://github.com/scada-tools/scada-toolstool; https://github.com/scada-tools/scada-toolstools; https://github.com/scada-tools/scada-toolsframework; https://github.com/scada-tools/scada-tools-tool; https://github.com/scada-tools/scada-tools-tools; https://github.com/xer0dayz/scada-tools; https://github.com/s0md3v/scada-tools
+sgw -> https://github.com/marcosRavelo/LTE-5G-Security-Tools  [KNOWN]
+sixnet-tools -> https://github.com/sixnet-tools/sixnet-tools; https://github.com/sixnet-tools/sixnet-toolstool; https://github.com/sixnet-tools/sixnet-toolstools; https://github.com/sixnet-tools/sixnet-toolsframework; https://github.com/sixnet-tools/sixnet-tools-tool; https://github.com/sixnet-tools/sixnet-tools-tools; https://github.com/xer0dayz/sixnet-tools; https://github.com/s0md3v/sixnet-tools
+snmpwn -> [PART OF] snmpwn
+ssh-auditor -> https://github.com/ncsa/ssh-auditor  [KNOWN]
+svcrack -> https://github.com/hempflower/svcrack  [KNOWN]
+svwar -> https://github.com/hempflower/svwar  [KNOWN]
+tpx-brute -> https://github.com/ChrisPritchard/tpx-brute  [KNOWN]
+udpfloodvlan -> https://github.com/udpfloodvlan/udpfloodvlan; https://github.com/udpfloodvlan/udpfloodvlantool; https://github.com/udpfloodvlan/udpfloodvlantools; https://github.com/udpfloodvlan/udpfloodvlanframework; https://github.com/udpfloodvlan/udpfloodvlan-tool; https://github.com/udpfloodvlan/udpfloodvlan-tools; https://github.com/xer0dayz/udpfloodvlan; https://github.com/s0md3v/udpfloodvlan
+wacker -> https://github.com/blaze-infosec/wacker  [KNOWN]
+wbk -> https://github.com/wbk/wbk; https://github.com/wbk/wbktool; https://github.com/wbk/wbktools; https://github.com/wbk/wbkframework; https://github.com/wbk/wbk-tool; https://github.com/wbk/wbk-tools; https://github.com/xer0dayz/wbk; https://github.com/s0md3v/wbk
+xxetimes -> https://github.com/xxetimes/xxetimes; https://github.com/xxetimes/xxetimestool; https://github.com/xxetimes/xxetimestools; https://github.com/xxetimes/xxetimesframework; https://github.com/xxetimes/xxetimes-tool; https://github.com/xxetimes/xxetimes-tools; https://github.com/xer0dayz/xxetimes; https://github.com/s0md3v/xxetimes
+zos-privesc -> https://github.com/ChrisPritchard/zos-privesc  [KNOWN]

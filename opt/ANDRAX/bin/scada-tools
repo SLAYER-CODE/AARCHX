@@ -1,0 +1,3 @@
+#!/bin/bash
+
+andrax-treecd /opt/ANDRAX/scada-tools

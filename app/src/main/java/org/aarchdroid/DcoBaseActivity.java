@@ -2,6 +2,7 @@ package org.aarchdroid;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -11,13 +12,17 @@ import android.widget.Toast;
 import android.util.Log;
 import android.util.DisplayMetrics;
 import org.aarchdroid.dragonterminal.bridge.Bridge;
+import org.json.JSONObject;
 import java.io.DataOutputStream;
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 public class DcoBaseActivity extends Activity {
     private static final String TAG = "DcoBaseActivity";
     private static Boolean hasRoot = null;
+    private static JSONObject toolManifest = null;
     private boolean layoutSet = false;
 
     @Override
@@ -26,6 +31,24 @@ public class DcoBaseActivity extends Activity {
         getWindow().setGravity(Gravity.CENTER);
         getWindow().setDimAmount(0.25f);
         setFinishOnTouchOutside(true);
+        loadManifest();
+    }
+
+    private void loadManifest() {
+        if (toolManifest != null) return;
+        try {
+            AssetManager am = getAssets();
+            InputStream is = am.open("tool-manifest.json");
+            byte[] buffer = new byte[is.available()];
+            is.read(buffer);
+            is.close();
+            String json = new String(buffer, StandardCharsets.UTF_8);
+            toolManifest = new JSONObject(json);
+            Log.d(TAG, "Manifest loaded: " + toolManifest.length() + " tools");
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to load manifest", e);
+            toolManifest = new JSONObject();
+        }
     }
 
     @Override
@@ -48,20 +71,68 @@ public class DcoBaseActivity extends Activity {
 
     public void onInstallClick(View v) {
         ViewGroup cardContent = (ViewGroup) v.getParent();
-        String tool = "";
+        String toolDisplayName = "";
         for (int i = 0; i < cardContent.getChildCount(); i++) {
             View child = cardContent.getChildAt(i);
             if (child instanceof TextView) {
                 String text = ((TextView) child).getText().toString().trim();
                 if (!text.isEmpty()) {
-                    tool = text.toLowerCase().replaceAll("[^a-z0-9-]", "").replaceAll("-+", "-");
+                    toolDisplayName = text;
                     break;
                 }
             }
         }
-        if (!tool.isEmpty()) {
-            run_hack_cmd("pacman -S " + tool);
+        if (!toolDisplayName.isEmpty()) {
+            String cmd = buildInstallCommand(toolDisplayName);
+            if (cmd != null) {
+                run_hack_cmd(cmd);
+            }
         }
+    }
+
+    private String buildInstallCommand(String displayName) {
+        String normalized = displayName.toLowerCase()
+                .replaceAll("[^a-z0-9-]", "-")
+                .replaceAll("-+", "-")
+                .replaceAll("^-|-$", "");
+
+        try {
+            if (toolManifest.has(normalized)) {
+                JSONObject entry = toolManifest.getJSONObject(normalized);
+                String source = entry.optString("source", "blackarch");
+                String pkg = entry.optString("pkg", normalized);
+                String url = entry.optString("url", "");
+                String repo = entry.optString("repo", "");
+                String note = entry.optString("note", "");
+
+                switch (source) {
+                    case "blackarch":
+                    case "arch":
+                        return "pacman -Sy --noconfirm " + pkg;
+                    case "pip":
+                        return "pip install " + pkg;
+                    case "gem":
+                        return "gem install " + pkg;
+                    case "go":
+                        return "go install " + pkg;
+                    case "github":
+                        return "sh /data/data/org.aarchdroid/files/scripts/install-tool.sh " + normalized;
+                    case "url":
+                        if (!url.isEmpty()) {
+                            return "mkdir -p /opt/" + normalized + " && wget -q \"" + url + "\" -O /opt/" + normalized + "/" + normalized + " && chmod +x /opt/" + normalized + "/" + normalized;
+                        }
+                        return "pacman -Sy --noconfirm " + normalized;
+                    case "ubuntu_only":
+                        Toast.makeText(this, note.isEmpty() ? "Solo disponible en Ubuntu" : note, Toast.LENGTH_LONG).show();
+                        return null;
+                    default:
+                        return "pacman -Sy --noconfirm " + normalized;
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error building install command", e);
+        }
+        return "pacman -Sy --noconfirm " + normalized;
     }
 
     public void run_hack_cmd(String cmd) {

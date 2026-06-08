@@ -1,0 +1,1906 @@
+{
+  "0d1n": {
+    "source": "blackarch",
+    "pkg": "0d1n",
+    "category": "website_hacking",
+    "available": true,
+    "description": "Web security tool to make fuzzing at HTTP inputs, made in C with libCurl."
+  },
+  "afl-fuzz": {
+    "source": "blackarch",
+    "pkg": "afl",
+    "category": "exploitation",
+    "available": true,
+    "description": "instrumentation-driven fuzzer for binary format"
+  },
+  "aircrack-ng": {
+    "source": "blackarch",
+    "pkg": "aircrack-ng",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "A GUI front-end to dd/dc3dd designed for easily creating forensic images."
+  },
+  "amass": {
+    "source": "blackarch",
+    "pkg": "amass",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "In-depth subdomain enumeration written in Go."
+  },
+  "amber": {
+    "source": "blackarch",
+    "pkg": "amber",
+    "category": "exploitation",
+    "available": true,
+    "description": "Reflective PE packer."
+  },
+  "apktool": {
+    "source": "arch",
+    "pkg": "apktool",
+    "category": "exploitation",
+    "available": true,
+    "description": "A tool for reverse engineering Android apk files."
+  },
+  "apple-bleee": {
+    "source": "blackarch",
+    "pkg": "apple-bleee",
+    "category": "macos_iphone",
+    "available": false,
+    "description": ""
+  },
+  "arjun": {
+    "source": "blackarch",
+    "pkg": "arjun",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "HTTP parameter discovery suite."
+  },
+  "aron": {
+    "source": "blackarch",
+    "pkg": "aron",
+    "category": "bug_bounty",
+    "available": false,
+    "description": ""
+  },
+  "arping": {
+    "source": "arch",
+    "pkg": "iputils",
+    "category": "packet_crafting",
+    "available": true,
+    "description": "ARP Ping from Thomas Habets (aka Debian arping)."
+  },
+  "backoori": {
+    "source": "blackarch",
+    "pkg": "backoori",
+    "category": "exploitation",
+    "available": true,
+    "description": "Tool aided persistence via Windows URI schemes abuse."
+  },
+  "bettercap": {
+    "source": "blackarch",
+    "pkg": "bettercap",
+    "category": "network_hacking",
+    "available": true,
+    "description": "Official Bettercap's Web UI."
+  },
+  "bgp-cli": {
+    "source": "blackarch",
+    "pkg": "bgp-cli",
+    "category": "network_hacking",
+    "available": false,
+    "description": ""
+  },
+  "bgp-leak": {
+    "source": "blackarch",
+    "pkg": "bgp-leak",
+    "category": "bug_bounty",
+    "available": false,
+    "description": ""
+  },
+  "bgp-md5crack": {
+    "source": "blackarch",
+    "pkg": "bgp-md5crack",
+    "category": "uncategorized",
+    "available": true,
+    "description": "RFC2385 password cracker"
+  },
+  "binwalk": {
+    "source": "blackarch",
+    "pkg": "binwalk",
+    "category": "exploitation",
+    "available": true,
+    "description": "Tool for searching a given binary image for embedded files"
+  },
+  "birp": {
+    "source": "blackarch",
+    "pkg": "birp",
+    "category": "mainframe",
+    "available": true,
+    "description": "A tool that will assist in the security assessment of mainframe applications served over TN3270."
+  },
+  "bit-twist": {
+    "source": "blackarch",
+    "pkg": "bit-twist",
+    "category": "uncategorized",
+    "available": true,
+    "description": "A simple yet powerful libpcap-based Ethernet packet generator. It is designed to complement tcpdump, which by itself has done a great job at capturing network traffic."
+  },
+  "bitb": {
+    "source": "blackarch",
+    "pkg": "bitb",
+    "category": "phishing",
+    "available": false,
+    "description": ""
+  },
+  "blescan": {
+    "source": "blackarch",
+    "pkg": "blescan",
+    "category": "wireless_hacking",
+    "available": false,
+    "description": ""
+  },
+  "blueranger": {
+    "source": "blackarch",
+    "pkg": "blueranger",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "A simple Bash script which uses Link Quality to locate Bluetooth device radios."
+  },
+  "bluesnarfer": {
+    "source": "blackarch",
+    "pkg": "bluesnarfer",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "A bluetooth attacking tool."
+  },
+  "bopscrk": {
+    "source": "blackarch",
+    "pkg": "bopscrk",
+    "category": "password_hacking",
+    "available": true,
+    "description": "Tool to generate smart wordlists, eg. based on lyrics."
+  },
+  "braa": {
+    "source": "blackarch",
+    "pkg": "braa",
+    "category": "information_gathering",
+    "available": true,
+    "description": "A mass snmp scanner."
+  },
+  "brakeman": {
+    "source": "blackarch",
+    "pkg": "brakeman",
+    "category": "exploitation",
+    "available": true,
+    "description": "A static analysis security vulnerability scanner for Ruby on Rails applications."
+  },
+  "btlejack": {
+    "source": "blackarch",
+    "pkg": "btlejack",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "Bluetooth Low Energy Swiss-army knife."
+  },
+  "btscanner": {
+    "source": "blackarch",
+    "pkg": "btscanner",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "Bluetooth device scanner."
+  },
+  "bully": {
+    "source": "blackarch",
+    "pkg": "bully",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "Retrieve WPA/WPA2 passphrase from a WPS enabled access point"
+  },
+  "cadaver": {
+    "source": "arch",
+    "pkg": "cadaver",
+    "category": "website_hacking",
+    "available": true,
+    "description": "Command-line WebDAV client for Unix"
+  },
+  "cameradar": {
+    "source": "blackarch",
+    "pkg": "cameradar",
+    "category": "exploitation",
+    "available": true,
+    "description": "Hacks its way into RTSP videosurveillance cameras."
+  },
+  "cansina": {
+    "source": "blackarch",
+    "pkg": "cansina",
+    "category": "uncategorized",
+    "available": true,
+    "description": "A python-based Web Content Discovery Tool."
+  },
+  "cantoolz": {
+    "source": "blackarch",
+    "pkg": "cantoolz",
+    "category": "exploitation",
+    "available": true,
+    "description": "Framework for black-box CAN network analysis."
+  },
+  "cdpsnarf": {
+    "source": "blackarch",
+    "pkg": "cdpsnarf",
+    "category": "network_hacking",
+    "available": true,
+    "description": "Cisco discovery protocol sniffer."
+  },
+  "cewl": {
+    "source": "blackarch",
+    "pkg": "cewl",
+    "category": "password_hacking",
+    "available": true,
+    "description": "A custom word list generator."
+  },
+  "cfr": {
+    "source": "blackarch",
+    "pkg": "cfr",
+    "category": "exploitation",
+    "available": true,
+    "description": "Another Java decompiler"
+  },
+  "chimera": {
+    "source": "blackarch",
+    "pkg": "chimera",
+    "category": "exploitation",
+    "available": true,
+    "description": "Lazy infinite streams with O(1) indexing and applications for memoization"
+  },
+  "chisel": {
+    "source": "blackarch",
+    "pkg": "chisel",
+    "category": "network_hacking",
+    "available": true,
+    "description": "A fast TCP tunnel over HTTP."
+  },
+  "cicspwn": {
+    "source": "blackarch",
+    "pkg": "cicspwn",
+    "category": "mainframe",
+    "available": false,
+    "description": ""
+  },
+  "cicsshot": {
+    "source": "blackarch",
+    "pkg": "cicsshot",
+    "category": "mainframe",
+    "available": false,
+    "description": ""
+  },
+  "cminer": {
+    "source": "blackarch",
+    "pkg": "cminer",
+    "category": "exploitation",
+    "available": true,
+    "description": "A tool for enumerating the code caves in PE files."
+  },
+  "cmseek": {
+    "source": "blackarch",
+    "pkg": "cmseek",
+    "category": "website_hacking",
+    "available": true,
+    "description": "CMS (Content Management Systems) Detection and Exploitation suite."
+  },
+  "commix": {
+    "source": "blackarch",
+    "pkg": "commix",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "Automated All-in-One OS Command Injection and Exploitation Tool."
+  },
+  "cowpatty": {
+    "source": "blackarch",
+    "pkg": "cowpatty",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "Wireless WPA/WPA2 PSK handshake cracking utility"
+  },
+  "crackle": {
+    "source": "blackarch",
+    "pkg": "crackle",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "Crack and decrypt BLE encryption."
+  },
+  "crlfuzz": {
+    "source": "blackarch",
+    "pkg": "crlfuzz",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "A fast tool to scan CRLF vulnerability written in Go."
+  },
+  "crunch": {
+    "source": "blackarch",
+    "pkg": "crunch",
+    "category": "password_hacking",
+    "available": true,
+    "description": "A wordlist generator for all combinations/permutations of a given character set."
+  },
+  "cryptomobile": {
+    "source": "blackarch",
+    "pkg": "cryptomobile",
+    "category": "voip_3g_4g",
+    "available": false,
+    "description": ""
+  },
+  "cstool": {
+    "source": "arch",
+    "pkg": "capstone",
+    "category": "exploitation",
+    "available": true,
+    "description": "A disassembly framework with the target of becoming the ultimate disasm engine for binary analysis and reversing in the security community."
+  },
+  "davtest": {
+    "source": "blackarch",
+    "pkg": "davtest",
+    "category": "uncategorized",
+    "available": true,
+    "description": "Tests WebDAV enabled servers by uploading test executable files, and then (optionally) uploading files which allow for command execution or other actions directly on the target."
+  },
+  "delorean": {
+    "source": "blackarch",
+    "pkg": "delorean",
+    "category": "website_hacking",
+    "available": true,
+    "description": "NTP Main-in-the-Middle tool."
+  },
+  "denial6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "uncategorized",
+    "available": true,
+    "description": "Complete tool set to attack the inherent protocol weaknesses of IPv6 and ICMP6"
+  },
+  "detect-sniffer6": {
+    "source": "blackarch",
+    "pkg": "detect-sniffer6",
+    "category": "information_gathering",
+    "available": true,
+    "description": "(extensible) Data Exfiltration Toolkit."
+  },
+  "dhcping": {
+    "source": "blackarch",
+    "pkg": "dhcping",
+    "category": "uncategorized",
+    "available": true,
+    "description": "A dynamic binary instrumentation tool."
+  },
+  "diameter-enum": {
+    "source": "blackarch",
+    "pkg": "diameter-enum",
+    "category": "voip_3g_4g",
+    "available": false,
+    "description": ""
+  },
+  "dig": {
+    "source": "arch",
+    "pkg": "bind-tools",
+    "category": "information_gathering",
+    "available": true,
+    "description": "A tool used to automate Linux swap analysis during post-exploitation or forensics."
+  },
+  "dns2tcp": {
+    "source": "blackarch",
+    "pkg": "dns2tcp",
+    "category": "network_hacking",
+    "available": true,
+    "description": "A tool for relaying TCP connections over DNS."
+  },
+  "dnschef": {
+    "source": "blackarch",
+    "pkg": "dnschef",
+    "category": "network_hacking",
+    "available": true,
+    "description": "A highly configurable DNS proxy for pentesters."
+  },
+  "dnsdict6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "information_gathering",
+    "available": true,
+    "description": "Complete tool set to attack the inherent protocol weaknesses of IPv6 and ICMP6"
+  },
+  "dnsdrdos": {
+    "source": "blackarch",
+    "pkg": "dnsdrdos",
+    "category": "stress_testing",
+    "available": true,
+    "description": "Proof of concept code for distributed DNS reflection DoS."
+  },
+  "dnsmap": {
+    "source": "blackarch",
+    "pkg": "dnsmap",
+    "category": "information_gathering",
+    "available": true,
+    "description": "Passive DNS network mapper."
+  },
+  "dnsteal": {
+    "source": "blackarch",
+    "pkg": "dnsteal",
+    "category": "exploitation",
+    "available": true,
+    "description": "DNS Exfiltration tool for stealthily sending files over DNS requests.."
+  },
+  "dnsx": {
+    "source": "blackarch",
+    "pkg": "dnsx",
+    "category": "information_gathering",
+    "available": true,
+    "description": "Fast and multi-purpose DNS toolkit allow to run multiple DNS queries of your choice with a list of user-supplied resolvers."
+  },
+  "docem": {
+    "source": "blackarch",
+    "pkg": "docem",
+    "category": "exploitation",
+    "available": true,
+    "description": "Uility to embed XXE and XSS payloads in docx,odt,pptx,etc (OXML_XEE on steroids)."
+  },
+  "doona": {
+    "source": "blackarch",
+    "pkg": "doona",
+    "category": "exploitation",
+    "available": true,
+    "description": "A fork of the Bruteforce Exploit Detector Tool (BED)."
+  },
+  "dos-new-ip6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "uncategorized",
+    "available": true,
+    "description": "Complete tool set to attack the inherent protocol weaknesses of IPv6 and ICMP6"
+  },
+  "dotdotpwn": {
+    "source": "blackarch",
+    "pkg": "dotdotpwn",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "The Transversal Directory Fuzzer."
+  },
+  "eap-md5-pass": {
+    "source": "blackarch",
+    "pkg": "eapmd5pass",
+    "category": "password_hacking",
+    "available": true,
+    "description": "An implementation of an offline dictionary attack against the EAP-MD5 protocol."
+  },
+  "eigrp-cli": {
+    "source": "blackarch",
+    "pkg": "eigrp-cli",
+    "category": "network_hacking",
+    "available": true,
+    "description": "A full-cpp written tool that aims to find ROP sequences in PE/Elf/Mach-O x86/x64 binaries."
+  },
+  "enodeb": {
+    "source": "blackarch",
+    "pkg": "enodeb",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "enumiax": {
+    "source": "blackarch",
+    "pkg": "enumiax",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "An IAX enumerator."
+  },
+  "evil-ssdp": {
+    "source": "blackarch",
+    "pkg": "evil-ssdp",
+    "category": "exploitation",
+    "available": true,
+    "description": "Spoof SSDP replies to phish for NetNTLM challenge/response on a network."
+  },
+  "evil-winrm": {
+    "source": "blackarch",
+    "pkg": "evil-winrm",
+    "category": "c2_rat",
+    "available": true,
+    "description": "The ultimate WinRM shell for hacking/pentesting."
+  },
+  "evilginx2": {
+    "source": "arch",
+    "pkg": "evilginx",
+    "category": "phishing",
+    "available": true,
+    "description": "Man-in-the-middle attack framework used for phishing login credentials"
+  },
+  "evilgrade": {
+    "source": "blackarch",
+    "pkg": "evilgrade",
+    "category": "exploitation",
+    "available": true,
+    "description": "Modular framework that takes advantage of poor upgrade implementations by injecting fake updates."
+  },
+  "exe2hex": {
+    "source": "blackarch",
+    "pkg": "exe2hex",
+    "category": "c2_rat",
+    "available": true,
+    "description": "Inline file transfer using in-built Windows tools (DEBUG.exe or PowerShell)."
+  },
+  "expliot": {
+    "source": "blackarch",
+    "pkg": "expliot",
+    "category": "ics_scada_iot",
+    "available": false,
+    "description": ""
+  },
+  "fake-advertise6": {
+    "source": "blackarch",
+    "pkg": "fake-advertise6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "fake-dhcps6": {
+    "source": "blackarch",
+    "pkg": "fake-dhcps6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "fake-dns6d": {
+    "source": "blackarch",
+    "pkg": "fake-dns6d",
+    "category": "uncategorized",
+    "available": true,
+    "description": "A regular-expression based python MITM DNS server with correct DNS request passthrough and \"Not Found\" responses."
+  },
+  "fake-dnsupdate6": {
+    "source": "blackarch",
+    "pkg": "fake-dnsupdate6",
+    "category": "uncategorized",
+    "available": true,
+    "description": "A regular-expression based python MITM DNS server with correct DNS request passthrough and \"Not Found\" responses."
+  },
+  "fake-mld26": {
+    "source": "blackarch",
+    "pkg": "fake-mld26",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "fake-mld6": {
+    "source": "blackarch",
+    "pkg": "fake-mld6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "fake-mldrouter6": {
+    "source": "blackarch",
+    "pkg": "fake-mldrouter6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "fake-router26": {
+    "source": "blackarch",
+    "pkg": "fake-router26",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "fake-router6": {
+    "source": "blackarch",
+    "pkg": "fake-router6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "fake-solicitate6": {
+    "source": "blackarch",
+    "pkg": "fake-solicitate6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "ffuf": {
+    "source": "blackarch",
+    "pkg": "ffuf",
+    "category": "website_hacking",
+    "available": true,
+    "description": "Fast web fuzzer written in Go."
+  },
+  "fiked": {
+    "source": "blackarch",
+    "pkg": "fiked",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "Fake IDE daemon."
+  },
+  "find-all-links": {
+    "source": "blackarch",
+    "pkg": "find-all-links",
+    "category": "bug_bounty",
+    "available": false,
+    "description": ""
+  },
+  "flasm": {
+    "source": "blackarch",
+    "pkg": "flasm",
+    "category": "exploitation",
+    "available": true,
+    "description": "Disassembler tool for SWF bytecode."
+  },
+  "flood-advertise6": {
+    "source": "blackarch",
+    "pkg": "flood-advertise6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "flood-dhcpc6": {
+    "source": "blackarch",
+    "pkg": "flood-dhcpc6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "flood-mld26": {
+    "source": "blackarch",
+    "pkg": "flood-mld26",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "flood-mld6": {
+    "source": "blackarch",
+    "pkg": "flood-mld6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "flood-mldrouter6": {
+    "source": "blackarch",
+    "pkg": "flood-mldrouter6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "flood-redir6": {
+    "source": "blackarch",
+    "pkg": "flood-redir6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "flood-router26": {
+    "source": "blackarch",
+    "pkg": "flood-router26",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "flood-router6": {
+    "source": "blackarch",
+    "pkg": "flood-router6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "flood-rs6": {
+    "source": "blackarch",
+    "pkg": "flood-rs6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "flood-solicitate6": {
+    "source": "blackarch",
+    "pkg": "flood-solicitate6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "flood-unreach6": {
+    "source": "blackarch",
+    "pkg": "flood-unreach6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "forbidden": {
+    "source": "blackarch",
+    "pkg": "forbidden",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "Patch built-in python objects"
+  },
+  "fragmentation6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "uncategorized",
+    "available": true,
+    "description": "Pseudorandom number sequence test."
+  },
+  "frida": {
+    "source": "arch",
+    "pkg": "frida",
+    "category": "macos_iphone",
+    "available": true,
+    "description": "Frida.re based RunPE (and MapViewOfSection) extraction tool."
+  },
+  "fuzz-ip6": {
+    "source": "blackarch",
+    "pkg": "fuzz-ip6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "gobuster": {
+    "source": "blackarch",
+    "pkg": "gobuster",
+    "category": "website_hacking",
+    "available": true,
+    "description": "Find emails of a person and return info associated with them."
+  },
+  "godoh": {
+    "source": "blackarch",
+    "pkg": "godoh",
+    "category": "c2_rat",
+    "available": false,
+    "description": ""
+  },
+  "gophish": {
+    "source": "blackarch",
+    "pkg": "gophish",
+    "category": "phishing",
+    "available": true,
+    "description": "Open-Source Phishing Framework."
+  },
+  "gtp-scan": {
+    "source": "blackarch",
+    "pkg": "gtp-scan",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "A small python script that scans for GTP (GPRS tunneling protocol) speaking hosts."
+  },
+  "hashboy": {
+    "source": "blackarch",
+    "pkg": "hashboy",
+    "category": "password_hacking",
+    "available": false,
+    "description": ""
+  },
+  "hashcat": {
+    "source": "blackarch",
+    "pkg": "hashcat",
+    "category": "password_hacking",
+    "available": true,
+    "description": "Worlds fastest WPA cracker with dictionary mutation engine."
+  },
+  "hcxdumptool": {
+    "source": "blackarch",
+    "pkg": "hcxdumptool",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "Small tool to capture packets from wlan devices"
+  },
+  "hexinject": {
+    "source": "blackarch",
+    "pkg": "hexinject",
+    "category": "packet_crafting",
+    "available": true,
+    "description": "A very versatile packet injector and sniffer that provides a command-line framework for raw network access."
+  },
+  "homepwn": {
+    "source": "blackarch",
+    "pkg": "homepwn",
+    "category": "ics_scada_iot",
+    "available": true,
+    "description": "Swiss Army Knife for Pentesting of IoT Devices."
+  },
+  "htshells": {
+    "source": "blackarch",
+    "pkg": "htshells",
+    "category": "website_hacking",
+    "available": true,
+    "description": "Self contained web shells and other attacks via .htaccess files."
+  },
+  "httpx": {
+    "source": "blackarch",
+    "pkg": "httpx",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "A fast and multi-purpose HTTP toolkit allow to run multiple probers using retryablehttp library."
+  },
+  "hydra": {
+    "source": "blackarch",
+    "pkg": "hydra",
+    "category": "password_hacking",
+    "available": true,
+    "description": "A Bluetooth device discovery service built on top of the bluez library."
+  },
+  "iaxflood": {
+    "source": "blackarch",
+    "pkg": "iaxflood",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "IAX flooder."
+  },
+  "iblessing": {
+    "source": "blackarch",
+    "pkg": "iblessing",
+    "category": "macos_iphone",
+    "available": true,
+    "description": "High-quality, full-featured hex editor."
+  },
+  "ike-scan": {
+    "source": "blackarch",
+    "pkg": "ike-scan",
+    "category": "scanning",
+    "available": true,
+    "description": "A tool that uses IKE protocol to discover, fingerprint and test IPSec VPN servers."
+  },
+  "ilo4-toolbox": {
+    "source": "blackarch",
+    "pkg": "ilo4-toolbox",
+    "category": "exploitation",
+    "available": true,
+    "description": "Toolbox for HPE iLO4 analysis."
+  },
+  "imagejs": {
+    "source": "blackarch",
+    "pkg": "imagejs",
+    "category": "website_hacking",
+    "available": true,
+    "description": "Small tool to package javascript into a valid image file."
+  },
+  "implementation6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "information_gathering",
+    "available": true,
+    "description": "Pseudorandom number sequence test."
+  },
+  "interactsh": {
+    "source": "blackarch",
+    "pkg": "interactsh",
+    "category": "exploitation",
+    "available": true,
+    "description": "Open-Source Solution for Out of band Data Extraction."
+  },
+  "intrace": {
+    "source": "blackarch",
+    "pkg": "intrace",
+    "category": "information_gathering",
+    "available": true,
+    "description": "Traceroute-like application piggybacking on existing TCP connections."
+  },
+  "inverse-lookup6": {
+    "source": "blackarch",
+    "pkg": "inverse-lookup6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "inviteflood": {
+    "source": "blackarch",
+    "pkg": "inviteflood",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "Flood a device with INVITE requests."
+  },
+  "ipcalc": {
+    "source": "arch",
+    "pkg": "ipcalc",
+    "category": "network_hacking",
+    "available": true,
+    "description": "Calculates IP broadcast, network, Cisco wildcard mask, and host ranges"
+  },
+  "ipdecap": {
+    "source": "blackarch",
+    "pkg": "ipdecap",
+    "category": "network_hacking",
+    "available": true,
+    "description": "Can decapsulate traffic encapsulated within GRE, IPIP, 6in4, ESP (ipsec) protocols, and can also remove IEEE 802.1Q (virtual lan) header."
+  },
+  "isip": {
+    "source": "blackarch",
+    "pkg": "isip",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "Interactive sip toolkit for packet manipulations, sniffing, man in the middle attacks, fuzzing, simulating of dos attacks."
+  },
+  "ismtp": {
+    "source": "blackarch",
+    "pkg": "ismtp",
+    "category": "information_gathering",
+    "available": false,
+    "description": ""
+  },
+  "jaeles": {
+    "source": "blackarch",
+    "pkg": "jaeles",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "The Swiss Army knife for automated Web Application Testing."
+  },
+  "john-the-ripper": {
+    "source": "arch",
+    "pkg": "john",
+    "category": "uncategorized",
+    "available": true,
+    "description": "GUI for John the Ripper."
+  },
+  "js-alert": {
+    "source": "blackarch",
+    "pkg": "js-alert",
+    "category": "bug_bounty",
+    "available": false,
+    "description": ""
+  },
+  "jwt-crack": {
+    "source": "blackarch",
+    "pkg": "jwt-crack",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "JWT brute force cracker written in C."
+  },
+  "jwt-tool": {
+    "source": "blackarch",
+    "pkg": "jwt-tool",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "Toolkit for validating, forging and cracking JWTs (JSON Web Tokens)."
+  },
+  "kadimus": {
+    "source": "blackarch",
+    "pkg": "kadimus",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "LFI Scan & Exploit Tool."
+  },
+  "katana": {
+    "source": "blackarch",
+    "pkg": "katana",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "A framework that seekss to unite general auditing tools, which are general pentesting tools (Network,Web,Desktop and others)."
+  },
+  "kill-router6": {
+    "source": "blackarch",
+    "pkg": "kill-router6",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "ldp-cli": {
+    "source": "blackarch",
+    "pkg": "ldp-cli",
+    "category": "network_hacking",
+    "available": false,
+    "description": ""
+  },
+  "ligolo-ng": {
+    "source": "blackarch",
+    "pkg": "ligolo-ng",
+    "category": "network_hacking",
+    "available": true,
+    "description": "An advanced, yet simple, tunneling tool that uses a TUN interface."
+  },
+  "lulzbuster": {
+    "source": "blackarch",
+    "pkg": "lulzbuster",
+    "category": "website_hacking",
+    "available": true,
+    "description": "A multithreaded, very fast and smart HTTP(S) directory and file bruteforcer written in C on top of libcurl."
+  },
+  "mainframe-bruter": {
+    "source": "blackarch",
+    "pkg": "mainframe-bruter",
+    "category": "mainframe",
+    "available": false,
+    "description": ""
+  },
+  "maintp": {
+    "source": "blackarch",
+    "pkg": "maintp",
+    "category": "mainframe",
+    "available": false,
+    "description": ""
+  },
+  "maskprocessor": {
+    "source": "blackarch",
+    "pkg": "maskprocessor",
+    "category": "password_hacking",
+    "available": true,
+    "description": "A High-Performance word generator with a per-position configurable charset."
+  },
+  "masscan": {
+    "source": "blackarch",
+    "pkg": "masscan",
+    "category": "scanning",
+    "available": true,
+    "description": "Masscan integrated with Shodan API."
+  },
+  "massdns": {
+    "source": "blackarch",
+    "pkg": "massdns",
+    "category": "information_gathering",
+    "available": true,
+    "description": "A high-performance DNS stub resolver in C."
+  },
+  "mbtget": {
+    "source": "blackarch",
+    "pkg": "mbtget",
+    "category": "ics_scada_iot",
+    "available": false,
+    "description": ""
+  },
+  "mdk4": {
+    "source": "blackarch",
+    "pkg": "mdk4",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "A tool to exploit common IEEE 802.11 protocol weaknesses"
+  },
+  "medusa": {
+    "source": "blackarch",
+    "pkg": "medusa",
+    "category": "password_hacking",
+    "available": true,
+    "description": "Speedy, massively parallel and modular login brute-forcer for network"
+  },
+  "merlinc2": {
+    "source": "blackarch",
+    "pkg": "merlin",
+    "category": "c2_rat",
+    "available": true,
+    "description": "Merlin is a cross-platform post-exploitation HTTP/2 Command & Control server and agent written in golang."
+  },
+  "metasploit-framework": {
+    "source": "arch",
+    "pkg": "metasploit",
+    "category": "uncategorized",
+    "available": true,
+    "description": "db_autopwn plugin of metasploit."
+  },
+  "mfdos": {
+    "source": "blackarch",
+    "pkg": "mf-dos",
+    "category": "mainframe",
+    "available": false,
+    "description": ""
+  },
+  "mfoc": {
+    "source": "blackarch",
+    "pkg": "mfoc",
+    "category": "password_hacking",
+    "available": true,
+    "description": "MiFare Classic Universal toolKit"
+  },
+  "mfsniffer": {
+    "source": "blackarch",
+    "pkg": "mfsniffer",
+    "category": "mainframe",
+    "available": true,
+    "description": "A python script for capturing unencrypted TSO login credentials."
+  },
+  "mfterm": {
+    "source": "blackarch",
+    "pkg": "mfterm",
+    "category": "wireless_hacking",
+    "available": false,
+    "description": ""
+  },
+  "miranda": {
+    "source": "blackarch",
+    "pkg": "miranda",
+    "category": "network_hacking",
+    "available": true,
+    "description": "A Python-based Universal Plug-N-Play client application designed to discover, query and interact with UPNP devices."
+  },
+  "mitm6": {
+    "source": "blackarch",
+    "pkg": "mitm6",
+    "category": "network_hacking",
+    "available": true,
+    "description": "Pwning IPv4 via IPv6."
+  },
+  "mitmproxy": {
+    "source": "arch",
+    "pkg": "mitmproxy",
+    "category": "website_hacking",
+    "available": true,
+    "description": "A simple yet effective python3 script to perform DNS spoofing via ARP poisoning."
+  },
+  "mme": {
+    "source": "blackarch",
+    "pkg": "mme",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "Extract all comments from the specified URL resource."
+  },
+  "mme-enodeb": {
+    "source": "blackarch",
+    "pkg": "mmenodeb",
+    "category": "voip_3g_4g",
+    "available": false,
+    "description": ""
+  },
+  "modlishka": {
+    "source": "blackarch",
+    "pkg": "modlishka",
+    "category": "phishing",
+    "available": true,
+    "description": "A powerful and flexible HTTP reverse proxy."
+  },
+  "modscan": {
+    "source": "blackarch",
+    "pkg": "modscan",
+    "category": "ics_scada_iot",
+    "available": true,
+    "description": "A new tool designed to map a SCADA MODBUS TCP based network."
+  },
+  "monsoon": {
+    "source": "blackarch",
+    "pkg": "monsoon",
+    "category": "website_hacking",
+    "available": true,
+    "description": "A fast HTTP enumerator that allows you to execute a large number of HTTP requests."
+  },
+  "mpls-redirect": {
+    "source": "blackarch",
+    "pkg": "mpls-redirect",
+    "category": "network_hacking",
+    "available": true,
+    "description": "Perform subdomain enumeration, endpoint recognition, and more."
+  },
+  "mpls-tun": {
+    "source": "blackarch",
+    "pkg": "mpls-tun",
+    "category": "network_hacking",
+    "available": false,
+    "description": ""
+  },
+  "narthex": {
+    "source": "blackarch",
+    "pkg": "narthex",
+    "category": "password_hacking",
+    "available": true,
+    "description": "Modular personalized dictionary generator."
+  },
+  "nbtscan": {
+    "source": "blackarch",
+    "pkg": "nbtscan",
+    "category": "scanning",
+    "available": true,
+    "description": "Scan networks searching for NetBIOS information"
+  },
+  "ncat": {
+    "source": "blackarch",
+    "pkg": "ncat",
+    "category": "uncategorized",
+    "available": true,
+    "description": "Bind and reverse shell handler with FW/IDS/IPS evasion, self-inject and port-scanning."
+  },
+  "ncrack": {
+    "source": "blackarch",
+    "pkg": "ncrack",
+    "category": "password_hacking",
+    "available": true,
+    "description": "Bruteforce the Android Passcode given the hash and salt."
+  },
+  "nemesis": {
+    "source": "blackarch",
+    "pkg": "nemesis",
+    "category": "packet_crafting",
+    "available": true,
+    "description": "A command-line network packet crafting and injection utility."
+  },
+  "netdiscover": {
+    "source": "blackarch",
+    "pkg": "netdiscover",
+    "category": "scanning",
+    "available": true,
+    "description": "An active/passive address reconnaissance tool, mainly developed for those wireless networks without dhcp server, when you are wardriving. It can be also used on hub/switched networks."
+  },
+  "netebcdicat": {
+    "source": "blackarch",
+    "pkg": "netebcdicat",
+    "category": "mainframe",
+    "available": false,
+    "description": ""
+  },
+  "netmask": {
+    "source": "arch",
+    "pkg": "netmask",
+    "category": "network_hacking",
+    "available": true,
+    "description": "Helps determine network masks"
+  },
+  "nimcrypt2": {
+    "source": "blackarch",
+    "pkg": "nimcrypt2",
+    "category": "c2_rat",
+    "available": false,
+    "description": ""
+  },
+  "nmap": {
+    "source": "blackarch",
+    "pkg": "nmap",
+    "category": "scanning",
+    "available": true,
+    "description": "Map organization network ranges using ASN information."
+  },
+  "nodexp": {
+    "source": "blackarch",
+    "pkg": "nodexp",
+    "category": "bug_bounty",
+    "available": false,
+    "description": ""
+  },
+  "nomore403": {
+    "source": "blackarch",
+    "pkg": "nomore403",
+    "category": "bug_bounty",
+    "available": false,
+    "description": ""
+  },
+  "nping": {
+    "source": "blackarch",
+    "pkg": "nping",
+    "category": "packet_crafting",
+    "available": true,
+    "description": "A dynamic binary instrumentation tool."
+  },
+  "ntlmrecon": {
+    "source": "blackarch",
+    "pkg": "ntlmrecon",
+    "category": "exploitation",
+    "available": true,
+    "description": "A tool to enumerate information from NTLM authentication enabled web endpoints."
+  },
+  "nuclei": {
+    "source": "blackarch",
+    "pkg": "nuclei",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "A fast tool for configurable targeted scanning based on templates offering massive extensibility and ease of use."
+  },
+  "objection": {
+    "source": "blackarch",
+    "pkg": "objection",
+    "category": "macos_iphone",
+    "available": true,
+    "description": "Instrumented Mobile Pentest Framework."
+  },
+  "on-the-fly": {
+    "source": "blackarch",
+    "pkg": "on-the-fly",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "onesixtyone": {
+    "source": "blackarch",
+    "pkg": "onesixtyone",
+    "category": "information_gathering",
+    "available": true,
+    "description": "An SNMP scanner that sends multiple SNMP requests to multiple IP addresses"
+  },
+  "owl": {
+    "source": "blackarch",
+    "pkg": "owl",
+    "category": "macos_iphone",
+    "available": true,
+    "description": "A Python Web path scanner tool."
+  },
+  "parasite6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "uncategorized",
+    "available": true,
+    "description": "Complete tool set to attack the inherent protocol weaknesses of IPv6 and ICMP6"
+  },
+  "patator": {
+    "source": "blackarch",
+    "pkg": "patator",
+    "category": "password_hacking",
+    "available": true,
+    "description": "A multi-purpose bruteforcer."
+  },
+  "payloadmask": {
+    "source": "blackarch",
+    "pkg": "payloadmask",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "Web Payload list editor to use techniques to try bypass web application firewall."
+  },
+  "pgw": {
+    "source": "blackarch",
+    "pkg": "pgw",
+    "category": "voip_3g_4g",
+    "available": false,
+    "description": ""
+  },
+  "phatso": {
+    "source": "blackarch",
+    "pkg": "phatso",
+    "category": "mainframe",
+    "available": false,
+    "description": ""
+  },
+  "phpsploit": {
+    "source": "blackarch",
+    "pkg": "phpsploit",
+    "category": "c2_rat",
+    "available": true,
+    "description": "Stealth post-exploitation framework."
+  },
+  "pipal": {
+    "source": "blackarch",
+    "pkg": "pipal",
+    "category": "password_hacking",
+    "available": true,
+    "description": "A password analyser."
+  },
+  "pixiewps": {
+    "source": "blackarch",
+    "pkg": "pixiewps",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "Offline bruteforce of the WPS pin exploiting the low or non-existing entropy of some APs"
+  },
+  "plcscan": {
+    "source": "blackarch",
+    "pkg": "plcscan",
+    "category": "ics_scada_iot",
+    "available": true,
+    "description": "This is a tool written in Python that will scan for PLC devices over s7comm or modbus protocols."
+  },
+  "powershell": {
+    "source": "arch",
+    "pkg": "powershell",
+    "category": "exploitation",
+    "available": true,
+    "description": "A simple tool for using a PowerShell downgrade attack and inject shellcode straight into memory."
+  },
+  "pret": {
+    "source": "blackarch",
+    "pkg": "pret",
+    "category": "exploitation",
+    "available": true,
+    "description": "Printer Exploitation Toolkit - The tool that made dumpster diving obsolete."
+  },
+  "protos-test-suite": {
+    "source": "blackarch",
+    "pkg": "protos-test-suite",
+    "category": "voip_3g_4g",
+    "available": false,
+    "description": ""
+  },
+  "psikotik": {
+    "source": "blackarch",
+    "pkg": "psikotik",
+    "category": "mainframe",
+    "available": false,
+    "description": ""
+  },
+  "psk-crack": {
+    "source": "blackarch",
+    "pkg": "psk-crack",
+    "category": "password_hacking",
+    "available": false,
+    "description": ""
+  },
+  "pwndrop": {
+    "source": "blackarch",
+    "pkg": "pwndrop",
+    "category": "exploitation",
+    "available": true,
+    "description": "Self-deployable file hosting service for red teamers, allowing to easily upload and share payloads over HTTP and WebDAV."
+  },
+  "qrgen": {
+    "source": "blackarch",
+    "pkg": "qrgen",
+    "category": "exploitation",
+    "available": true,
+    "description": "Simple script for generating Malformed QRCodes."
+  },
+  "qrljacker": {
+    "source": "blackarch",
+    "pkg": "qrljacker",
+    "category": "exploitation",
+    "available": true,
+    "description": "QRLJacker is a highly customizable exploitation framework to demonstrate \"QRLJacking Attack Vector\"."
+  },
+  "randicmp6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "uncategorized",
+    "available": true,
+    "description": "Complete tool set to attack the inherent protocol weaknesses of IPv6 and ICMP6"
+  },
+  "rbcd": {
+    "source": "blackarch",
+    "pkg": "rbcd",
+    "category": "exploitation",
+    "available": false,
+    "description": ""
+  },
+  "reaver": {
+    "source": "blackarch",
+    "pkg": "reaver",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "Brute force attack against Wifi Protected Setup"
+  },
+  "redir6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "uncategorized",
+    "available": true,
+    "description": "Complete tool set to attack the inherent protocol weaknesses of IPv6 and ICMP6"
+  },
+  "responder": {
+    "source": "blackarch",
+    "pkg": "responder",
+    "category": "network_hacking",
+    "available": true,
+    "description": "A LLMNR and NBT-NS poisoner, with built-in HTTP/SMB/MSSQL/FTP/LDAP rogue authentication server supporting NTLMv1/NTLMv2/LMv2 (multirelay version)."
+  },
+  "rsmurf6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "uncategorized",
+    "available": true,
+    "description": "Complete tool set to attack the inherent protocol weaknesses of IPv6 and ICMP6"
+  },
+  "rtpbreak": {
+    "source": "blackarch",
+    "pkg": "rtpbreak",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "Detects, reconstructs and analyzes any RTP session."
+  },
+  "rtpflood": {
+    "source": "blackarch",
+    "pkg": "rtpflood",
+    "category": "voip_3g_4g",
+    "available": false,
+    "description": ""
+  },
+  "rtpinsertsound": {
+    "source": "blackarch",
+    "pkg": "rtpinsertsound",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "A dynamic binary instrumentation tool."
+  },
+  "s1ap-enum": {
+    "source": "blackarch",
+    "pkg": "s1ap-enum",
+    "category": "voip_3g_4g",
+    "available": false,
+    "description": ""
+  },
+  "s3scanner": {
+    "source": "blackarch",
+    "pkg": "s3scanner",
+    "category": "uncategorized",
+    "available": true,
+    "description": "A tool to find open S3 buckets in AWS or other cloud providers."
+  },
+  "s7scan": {
+    "source": "blackarch",
+    "pkg": "s7scan",
+    "category": "ics_scada_iot",
+    "available": false,
+    "description": ""
+  },
+  "scada-tools": {
+    "source": "blackarch",
+    "pkg": "scada-tools",
+    "category": "ics_scada_iot",
+    "available": false,
+    "description": ""
+  },
+  "scapy": {
+    "source": "blackarch",
+    "pkg": "scapy",
+    "category": "packet_crafting",
+    "available": true,
+    "description": "Powerful interactive packet manipulation program written in Python (tools)"
+  },
+  "sctpscan": {
+    "source": "blackarch",
+    "pkg": "sctpscan",
+    "category": "scanning",
+    "available": true,
+    "description": "A network scanner for discovery and security."
+  },
+  "sdnpwn": {
+    "source": "blackarch",
+    "pkg": "sdnpwn",
+    "category": "network_hacking",
+    "available": true,
+    "description": "An SDN penetration testing toolkit."
+  },
+  "sfuzz": {
+    "source": "blackarch",
+    "pkg": "sfuzz",
+    "category": "exploitation",
+    "available": true,
+    "description": "A simple fuzzer."
+  },
+  "sgn": {
+    "source": "blackarch",
+    "pkg": "sgn",
+    "category": "exploitation",
+    "available": true,
+    "description": "Shikata ga nai encoder ported into go with several improvements."
+  },
+  "sgw": {
+    "source": "blackarch",
+    "pkg": "sgw",
+    "category": "voip_3g_4g",
+    "available": false,
+    "description": ""
+  },
+  "shuffledns": {
+    "source": "blackarch",
+    "pkg": "shuffledns",
+    "category": "information_gathering",
+    "available": true,
+    "description": "A wrapper around massdns written in GO."
+  },
+  "singularity": {
+    "source": "blackarch",
+    "pkg": "singularity",
+    "category": "exploitation",
+    "available": true,
+    "description": "Endgame: Singularity - simulation of true AI"
+  },
+  "sipcracker": {
+    "source": "blackarch",
+    "pkg": "sipcracker",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "A SIP protocol login cracker."
+  },
+  "sippts": {
+    "source": "blackarch",
+    "pkg": "sippts",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "Set of tools to audit SIP based VoIP Systems."
+  },
+  "sipsak": {
+    "source": "blackarch",
+    "pkg": "sipsak",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "A small command line tool for developers and administrators of Session Initiation Protocol (SIP) applications."
+  },
+  "sixnet-tools": {
+    "source": "blackarch",
+    "pkg": "sixnet-tools",
+    "category": "ics_scada_iot",
+    "available": false,
+    "description": ""
+  },
+  "slowhttptest": {
+    "source": "blackarch",
+    "pkg": "slowhttptest",
+    "category": "stress_testing",
+    "available": true,
+    "description": "Highly configurable tool that simulates some Application Layer Denial of Service (DoS) attacks"
+  },
+  "smap": {
+    "source": "blackarch",
+    "pkg": "smap",
+    "category": "exploitation",
+    "available": true,
+    "description": "Shellcode mapper - Handy tool for shellcode analysis."
+  },
+  "smod": {
+    "source": "blackarch",
+    "pkg": "smod",
+    "category": "ics_scada_iot",
+    "available": true,
+    "description": "A modular framework with every kind of diagnostic and offensive feature you could need in order to pentest modbus protocol."
+  },
+  "smtp-user-enum": {
+    "source": "blackarch",
+    "pkg": "smtp-user-enum",
+    "category": "information_gathering",
+    "available": true,
+    "description": "Username guessing tool primarily for use against the default Solaris SMTP service. Can use either EXPN, VRFY or RCPT TO."
+  },
+  "smuggler": {
+    "source": "blackarch",
+    "pkg": "smuggler",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "An HTTP Request Smuggling / Desync testing tool written in Python 3."
+  },
+  "smurf6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "uncategorized",
+    "available": true,
+    "description": "Complete tool set to attack the inherent protocol weaknesses of IPv6 and ICMP6"
+  },
+  "snmpwn": {
+    "source": "blackarch",
+    "pkg": "snmpwn",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "socat": {
+    "source": "arch",
+    "pkg": "socat",
+    "category": "network_hacking",
+    "available": true,
+    "description": "Multipurpose relay"
+  },
+  "spiderfoot": {
+    "source": "blackarch",
+    "pkg": "spiderfoot",
+    "category": "information_gathering",
+    "available": true,
+    "description": "The Open Source Footprinting Tool."
+  },
+  "spooftooph": {
+    "source": "blackarch",
+    "pkg": "spooftooph",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "Designed to automate spoofing or cloning Bluetooth device Name, Class, and Address. Cloning this information effectively allows Bluetooth device to hide in plain sight."
+  },
+  "sqlmap": {
+    "source": "blackarch",
+    "pkg": "sqlmap",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "Automated Mongo database and NoSQL web application exploitation tool"
+  },
+  "ssh-auditor": {
+    "source": "blackarch",
+    "pkg": "ssh-auditor",
+    "category": "scanning",
+    "available": false,
+    "description": ""
+  },
+  "subfinder": {
+    "source": "blackarch",
+    "pkg": "subfinder",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "Modular subdomain discovery tool that can discover massive amounts of valid subdomains for any target."
+  },
+  "svcrack": {
+    "source": "blackarch",
+    "pkg": "svcrack",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "svmap": {
+    "source": "blackarch",
+    "pkg": "svmap",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "A Vulnerability-Exploit desktop finder."
+  },
+  "svwar": {
+    "source": "blackarch",
+    "pkg": "svwar",
+    "category": "uncategorized",
+    "available": false,
+    "description": ""
+  },
+  "swaks": {
+    "source": "blackarch",
+    "pkg": "swaks",
+    "category": "information_gathering",
+    "available": true,
+    "description": "Swiss Army Knife SMTP; Command line SMTP testing, including TLS and AUTH"
+  },
+  "termineter": {
+    "source": "blackarch",
+    "pkg": "termineter",
+    "category": "ics_scada_iot",
+    "available": true,
+    "description": "Smart meter testing framework."
+  },
+  "thcping6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "uncategorized",
+    "available": true,
+    "description": "A dynamic binary instrumentation tool."
+  },
+  "tpx-brute": {
+    "source": "blackarch",
+    "pkg": "tpx-brute",
+    "category": "mainframe",
+    "available": false,
+    "description": ""
+  },
+  "trace6": {
+    "source": "blackarch",
+    "pkg": "thc-ipv6",
+    "category": "uncategorized",
+    "available": true,
+    "description": "A simple yet powerful VoIP Corporate Directory enumeration tool that mimics the behavior of an IP Phone in order to download the name and extension entries that a given phone can display on its screen interface."
+  },
+  "tshark": {
+    "source": "arch",
+    "pkg": "tshark",
+    "category": "network_hacking",
+    "available": true,
+    "description": "An open-source UNIX backdoor that compiles on all variants, has full pty support, and uses strong crypto for communication."
+  },
+  "tshocker": {
+    "source": "blackarch",
+    "pkg": "tshocker",
+    "category": "mainframe",
+    "available": true,
+    "description": "A tool to find and exploit servers vulnerable to Shellshock."
+  },
+  "udpfloodvlan": {
+    "source": "blackarch",
+    "pkg": "udpfloodvlan",
+    "category": "voip_3g_4g",
+    "available": false,
+    "description": ""
+  },
+  "uncover": {
+    "source": "blackarch",
+    "pkg": "uncover",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "Discover exposed hosts on the internet using multiple search engines."
+  },
+  "upnp-tools": {
+    "source": "blackarch",
+    "pkg": "upnp-tools",
+    "category": "network_hacking",
+    "available": true,
+    "description": "Utilities and demos to work with UPnP"
+  },
+  "urlcrazy": {
+    "source": "blackarch",
+    "pkg": "urlcrazy",
+    "category": "phishing",
+    "available": true,
+    "description": "Generate and test domain typos and variations to detect and perform typo squatting, URL hijacking, phishing, and corporate espionage."
+  },
+  "voiphopper": {
+    "source": "blackarch",
+    "pkg": "voiphopper",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "A security validation tool that tests to see if a PC can mimic the behavior of an IP Phone. It rapidly automates a VLAN Hop into the Voice VLAN."
+  },
+  "vsaudit": {
+    "source": "blackarch",
+    "pkg": "vsaudit",
+    "category": "voip_3g_4g",
+    "available": true,
+    "description": "VOIP Security Audit Framework."
+  },
+  "wacker": {
+    "source": "blackarch",
+    "pkg": "wacker",
+    "category": "wireless_hacking",
+    "available": false,
+    "description": ""
+  },
+  "wafw00f": {
+    "source": "blackarch",
+    "pkg": "wafw00f",
+    "category": "website_hacking",
+    "available": true,
+    "description": "Identify and fingerprint Web Application Firewall (WAF) products protecting a website."
+  },
+  "wash": {
+    "source": "blackarch",
+    "pkg": "reaver",
+    "category": "wireless_hacking",
+    "available": true,
+    "description": "Brute force attack against Wifi Protected Setup"
+  },
+  "wbk": {
+    "source": "blackarch",
+    "pkg": "wbk",
+    "category": "bug_bounty",
+    "available": false,
+    "description": ""
+  },
+  "wfuzz": {
+    "source": "blackarch",
+    "pkg": "wfuzz",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "Utility to bruteforce web applications to find their not linked resources."
+  },
+  "whatweb": {
+    "source": "blackarch",
+    "pkg": "whatweb",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "Next generation web scanner that identifies what websites are running."
+  },
+  "whois": {
+    "source": "blackarch",
+    "pkg": "whois",
+    "category": "information_gathering",
+    "available": true,
+    "description": "Python client for the whois.cymru.com service"
+  },
+  "wpscan": {
+    "source": "blackarch",
+    "pkg": "wpscan",
+    "category": "website_hacking",
+    "available": true,
+    "description": "A limited problem scanner for C source files"
+  },
+  "xspear": {
+    "source": "blackarch",
+    "pkg": "xspear",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "Powerful XSS Scanning and Parameter analysis tool&gem."
+  },
+  "xsstrike": {
+    "source": "blackarch",
+    "pkg": "xsstrike",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "An advanced XSS detection and exploitation suite."
+  },
+  "xxeinjector": {
+    "source": "blackarch",
+    "pkg": "xxeinjector",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "Tool for automatic exploitation of XXE vulnerability using direct and different out of band methods."
+  },
+  "xxetimes": {
+    "source": "blackarch",
+    "pkg": "xxetimes",
+    "category": "bug_bounty",
+    "available": false,
+    "description": ""
+  },
+  "xxexploiter": {
+    "source": "blackarch",
+    "pkg": "xxexploiter",
+    "category": "bug_bounty",
+    "available": true,
+    "description": "It generates the XML payloads, and automatically starts a server to serve the needed DTD's or to do data exfiltration."
+  },
+  "yersinia": {
+    "source": "blackarch",
+    "pkg": "yersinia",
+    "category": "network_hacking",
+    "available": true,
+    "description": "A network tool designed to take advantage of some weakness in different network protocols."
+  },
+  "zap": {
+    "source": "blackarch",
+    "pkg": "zap",
+    "category": "uncategorized",
+    "available": true,
+    "description": "A python script for obfuscating wireless networks."
+  },
+  "zos-privesc": {
+    "source": "blackarch",
+    "pkg": "zos-privesc",
+    "category": "mainframe",
+    "available": false,
+    "description": ""
+  }
+}

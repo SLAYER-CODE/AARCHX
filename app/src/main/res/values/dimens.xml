@@ -28,4 +28,6 @@
     <dimen name="package_item_padding">16dp</dimen>
     <dimen name="color_item_padding">4dp</dimen>
 
+    <dimen name="bubble_outline_stroke_width">2dp</dimen>
+
 </resources>

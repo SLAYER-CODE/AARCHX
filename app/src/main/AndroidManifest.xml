@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:name=".AArchDroidApp"
@@ -200,6 +201,35 @@
         <!-- NeoTerm Service -->
         <service android:name="org.aarchdroid.dragonterminal.services.NeoTermService"
             android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- Float Overlay Launcher -->
+        <activity
+            android:name="org.aarchdroid.dragonterminal.floatui.FloatActivity"
+            android:exported="true"
+            android:icon="@mipmap/dragon_terminal_al"
+            android:roundIcon="@mipmap/dragon_terminal_al_round"
+            android:label="@string/float_launcher_name"
+            android:theme="@style/AppTheme.Transparent"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Overlay Permission Request -->
+        <activity
+            android:name="org.aarchdroid.dragonterminal.floatui.OverlayPermissionActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.Transparent" />
+
+        <!-- Float Overlay Foreground Service -->
+        <service
+            android:name="org.aarchdroid.dragonterminal.floatui.FloatService"
+            android:enabled="true"
+            android:exported="false"
             android:foregroundServiceType="dataSync" />
 
     </application>
