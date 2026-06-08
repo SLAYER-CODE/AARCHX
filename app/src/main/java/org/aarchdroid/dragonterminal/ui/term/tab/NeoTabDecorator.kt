@@ -1,16 +1,20 @@
 package org.aarchdroid.dragonterminal.ui.term.tab
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import de.mrapp.android.tabswitcher.Tab
 import de.mrapp.android.tabswitcher.TabSwitcher
 import de.mrapp.android.tabswitcher.TabSwitcherDecorator
+import org.aarchdroid.AArchDroidApp
 import org.aarchdroid.dragonterminal.Globals
 import org.aarchdroid.dragonterminal.NeoGLView
 import org.aarchdroid.R
@@ -83,6 +87,20 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                     val extraKeysView = view.findViewById<ExtraKeysView>(R.id.extra_keys)
                     bindTerminalView(termTab, terminalView, extraKeysView)
                     terminalView.requestFocus()
+                }
+
+                val floatBtn = view.findViewById<ImageButton>(R.id.float_button)
+                val session = termTab.termData.termSession
+                if (tabSwitcher.isSwitcherShown && session != null) {
+                    floatBtn?.visibility = View.VISIBLE
+                    floatBtn?.setOnClickListener {
+                        val act = this@NeoTabDecorator.context
+                        act.transferringHandle = session.mHandle
+                        tabSwitcher.removeTab(tab)
+                    }
+                } else {
+                    floatBtn?.visibility = View.GONE
+                    floatBtn?.setOnClickListener(null)
                 }
             }
 

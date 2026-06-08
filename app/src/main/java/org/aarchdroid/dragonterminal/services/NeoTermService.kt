@@ -127,6 +127,16 @@ class NeoTermService : Service() {
         return indexOfRemoved
     }
 
+    fun takeSession(sessionHandle: String): TerminalSession? {
+        synchronized(mTerminalSessions) {
+            val idx = mTerminalSessions.indexOfFirst { it.mHandle == sessionHandle }
+            if (idx >= 0) {
+                return mTerminalSessions.removeAt(idx)
+            }
+        }
+        return null
+    }
+
     fun createXSession(activity: Activity, parameter: XParameter): XSession {
         val session = TerminalUtils.createSession(activity, parameter)
         synchronized(mXSessions) {

@@ -44,6 +44,7 @@ import org.aarchdroid.dragonterminal.frontend.session.shell.client.TermViewClien
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.*
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XParameter
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XSession
+import org.aarchdroid.dragonterminal.floatui.FloatService
 import org.aarchdroid.dragonterminal.services.NeoTermService
 import org.aarchdroid.dragonterminal.ui.settings.SettingActivity
 import org.aarchdroid.dragonterminal.ui.term.tab.NeoTab
@@ -85,6 +86,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     @Volatile
     var rootAvailable = false
+
+    @Volatile
+    var transferringHandle: String? = null
 
     private var sessionHistoryAdapter: SessionHistoryAdapter? = null
     private val tabSessionMap = HashMap<String, String>() // TerminalSession.handle -> sessionId
@@ -416,15 +420,33 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 override fun onTabRemoved(tabSwitcher: TabSwitcher, index: Int, tab: Tab, animation: Animation) {
                     if (tab is TermTab) {
                         val session = tab.termData.termSession
-                        // Close this tab's session history
-                        if (session != null) {
-                            val sid = tabSessionMap.remove(session.mHandle)
-                            if (sid != null) {
-                                SessionHistory.closeSession(this@NeoTermActivity, sid)
+                        val isTransfer = session != null && session.mHandle == this@NeoTermActivity.transferringHandle
+                        if (isTransfer) {
+                            // Transfer to float: don't kill session, don't close history
+                            this@NeoTermActivity.transferringHandle = null
+                            val taken = termService?.takeSession(session!!.mHandle)
+                            AArchDroidApp.transferredSession = taken
+                            if (taken != null) {
+                                val intent = Intent(this@NeoTermActivity, FloatService::class.java)
+                                    .setAction(FloatService.ACTION_TAKEOVER)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    startForegroundService(intent)
+                                } else {
+                                    startService(intent)
+                                }
                             }
-                            CommandInterceptor.unregisterSession(session.mHandle)
+                        } else {
+                            // Normal close: kill session and close history
+                            if (session != null) {
+                                val sid = tabSessionMap.remove(session.mHandle)
+                                if (sid != null) {
+                                    SessionHistory.closeSession(this@NeoTermActivity, sid)
+                                }
+                                CommandInterceptor.unregisterSession(session.mHandle)
+                            }
+                            SessionRemover.removeSession(termService, tab)
                         }
-                        SessionRemover.removeSession(termService, tab)
                     } else if (tab is XSessionTab) {
                         SessionRemover.removeXSession(termService, tab)
                     }

@@ -10,6 +10,7 @@ import android.os.Build
 import android.widget.Toast
 import android.view.Gravity
 import android.annotation.SuppressLint
+import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.component.NeoInitializer
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.ui.bonus.BonusActivity
@@ -165,5 +166,8 @@ class AArchDroidApp : Application() {
     companion object {
         private var app: AArchDroidApp? = null
         fun get(): AArchDroidApp = app!!
+
+        @Volatile
+        var transferredSession: TerminalSession? = null
     }
 }

@@ -33,6 +33,7 @@ class FloatService : Service() {
         const val ACTION_STOP = "aarchdroid.float.action.stop"
         const val ACTION_SHOW = "aarchdroid.float.action.show"
         const val ACTION_HIDE = "aarchdroid.float.action.hide"
+        const val ACTION_TAKEOVER = "aarchdroid.float.action.takeover"
         private const val CHANNEL_ID = "aarchdroid_float_channel"
     }
 
@@ -46,6 +47,23 @@ class FloatService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         runForeground()
+
+        if (intent?.action == ACTION_TAKEOVER) {
+            val taken = AArchDroidApp.transferredSession
+            AArchDroidApp.transferredSession = null
+            if (taken == null) {
+                Log.w(TAG, "TAKEOVER: no transferred session available")
+                stopSelf()
+                return START_NOT_STICKY
+            }
+            if (floatView == null && !initFloatView(skipSession = true)) {
+                taken.finishIfRunning()
+                return START_NOT_STICKY
+            }
+            adoptSession(taken)
+            if (!visible) setVisible(true)
+            return START_NOT_STICKY
+        }
 
         if (floatView == null && !initFloatView()) {
             return START_NOT_STICKY
@@ -140,13 +158,15 @@ class FloatService : Service() {
         return builder.build()
     }
 
-    private fun initFloatView(): Boolean {
+    private fun initFloatView(skipSession: Boolean = false): Boolean {
         val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val v = inflater.inflate(R.layout.float_window, null) as FloatWindowView
         v.bindToService(this)
         floatView = v
 
-        createSession()
+        if (!skipSession) {
+            createSession()
+        }
 
         try {
             v.launchOverlay()
@@ -187,6 +207,48 @@ class FloatService : Service() {
             }
         }
 
+        session = createShellSession(callback)
+        session?.let { s ->
+            s.initializeEmulator(80, 24)
+            floatView?.terminalView?.attachSession(s)
+            floatView?.sessionClient?.checkFontAndColors()
+        }
+    }
+
+    private fun adoptSession(taken: TerminalSession) {
+        // Finish existing float session if any
+        session?.finishIfRunning()
+        session = null
+
+        val callback = object : SessionChangedCallback {
+            override fun onTextChanged(session: TerminalSession) {
+                floatView?.sessionClient?.onTextChanged(session)
+            }
+            override fun onSessionFinished(session: TerminalSession) {
+                floatView?.sessionClient?.onSessionFinished(session)
+                requestStopService()
+            }
+            override fun onTitleChanged(session: TerminalSession) {}
+            override fun onClipboardText(session: TerminalSession, text: String) {
+                floatView?.sessionClient?.onCopyText(text)
+            }
+            override fun onBell(session: TerminalSession) {
+                floatView?.sessionClient?.onBell()
+            }
+            override fun onColorsChanged(session: TerminalSession) {
+                floatView?.sessionClient?.onColorsChanged()
+            }
+        }
+        taken.setChangeCallback(callback)
+        session = taken
+        floatView?.terminalView?.attachSession(taken)
+        floatView?.sessionClient?.checkFontAndColors()
+    }
+
+    private fun createShellSession(callback: SessionChangedCallback): TerminalSession? {
+        val profile = ShellProfile()
+        val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/" + DefaultValues.loginShell
+
         val builder = ShellTermSession.Builder()
             .currentWorkingDirectory(NeoTermPath.HOME_PATH)
             .callback(callback)
@@ -202,13 +264,7 @@ class FloatService : Service() {
             builder.executablePath(profile.loginShell)
         }
 
-        session = builder.create(this)
-
-        session?.let { s ->
-            s.initializeEmulator(80, 24)
-            floatView?.terminalView?.attachSession(s)
-            floatView?.sessionClient?.checkFontAndColors()
-        }
+        return builder.create(this)
     }
 
     private fun setVisible(show: Boolean) {

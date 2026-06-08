@@ -94,8 +94,12 @@ public class TerminalSession extends TerminalOutput {
         return mChangeCallback;
     }
 
+    public void setChangeCallback(SessionChangedCallback changeCallback) {
+        mChangeCallback = changeCallback;
+    }
+
     /** Callback which gets notified when a session finishes or changes title. */
-    private final SessionChangedCallback mChangeCallback;
+    private SessionChangedCallback mChangeCallback;
 
     /** The pid of the executablePath process. 0 if not started and -1 if finished running. */
     private int mShellPid;
