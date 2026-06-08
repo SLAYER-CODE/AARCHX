@@ -50,7 +50,7 @@ open class ShellTermSession private constructor(shellPath: String, cwd: String,
         if (command?.isNotEmpty() == true) {
             Handler().postDelayed({
                 write("clear\r$command\r")
-            }, 1500)
+            }, 500)
         }
     }
 

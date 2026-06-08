@@ -4,16 +4,23 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:paddingVertical="1dp"
-    android:paddingStart="8dp"
+    android:paddingStart="1dp"
     android:paddingEnd="8dp">
 
     <TextView
         android:id="@+id/commandText"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:ellipsize="end"
+        android:layout_weight="1"
         android:fontFamily="monospace"
-        android:maxLines="1"
         android:textSize="9sp" />
+
+    <TextView
+        android:id="@+id/grayPath"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:textSize="9sp"
+        android:textColor="#FF888888" />
 
 </LinearLayout>

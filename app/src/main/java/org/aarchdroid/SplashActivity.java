@@ -79,7 +79,6 @@ public class SplashActivity extends AppCompatActivity {
                     appendLog("[*] Rootfs listo para usar.");
                     appendLog("[>] Iniciando terminal...");
                     setButtonsIniciando();
-                    try { Thread.sleep(1500); } catch (InterruptedException ie) {}
                     appendLog("[>] Abriendo terminal...");
                     startActivity(new Intent(SplashActivity.this,
                         org.aarchdroid.dragonterminal.ui.term.NeoTermActivity.class));
@@ -96,7 +95,6 @@ public class SplashActivity extends AppCompatActivity {
                     appendLog("[*] Rootfs listo para usar.");
                     appendLog("[>] Iniciando terminal...");
                     setButtonsIniciando();
-                    try { Thread.sleep(1500); } catch (InterruptedException ie) {}
                     appendLog("[>] Abriendo terminal...");
                     startActivity(new Intent(SplashActivity.this,
                         org.aarchdroid.dragonterminal.ui.term.NeoTermActivity.class));
@@ -273,7 +271,6 @@ public class SplashActivity extends AppCompatActivity {
                     appendLog("[+] Rootfs ya instalado.");
                     appendLog("[>] Iniciando terminal...");
                     setButtonsIniciando();
-                    try { Thread.sleep(1500); } catch (InterruptedException ie) {}
                     appendLog("[>] Abriendo terminal...");
                     startActivity(new Intent(SplashActivity.this,
                         org.aarchdroid.dragonterminal.ui.term.NeoTermActivity.class));

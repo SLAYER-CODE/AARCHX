@@ -4,6 +4,9 @@ import android.util.Log
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 
 object CommandInterceptor {
+    @Volatile
+    var suppressLogging = false
+
     private val sessionContexts = HashMap<String, SessionContext>()
 
     data class SessionContext(
@@ -49,14 +52,16 @@ object CommandInterceptor {
         }
         Log.d("AArchDroid", "CommandInterceptor: cmd='$cmd' dir='${ctx.currentDir}'")
 
-        // Save to session history
-        SessionHistory.logCommand(
-            org.aarchdroid.AArchDroidApp.get(),
-            ctx.sessionId,
-            ctx.terminalId,
-            ctx.currentDir,
-            cmd
-        )
+        // Save to session history (skip if suppressed, e.g. during restore)
+        if (!suppressLogging) {
+            SessionHistory.logCommand(
+                org.aarchdroid.AArchDroidApp.get(),
+                ctx.sessionId,
+                ctx.terminalId,
+                ctx.currentDir,
+                cmd
+            )
+        }
     }
 
     fun unregisterSession(mHandle: String) {

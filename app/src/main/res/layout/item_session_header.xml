@@ -5,13 +5,21 @@
     android:orientation="horizontal"
     android:paddingTop="8dp"
     android:paddingBottom="1dp"
-    android:paddingStart="8dp"
+    android:paddingStart="1dp"
     android:paddingEnd="8dp">
 
     <TextView
         android:id="@+id/sessionTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:textSize="10sp" />
+
+    <TextView
+        android:id="@+id/sessionStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
         android:fontFamily="monospace"
         android:textSize="10sp" />
 

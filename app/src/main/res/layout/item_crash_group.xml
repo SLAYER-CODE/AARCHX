@@ -5,8 +5,9 @@
     android:orientation="horizontal"
     android:paddingTop="4dp"
     android:paddingBottom="1dp"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp">
+    android:paddingStart="1dp"
+    android:paddingEnd="8dp"
+    android:layout_marginTop="14dp">
 
     <TextView
         android:id="@+id/crashText"

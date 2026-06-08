@@ -26,6 +26,7 @@ import android.widget.ImageButton
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+
 import org.aarchdroid.AArchDroidApp
 import org.aarchdroid.R
 import android.content.DialogInterface
@@ -94,14 +95,15 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         Log.d("AArchDroid", "NeoTermActivity: intent action=" + (intent?.action ?: "null") +
                 " extras=" + (intent?.extras?.keySet()?.joinToString() ?: "null"))
 
-        Log.d("AArchDroid", "NeoTermActivity: checking root access")
-        rootAvailable = isRooted(this)
-        if (!rootAvailable) {
-            Log.w("AArchDroid", "NeoTermActivity: root not detected — showing dialog")
-            showNoRootDialog()
-        }
-
-        changehostname("AARCHX")
+        Log.d("AArchDroid", "NeoTermActivity: queue root check in background")
+        Thread {
+            val ok = isRooted(this@NeoTermActivity)
+            rootAvailable = ok
+            if (!ok) {
+                runOnUiThread { showNoRootDialog() }
+            }
+            changehostname("AARCHX")
+        }.start()
 
         NeoPermission.initAppPermission(this, NeoPermission.REQUEST_APP_PERMISSION)
         NeoPermission.initPostNotificationsPermission(this)
@@ -171,15 +173,12 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         val historyList = findViewById<RecyclerView>(R.id.sessionHistoryList)
         historyList.layoutManager = LinearLayoutManager(this)
         historyList.setHasFixedSize(true)
+        historyList.setPadding(6, 0, 0, 0)
+        historyList.clipToPadding = false
         val adapter = SessionHistoryAdapter(
             data = history,
             onRestoreSession = { session ->
-                Log.d("AArchDroid", "Restore session: ${session.id}")
-                // TODO: implement restore
-            },
-            onRestoreAll = {
-                Log.d("AArchDroid", "Restore all terminals")
-                // TODO: implement restore all
+                restoreSession(session)
             }
         )
         sessionHistoryAdapter = adapter
@@ -388,6 +387,19 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
                 override fun onSwitcherHidden(tabSwitcher: TabSwitcher) {
                     toolbar.setBackgroundResource(R.color.black_fuck)
+                    val hiddenTab = tabSwitcher.selectedTab
+                    if (hiddenTab is TermTab) {
+                        hiddenTab.termData.extraKeysView?.visibility = View.VISIBLE
+                    }
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        val tab = tabSwitcher.selectedTab
+                        if (tab is TermTab) {
+                            tab.termData.termView?.let { view ->
+                                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                                imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                            }
+                        }
+                    }, 300)
                 }
 
                 override fun onSelectionChanged(tabSwitcher: TabSwitcher, selectedTabIndex: Int, selectedTab: Tab?) {
@@ -552,112 +564,75 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
 
         if (!isRecreating()) {
-            Log.d("AArchDroid", "NeoTermActivity: first launch — extracting assets")
+            val sharedPref = this.getSharedPreferences(this.packageName, Context.MODE_PRIVATE)
+            val issafepts = sharedPref.getBoolean("issafepts", false)
 
-            var reader: BufferedReader? = null
-            var testmsg=""
-            var result = false
-            var stdin: OutputStream? = null
-            val stdout: InputStream
-            val params = ArrayList<String>()
-
-            try {
-                Log.d("AArchDroid", "NeoTermActivity: testing root via `su`")
-                val pb = ProcessBuilder("su")
-                pb.directory(File(AArchDroidApp.get().applicationInfo.dataDir))
-                pb.redirectErrorStream(true)
-                val process: Process = pb.start()
-                stdin = process.outputStream
-                stdout = process.inputStream
-                params.add(0, "PATH=" + AArchDroidApp.get().filesDir.absolutePath + "/bin:\$PATH")
-                params.add("exit 0")
-                var os: DataOutputStream? = null
-
+            if (issafepts) {
+                Log.d("AArchDroid", "NeoTermActivity: fast path — assets already extracted")
+                enterMain()
+                update_colors()
+                updatePlaceholderVisibility()
+                get_motherfucker_battery()
+                Thread { checkinstallterm() }.start()
+            } else {
+                Log.d("AArchDroid", "NeoTermActivity: first launch — extracting assets")
+                var reader: BufferedReader? = null
+                var stdin: OutputStream? = null
                 try {
-                    os = DataOutputStream(stdin)
-                    for (cmd in params) {
-                        os.writeBytes(cmd + "\n")
+                    Log.d("AArchDroid", "NeoTermActivity: testing root via `su`")
+                    val pb = ProcessBuilder("su")
+                    pb.directory(File(AArchDroidApp.get().applicationInfo.dataDir))
+                    pb.redirectErrorStream(true)
+                    val process: Process = pb.start()
+                    stdin = process.outputStream
+                    val stdout = process.inputStream
+                    val params = ArrayList<String>()
+                    params.add(0, "PATH=" + AArchDroidApp.get().filesDir.absolutePath + "/bin:\$PATH")
+                    params.add("exit 0")
+                    DataOutputStream(stdin).use { os ->
+                        for (cmd in params) os.writeBytes(cmd + "\n")
                     }
-                    os.flush()
-                } catch (e: IOException) {
-                    Log.e("AArchDroid", "NeoTermActivity: su stdin write failed — " + e.message)
+                    reader = BufferedReader(InputStreamReader(stdout))
+                    val buffer = CharArray(1024)
+                    while (reader.read(buffer).also { var n = it } != -1) {}
+                    process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS)
+                } catch (e: Exception) {
+                    Log.e("AArchDroid", "NeoTermActivity: su test threw — " + e.message)
                 } finally {
-                    os?.close()
+                    reader?.close()
+                    stdin?.close()
                 }
 
-                reader = BufferedReader(InputStreamReader(stdout))
-                var n: Int
-                val buffer = CharArray(1024)
-                while (reader.read(buffer).also { n = it } != -1) {
-                    val msg = String(buffer, 0, n)
-                    testmsg += msg
-                }
+                Log.d("AArchDroid", "NeoTermActivity: first run — extracting assets from APK")
+                suRun("rm -rf " + this.filesDir.absolutePath + "/bin")
+                suRun("rm -rf " + this.filesDir.absolutePath + "/scripts")
 
-                if (process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS) && process.exitValue() == 0) result = true
-                Log.d("AArchDroid", "NeoTermActivity: su test result=" + result + " output=" + testmsg.take(200))
-            } catch (e: Exception) {
-                result = false
-                Log.e("AArchDroid", "NeoTermActivity: su test threw — " + e.message)
-            } finally {
-                reader?.close()
-                stdin?.close()
+                val AllDir = File(filesDir.absolutePath+"/scripts")
+                AllDir.mkdirs()
+                val BinDir = File(filesDir.absolutePath+"/bin")
+                BinDir.mkdirs()
 
-                val sharedPref = this.getSharedPreferences(this.packageName, Context.MODE_PRIVATE)
-                val issafepts = sharedPref.getBoolean("issafepts", false)
-                Log.d("AArchDroid", "NeoTermActivity: issafepts=" + issafepts)
+                AssetsUtils.extractAssetsDir(this, "all/scripts", this.filesDir.absolutePath+"/scripts")
+                setPermissions(AllDir)
 
-                if(issafepts) {
-                    Log.d("AArchDroid", "NeoTermActivity: assets already extracted — skipping")
-                    val AllDir = File(filesDir.absolutePath+"/scripts")
-                    AllDir.mkdirs()
-                    val BinDir = File(filesDir.absolutePath+"/bin")
-                    BinDir.mkdirs()
+                AssetsUtils.extractAssetsDir(this, "arm/static/bin", this.filesDir.absolutePath+"/bin")
+                setPermissions(BinDir)
 
-                    AssetsUtils.extractAssetsDir(this, "all/scripts", this.filesDir.absolutePath+"/scripts")
-                    setPermissions(AllDir)
-
-                    AssetsUtils.extractAssetsDir(this, "arm/static/bin", this.filesDir.absolutePath+"/bin")
-                    setPermissions(BinDir)
-
-                } else {
-                    Log.d("AArchDroid", "NeoTermActivity: first run — extracting assets from APK")
-                    suRun("rm -rf " + this.filesDir.absolutePath + "/bin")
-                    suRun("rm -rf " + this.filesDir.absolutePath + "/scripts")
-
-                    val AllDir = File(filesDir.absolutePath+"/scripts")
-                    AllDir.mkdirs()
-                    val BinDir = File(filesDir.absolutePath+"/bin")
-                    BinDir.mkdirs()
-
-                    AssetsUtils.extractAssetsDir(this, "all/scripts", this.filesDir.absolutePath+"/scripts")
-                    setPermissions(AllDir)
-
-                    AssetsUtils.extractAssetsDir(this, "arm/static/bin", this.filesDir.absolutePath+"/bin")
-                    setPermissions(BinDir)
-
-                    with (sharedPref.edit()) {
-                        putBoolean("issafepts", true)
-                        commit()
-                    }
-                    Log.d("AArchDroid", "NeoTermActivity: issafepts set to true")
+                with (sharedPref.edit()) {
+                    putBoolean("issafepts", true)
+                    commit()
                 }
 
                 checkinstallterm()
-
                 enterMain()
-
                 update_colors()
-
                 updatePlaceholderVisibility()
-
                 get_motherfucker_battery()
-
             }
 
             if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
                 Log.d("AArchDroid", "NeoTermActivity: notifications disabled — continuing anyway")
             }
-
         } else {
             Log.d("AArchDroid", "NeoTermActivity: onServiceConnected but recreating — skipping asset extraction")
         }
@@ -868,7 +843,77 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
         addNewTab(tab, animation)
         switchToSession(tab)
+        Handler(Looper.getMainLooper()).postDelayed({
+            val currentTab = tabSwitcher.selectedTab
+            if (currentTab is TermTab) {
+                currentTab.termData.termView?.let { view ->
+                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                }
+            }
+        }, 300)
         Log.d("AArchDroid", "NeoTermActivity: tab added and switched")
+    }
+
+    private fun restoreSession(session: org.aarchdroid.dragonterminal.data.SessionRecord) {
+        val systemShell = getSystemShellMode()
+        val profile = ShellProfile.create()
+        val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/archdroid.sh"
+
+        for (terminal in session.terminals) {
+            val sessionCallback = TermSessionCallback()
+            val viewClient = TermViewClient(this)
+
+            val parameter = ShellParameter()
+                .callback(sessionCallback)
+                .systemShell(systemShell)
+                .profile(profile)
+
+            if (!systemShell && profile.loginShell == defaultScript) {
+                parameter.executablePath("su")
+                parameter.arguments(arrayOf("su", "-c", "/system/bin/sh " + defaultScript))
+            }
+
+            val newSession = try {
+                termService!!.createTermSession(parameter)
+            } catch (e: Exception) {
+                Log.e("AArchDroid", "restoreSession: createTermSession failed — " + e.message)
+                continue
+            }
+
+            newSession.mSessionName = generateSessionName("Restored")
+
+            val sessionId = SessionHistory.startSession(this).id
+            CommandInterceptor.registerSession(newSession.mHandle, sessionId)
+            val term = SessionHistory.startTerminal(this, sessionId, "terminal")
+            CommandInterceptor.setTerminalId(newSession.mHandle, term.id)
+            tabSessionMap[newSession.mHandle] = sessionId
+
+            val tab = createTab(newSession.mSessionName) as TermTab
+            tab.termData.initializeSessionWith(newSession, sessionCallback, viewClient)
+
+            addNewTab(tab, createRevealAnimation())
+            switchToSession(tab)
+
+            // Execute saved commands with staggered delays, suppress logging
+            CommandInterceptor.suppressLogging = true
+            var delay = 1500L
+            for (cmd in terminal.commands) {
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    newSession.write(cmd.cmd + "\n")
+                }, delay)
+                delay += 400L
+            }
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                CommandInterceptor.suppressLogging = false
+            }, delay)
+        }
+
+        // Close the history placeholder after restore
+        sessionHistoryAdapter?.let { adapter ->
+            val freshData = SessionHistory.getHistory(this)
+            adapter.updateData(freshData)
+        }
     }
 
     private fun addNewSessionFromExisting(session: TerminalSession?) {
@@ -1043,6 +1088,11 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
 
         if (showSwitcher) {
+            val tab = tabSwitcher.selectedTab
+            if (tab is TermTab) {
+                tab.requireHideIme()
+                tab.termData.extraKeysView?.visibility = View.GONE
+            }
             tabSwitcher.showSwitcher()
         } else {
             tabSwitcher.hideSwitcher()
@@ -1161,11 +1211,12 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         if (::tabSwitcher.isInitialized) {
             placeholder.visibility = if (tabSwitcher.count == 0) View.VISIBLE else View.GONE
         }
+        toolbar.menu?.findItem(R.id.toggle_tab_switcher_menu_item)?.isVisible = tabSwitcher.count > 0
         if (tabSwitcher.count == 0) {
-            // Reload data from disk and rebuild
             sessionHistoryAdapter?.let { adapter ->
                 val freshData = SessionHistory.getHistory(this@NeoTermActivity)
                 adapter.updateData(freshData)
+                toolbar.title = "(${freshData.sessions.size}) Logs"
             }
         }
     }
@@ -1430,7 +1481,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
             }
 
-            if (process.waitFor() == 0) result = true
+            if (process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS) && process.exitValue() == 0) result = true
         } catch (e: Exception) {
             result = false
             //e.printStackTrace()

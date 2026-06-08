@@ -105,6 +105,11 @@ object SessionHistory {
     }
 
     fun logCommand(context: Context, sessionId: String, terminalId: String, path: String, cmd: String) {
+        val trimmed = cmd.trim()
+        if (trimmed == "ls" || trimmed == "cd" || trimmed.startsWith("ls ") || trimmed.startsWith("cd ")) {
+            return
+        }
+
         init(context)
         val record = CommandRecord(path = path, cmd = cmd)
         current?.sessions?.find { it.id == sessionId }?.terminals?.find { it.id == terminalId }?.commands?.let { cmds ->
@@ -126,6 +131,10 @@ object SessionHistory {
                 put("ord", order)
             }
             db?.writableDatabase?.insert("command", null, cv)
+            db?.writableDatabase?.execSQL(
+                "DELETE FROM command WHERE terminalId = ? AND uid NOT IN (SELECT uid FROM command WHERE terminalId = ? ORDER BY uid DESC LIMIT 5)",
+                arrayOf(terminalId, terminalId)
+            )
         }
     }
 

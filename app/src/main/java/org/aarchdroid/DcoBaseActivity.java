@@ -42,7 +42,7 @@ public class DcoBaseActivity extends Activity {
             DisplayMetrics dm = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(dm);
             getWindow().setLayout((int)(dm.widthPixels * 0.85),
-                (int)(dm.heightPixels * 0.65));
+                (int)(dm.heightPixels * 0.90));
         }
     }
 
