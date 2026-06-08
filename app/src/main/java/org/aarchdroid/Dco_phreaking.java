@@ -1,197 +1,102 @@
 package org.aarchdroid;
 
 import android.os.Bundle;
-import android.view.View;
-import androidx.cardview.widget.CardView;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
 
-/* JADX INFO: loaded from: classes2.dex */
 public class Dco_phreaking extends DcoBaseActivity {
     private static final String TAG = "Dco_phreaking";
-    @Override // android.app.Activity
+
+    @Override
     protected void onCreate(Bundle bundle) {
         try {
-        requestWindowFeature(1);
-        super.onCreate(bundle);
-        Log.d(TAG, "onCreate");
-        setContentView(R.layout.dco_phreaking);
-        getWindow().setFlags(1024, 1024);
-        CardView cardView = (CardView) findViewById(R.id.card_view_sctpscan);
-        CardView cardView2 = (CardView) findViewById(R.id.card_view_sipsak);
-        CardView cardView3 = (CardView) findViewById(R.id.card_view_enodebhack);
-        CardView cardView4 = (CardView) findViewById(R.id.card_view_mme);
-        CardView cardView5 = (CardView) findViewById(R.id.card_view_pgwhack);
-        CardView cardView6 = (CardView) findViewById(R.id.card_view_diameterenum);
-        CardView cardView7 = (CardView) findViewById(R.id.card_view_s1apenum);
-        CardView cardView8 = (CardView) findViewById(R.id.card_view_gtpscan);
-        CardView cardView9 = (CardView) findViewById(R.id.card_view_sgwhack);
-        CardView cardView10 = (CardView) findViewById(R.id.card_view_cryptomobile);
-        CardView cardView11 = (CardView) findViewById(R.id.card_view_enumiax);
-        CardView cardView12 = (CardView) findViewById(R.id.card_view_svmap);
-        CardView cardView13 = (CardView) findViewById(R.id.card_view_svwar);
-        CardView cardView14 = (CardView) findViewById(R.id.card_view_svcrack);
-        CardView cardView15 = (CardView) findViewById(R.id.card_view_isip);
-        CardView cardView16 = (CardView) findViewById(R.id.card_view_vsaudit);
-        CardView cardView17 = (CardView) findViewById(R.id.card_view_iaxflood);
-        CardView cardView18 = (CardView) findViewById(R.id.card_view_inviteflood);
-        CardView cardView19 = (CardView) findViewById(R.id.card_view_rtpflood);
-        CardView cardView20 = (CardView) findViewById(R.id.card_view_udpfloodVLAN);
-        CardView cardView21 = (CardView) findViewById(R.id.card_view_rtpbreak);
-        CardView cardView22 = (CardView) findViewById(R.id.card_view_rtpinsertsound);
-        CardView cardView23 = (CardView) findViewById(R.id.card_view_sippts);
-        CardView cardView24 = (CardView) findViewById(R.id.card_view_voiphopper);
-        cardView.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.1
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("sctpscan");
-            }
-        });
-        cardView3.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.2
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("eNodeB");
-            }
-        });
-        cardView4.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.3
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("mme");
-            }
-        });
-        cardView5.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.4
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("pgw");
-            }
-        });
-        cardView6.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.5
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("diameter_enum -h");
-            }
-        });
-        cardView7.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.6
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("s1ap_enum");
-            }
-        });
-        cardView8.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.7
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("gtp_scan -h");
-            }
-        });
-        cardView10.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.8
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("cryptomobile");
-            }
-        });
-        cardView9.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.9
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("sgw");
-            }
-        });
-        cardView11.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.10
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("enumiax");
-            }
-        });
-        cardView12.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.11
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("sipvicious_svmap");
-            }
-        });
-        cardView13.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.12
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("sipvicious_svwar");
-            }
-        });
-        cardView14.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.13
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("sipvicious_svcrack");
-            }
-        });
-        cardView15.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.14
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("sudo isip");
-            }
-        });
-        cardView2.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.15
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("sipsak");
-            }
-        });
-        cardView16.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.16
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("vsaudit");
-            }
-        });
-        cardView17.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.17
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("iaxflood");
-            }
-        });
-        cardView18.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.18
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("inviteflood");
-            }
-        });
-        cardView19.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.19
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("rtpflood");
-            }
-        });
-        cardView20.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.20
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("udpfloodVLAN");
-            }
-        });
-        cardView21.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.21
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("rtpbreak");
-            }
-        });
-        cardView22.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.22
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("rtpinsertsound");
-            }
-        });
-        cardView23.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.23
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("sippts");
-            }
-        });
-        cardView24.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_phreaking.24
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_phreaking.this.run_hack_cmd("voiphopper -h");
-            }
-        });
+            requestWindowFeature(1);
+            super.onCreate(bundle);
+            Log.d(TAG, "onCreate");
+            setContentView(R.layout.dco_list_scaffold);
+            getWindow().setFlags(1024, 1024);
+
+            TextView titleView = findViewById(R.id.title);
+            titleView.setText("Phreaking");
+            ((android.widget.ImageView) findViewById(R.id.banner)).setImageResource(R.drawable.phreaking);
+            ((TextView) findViewById(R.id.stats_tools)).setText("24");
+
+            RecyclerView list = findViewById(R.id.tool_list);
+            list.setLayoutManager(new LinearLayoutManager(this));
+
+            List<ToolItem> tools = buildToolList();
+            ToolAdapter adapter = new ToolAdapter(tools, new ToolAdapter.OnToolClickListener() {
+                @Override
+                public void onToolClick(String cmd) {
+                    run_hack_cmd(cmd);
+                }
+
+                @Override
+                public void onInstallClick(String toolKey) {
+                    String cmd = buildInstallCommandForKey(toolKey);
+                    if (cmd != null) {
+                        run_hack_cmd(cmd);
+                    }
+                }
+            });
+            list.setAdapter(adapter);
+            list.setHasFixedSize(true);
         } catch (Exception e) {
             Log.e(TAG, "onCreate failed", e);
             finish();
         }
     }
 
-    
-@Override // android.app.Activity
+    private List<ToolItem> buildToolList() {
+        List<ToolItem> list = new ArrayList<>();
+        list.add(makeItem("sippts", "Sippts", "", "sippts", "sippts"));
+        list.add(makeItem("svmap", "svmap", "SIP Scanner", "sipvicious_svmap", "sipvicious"));
+        list.add(makeItem("svwar", "svwar", "Identifies working lines on a PBX", "sipvicious_svwar", "sipvicious"));
+        list.add(makeItem("rtpbreak", "RTPBREAK", "Detects, reconstructs, and analyzes RTP sessions", "rtpbreak", "andraxtool_blackbg"));
+        list.add(makeItem("svcrack", "svcrack", "Crack PBX passwords", "sipvicious_svcrack", "sipvicious"));
+        list.add(makeItem("enumiax", "ENUMIAX", "IAX Protocol Enumerator", "enumiax", "andraxtool_blackbg"));
+        list.add(makeItem("rtpinsertsound", "RTPInsertSOUND", "Insert audio into RTP stream", "rtpinsertsound", "andraxtool_blackbg"));
+        list.add(makeItem("iaxflood", "IAXFLOOD", "Inter-Asterisk_eXchange Flooder", "iaxflood", "andraxtool_blackbg"));
+        list.add(makeItem("inviteflood", "INVITEFLOOD", "SIP/SDP INVITE flooding over UDP/IP", "inviteflood", "andraxtool_blackbg"));
+        list.add(makeItem("rtpflood", "RTPFLOOD", "Flood any device that is processing RTP", "rtpflood", "andraxtool_blackbg"));
+        list.add(makeItem("udpfloodVLAN", "UDPFloodVLAN", "UDP Flood with VLAN Support", "udpfloodVLAN", "andraxtool_blackbg"));
+        list.add(makeItem("voiphopper", "VOIPHopper", "VoIP Hopper Network Penetration Testing", "voiphopper -h", "voiphopper"));
+        list.add(makeItem("vsaudit", "VSAudit", "VOIP Security Audit Framework", "vsaudit", "andraxtool_blackbg"));
+        list.add(makeItem("sipsak", "SIPSAK", "SIP swiss army knife", "sipsak", "andraxtool_blackbg"));
+        list.add(makeItem("isip", "iSIP", "Interactive sip toolkit for packet manipulations", "sudo isip", "sip"));
+        list.add(makeItem("sctpscan", "SCTPScan", "SCTP Network Scanner", "sctpscan", "sctpscan"));
+        list.add(makeItem("gtpscan", "GTP-Scan", "GTP Scanner", "gtp_scan -h", "gtp_scan"));
+        list.add(makeItem("diameterenum", "Diameter-Enum", "Diameter Scanner", "diameter_enum -h", "ltetower"));
+        list.add(makeItem("s1apenum", "S1AP_Enum", "S1AP Enumerator", "s1ap_enum", "ltetower"));
+        list.add(makeItem("cryptomobile", "CryptoMobile", "Rape mobile Crypto", "cryptomobile", "cryptomobile"));
+        list.add(makeItem("enodebhack", "eNodeB", "Evolved Node B for LTE Hacking and 5G Downgrade", "eNodeB", "lte"));
+        list.add(makeItem("mme", "Mme", "", "mme", "lte"));
+        list.add(makeItem("sgwhack", "SGW", "Serving Gateway", "sgw", "cellphonetower"));
+        list.add(makeItem("pgwhack", "PGW", "Packet Data Network Gateway", "pgw", "cellphonetower"));
+        return list;
+    }
+
+    private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
+        ToolItem item = new ToolItem();
+        item.key = key;
+        item.displayName = displayName;
+        item.description = description;
+        item.cmd = cmd;
+        if (drawableName == null || drawableName.isEmpty()) {
+            item.iconResId = R.drawable.andraxtool_blackbg;
+        } else {
+            int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
+            item.iconResId = id != 0 ? id : R.drawable.andraxtool_blackbg;
+        }
+        return item;
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");

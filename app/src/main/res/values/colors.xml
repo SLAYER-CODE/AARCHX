@@ -25,4 +25,10 @@
     <color name="colorred">#FF0000</color>
     <color name="tool_title_gray">#B0B0B0</color>
     <color name="tool_desc_gray">#3D6B3D</color>
+    <color name="neon_green">#39FF14</color>
+    <color name="cyan_bright">#00FFFF</color>
+    <color name="orange_yellow">#FFB347</color>
+    <color name="light_green">#90EE90</color>
+    <color name="orange_bright">#FF8C00</color>
+    <color name="divider_green">#14FF00</color>
 </resources>

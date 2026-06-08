@@ -291,14 +291,15 @@ class FloatWindowView @JvmOverloads constructor(
     fun loseFocus() {
         overlayFocused = false
         layoutParams.flags = computeFlags(false)
-        windowControls?.background = ColorDrawable(Color.parseColor("#FF444444"))
+        windowControls?.background = ColorDrawable(Color.parseColor("#FF661111"))
         updateLayout()
         alpha = ALPHA_NO_FOCUS
     }
 
     fun enterDragMode() {
         isDragging = true
-        alpha = ALPHA_MOVING
+        windowControls?.background = ColorDrawable(Color.parseColor("#FF661111"))
+        alpha = 1.0f
     }
 
     private fun exitDragMode() {

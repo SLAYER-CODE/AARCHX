@@ -1,0 +1,2584 @@
+{
+  "bug_bounty": {
+    "xml_file": "dco_bug_bounty.xml",
+    "java_file": "Dco_bug_bounty.java",
+    "cards": [
+      {
+        "key": "bgpleak",
+        "displayName": "BGP-Leak",
+        "description": "Exposing your Motherfucker Organization",
+        "drawable": "bgpleak",
+        "cmd": "bgp-leak -h",
+        "category": null
+      },
+      {
+        "key": "amass",
+        "displayName": "Amass",
+        "description": "In-depth Attack Surface Mapping and Asset Discovery",
+        "drawable": "amass",
+        "cmd": "amass",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "subfinder",
+        "displayName": "Subfinder",
+        "description": "Passive subdomain discovery",
+        "drawable": "subfinder",
+        "cmd": "subfinder",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "uncover",
+        "displayName": "Uncover",
+        "description": "Discover exposed hosts on the internet",
+        "drawable": "andraxtool",
+        "cmd": "uncover",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "aron",
+        "displayName": "Aron",
+        "description": "Find hidden GET/POST",
+        "drawable": "andraxtool",
+        "cmd": "aron -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "arjun",
+        "displayName": "Arjun",
+        "description": "HTTP parameter discovery suite",
+        "drawable": "arjun",
+        "cmd": "arjun -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "whatweb",
+        "displayName": "WhatWeb",
+        "description": "Next Generation Web Scanner",
+        "drawable": "whatweb",
+        "cmd": "whatweb -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "katana",
+        "displayName": "Katana",
+        "description": "Next GEN Crawling and Spidering",
+        "drawable": "katana",
+        "cmd": "katana",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "nuclei",
+        "displayName": "Nuclei",
+        "description": "Advanced targeted scan based on templates",
+        "drawable": "nuclei",
+        "cmd": "nuclei",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "httpx",
+        "displayName": "HttpX",
+        "description": "Multi-purpose HTTP toolkit",
+        "drawable": "httpx",
+        "cmd": "httpx",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "jaeles",
+        "displayName": "Jaeles",
+        "description": "Next Generation Web Application Testing",
+        "drawable": "jaeles",
+        "cmd": "jaeles",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "wbk",
+        "displayName": "WBK",
+        "description": "WayBackURLS Client",
+        "drawable": "waybackmachine",
+        "cmd": "wbk -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "findalllinks",
+        "displayName": "Find-All-Links",
+        "description": "Find links using Wayback Machine",
+        "drawable": "findalllinks",
+        "cmd": "find-all-links",
+        "category": null
+      },
+      {
+        "key": "wfuzz",
+        "displayName": "Wfuzz",
+        "description": "Web Application Fuzzer",
+        "drawable": "wfuzz",
+        "cmd": "wfuzz --help",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "commix",
+        "displayName": "COMMIX",
+        "description": "All-in-One OS command injection and exploitation tool",
+        "drawable": "commix",
+        "cmd": "commix",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "sqlmap",
+        "displayName": null,
+        "description": null,
+        "drawable": "sqlmap",
+        "cmd": "sqlmap",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "dotdotpwn",
+        "displayName": "DotDotPWN",
+        "description": "The Directory Traversal Fuzzer",
+        "drawable": "dotdotpwn",
+        "cmd": "dotdotpwn",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "nodexp",
+        "displayName": "NodeXP",
+        "description": "Server Side JavaScript Injection",
+        "drawable": "nodexp",
+        "cmd": "nodexp --help",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "jsalert",
+        "displayName": "JS-Alert",
+        "description": "Find keywords in javascript files and extract the context",
+        "drawable": "andraxtool",
+        "cmd": "jsalert",
+        "category": null
+      },
+      {
+        "key": "xsstrike",
+        "displayName": "XSSTrike",
+        "description": "Advanced XSS Detection Suite",
+        "drawable": "xsstrike",
+        "cmd": "xsstrike",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "xspear",
+        "displayName": "XSpear",
+        "description": "Powerfull XSS Scanning and Parameter analysis",
+        "drawable": "xspear",
+        "cmd": "XSpear -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "payloadmask",
+        "displayName": "PayloadMask",
+        "description": "Bypass WAF using payload editing",
+        "drawable": "payloadmask",
+        "cmd": "payloadmask",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "crlfuzz",
+        "displayName": "CRLFuzz",
+        "description": "Fast CRLF vulnerability scanner",
+        "drawable": "crlfuzz",
+        "cmd": "crlfuzz -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "kadimus",
+        "displayName": "Kadimus",
+        "description": "LFI Scan &amp; Exploit Tool",
+        "drawable": "andraxtool",
+        "cmd": "kadimus",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "xxeinjector",
+        "displayName": "XXEInjector",
+        "description": "XML External Entity Injector",
+        "drawable": "xxe",
+        "cmd": "xxeinjector",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "xxexploiter",
+        "displayName": "XXExploiter",
+        "description": "XXE Exploiter",
+        "drawable": "xxe",
+        "cmd": "xxexploiter",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "xxetimes",
+        "displayName": "XXETimes",
+        "description": "Local File Explorer XXE DTD Entity Expansion",
+        "drawable": "xxe",
+        "cmd": "xxetimes -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "phpsploit",
+        "displayName": "PHPSploit",
+        "description": "Remote control framework for web",
+        "drawable": "andraxtool",
+        "cmd": "phpsploit",
+        "category": "c2_rat"
+      },
+      {
+        "key": "jwt_tool",
+        "displayName": "JWT_Tool",
+        "description": "The JSON Web Token Toolkit",
+        "drawable": "jwt",
+        "cmd": "jwt_tool -h",
+        "category": null
+      },
+      {
+        "key": "jwtcrack",
+        "displayName": "JWT-Crack",
+        "description": "JWT Brute Force Cracker",
+        "drawable": "jwt",
+        "cmd": "jwtcrack",
+        "category": null
+      },
+      {
+        "key": "nomore403",
+        "displayName": "nomore403",
+        "description": "Bypass 40X response codes",
+        "drawable": "nomore403",
+        "cmd": "nomore403",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "forbidden",
+        "displayName": "Forbidden",
+        "description": "Bypass 4xx HTTP response",
+        "drawable": "forbidden",
+        "cmd": "forbidden",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "smuggler",
+        "displayName": "Smuggler",
+        "description": "HTTP Request Smuggling/Desync",
+        "drawable": "smuggler",
+        "cmd": "smuggler",
+        "category": "bug_bounty"
+      }
+    ]
+  },
+  "c2_rat": {
+    "xml_file": "dco_c2_rat.xml",
+    "java_file": "Dco_c2_rat.java",
+    "cards": [
+      {
+        "key": "merlin",
+        "displayName": "MerlinC2",
+        "description": "Post-exploitation C2",
+        "drawable": "merlin",
+        "cmd": "merlin-c2",
+        "category": null
+      },
+      {
+        "key": "nimcrypt",
+        "displayName": "Nimcrypt2",
+        "description": ".NET, PE, &amp; Raw Shellcode Packer/Loader",
+        "drawable": "nimcrypt",
+        "cmd": "nimcrypt -h",
+        "category": null
+      },
+      {
+        "key": "godoh",
+        "displayName": "GoDoH",
+        "description": "DNS-over-HTTPS C2",
+        "drawable": "godoh",
+        "cmd": "godoh -h",
+        "category": "c2_rat"
+      },
+      {
+        "key": "phpsploit",
+        "displayName": "PHPSploit",
+        "description": "Remote control framework for web",
+        "drawable": "andraxtool",
+        "cmd": "phpsploit",
+        "category": "c2_rat"
+      },
+      {
+        "key": "evilwinrm",
+        "displayName": "Evil-WinRM",
+        "description": "The ultimate WinRM shell",
+        "drawable": "evilwinrm",
+        "cmd": "evil-winrm",
+        "category": null
+      },
+      {
+        "key": "exe2hex",
+        "displayName": "exe2hex",
+        "description": "Encode Win EXE to HEX",
+        "drawable": "exe2hex",
+        "cmd": "exe2hex",
+        "category": "c2_rat"
+      }
+    ]
+  },
+  "ics_scada_iot": {
+    "xml_file": "dco_ics_scada_iot.xml",
+    "java_file": "Dco_ics_scada_iot.java",
+    "cards": [
+      {
+        "key": "plcscan",
+        "displayName": "PLCScan",
+        "description": "MODBus and S7COMM PLC Scanner",
+        "drawable": "plc",
+        "cmd": "plcscan",
+        "category": "ics_scada_iot"
+      },
+      {
+        "key": "s7scan",
+        "displayName": "S7Scan",
+        "description": "S7 Scanner using LLC and TCT/IP",
+        "drawable": "plc",
+        "cmd": "s7scan",
+        "category": "ics_scada_iot"
+      },
+      {
+        "key": "modscan",
+        "displayName": "MODScan",
+        "description": "MODBus Scanner",
+        "drawable": "modbus",
+        "cmd": "modscan",
+        "category": "ics_scada_iot"
+      },
+      {
+        "key": "mbtget",
+        "displayName": "MBTGET",
+        "description": "Modbus/TCP client",
+        "drawable": "modbus",
+        "cmd": "mbtget -h",
+        "category": "ics_scada_iot"
+      },
+      {
+        "key": "sixnettools",
+        "displayName": "SIXNET-Tools",
+        "description": "Exploit sixnet RTUs",
+        "drawable": "andraxtool",
+        "cmd": "SIXNET-tools",
+        "category": null
+      },
+      {
+        "key": "scadatools",
+        "displayName": "SCADA-Tools",
+        "description": "SCADA Scan and Hack tools",
+        "drawable": "scadatools",
+        "cmd": "scada-tools",
+        "category": null
+      },
+      {
+        "key": "smod",
+        "displayName": "SMOD",
+        "description": "MODBUS Penetration Test Framework",
+        "drawable": "modbus",
+        "cmd": "sudo smod",
+        "category": "ics_scada_iot"
+      },
+      {
+        "key": "expliot",
+        "displayName": "eXplIOT",
+        "description": "IOT Security Testing and Exploitation",
+        "drawable": "iot",
+        "cmd": "expliot",
+        "category": "ics_scada_iot"
+      },
+      {
+        "key": "homepwn",
+        "displayName": "HomePWN",
+        "description": "Swiss Army Knife for Pentesting of IoT Devices",
+        "drawable": "homepwn",
+        "cmd": "homePwn",
+        "category": "ics_scada_iot"
+      },
+      {
+        "key": "onthefly",
+        "displayName": "On-The-Fly",
+        "description": "Network Pentesting on IT, ICS &amp; IoT Environments",
+        "drawable": "onthefly",
+        "cmd": "on-the-fly",
+        "category": null
+      },
+      {
+        "key": "termineter",
+        "displayName": "termineter",
+        "description": "Smart Meter Security Testing Framework",
+        "drawable": "termineter",
+        "cmd": "termineter",
+        "category": "ics_scada_iot"
+      }
+    ]
+  },
+  "information_gathering": {
+    "xml_file": "dco_information_gathering.xml",
+    "java_file": "Dco_Information_Gathering.java",
+    "cards": [
+      {
+        "key": "whois",
+        "displayName": "Whois",
+        "description": "Domain/IP Information",
+        "drawable": "andraxtool",
+        "cmd": "whois",
+        "category": "information_gathering"
+      },
+      {
+        "key": "dig",
+        "displayName": "DIG",
+        "description": "Domain Information Groper",
+        "drawable": "andraxtool",
+        "cmd": "dig -h",
+        "category": "information_gathering"
+      },
+      {
+        "key": "dnsx",
+        "displayName": "dnsX",
+        "description": "Fast multi-purpose DNS toolkit",
+        "drawable": "dnsx",
+        "cmd": "dnsx",
+        "category": "information_gathering"
+      },
+      {
+        "key": "shuffledns",
+        "displayName": "ShuffleDNS",
+        "description": "Mass Subdomain Enumeration",
+        "drawable": "shuffledns",
+        "cmd": "shuffledns",
+        "category": "information_gathering"
+      },
+      {
+        "key": "massdns",
+        "displayName": "MassDNS",
+        "description": "High-performance DNS stub resolver",
+        "drawable": "andraxtool",
+        "cmd": "massdns",
+        "category": "information_gathering"
+      },
+      {
+        "key": "dnsmap",
+        "displayName": "DNSMap",
+        "description": "DNS Network Mapper",
+        "drawable": "andraxtool",
+        "cmd": "dnsmap",
+        "category": "information_gathering"
+      },
+      {
+        "key": "subfinder",
+        "displayName": "Subfinder",
+        "description": "Passive subdomain discovery",
+        "drawable": "subfinder",
+        "cmd": "subfinder",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "bgpleak",
+        "displayName": "BGP-Leak",
+        "description": "Exposing your Motherfucker Organization",
+        "drawable": "bgpleak",
+        "cmd": "bgp-leak -h",
+        "category": null
+      },
+      {
+        "key": "uncover",
+        "displayName": "Uncover",
+        "description": "Discover exposed hosts on the internet",
+        "drawable": "andraxtool",
+        "cmd": "uncover",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "trace6",
+        "displayName": "Trace6",
+        "description": "Traceroute for IPv6",
+        "drawable": "andraxtool",
+        "cmd": "trace6",
+        "category": "uncategorized"
+      },
+      {
+        "key": "intrace",
+        "displayName": "InTrace",
+        "description": "Enumerate IP hops using TCP",
+        "drawable": "andraxtool",
+        "cmd": "intrace",
+        "category": "information_gathering"
+      },
+      {
+        "key": "amass",
+        "displayName": "Amass",
+        "description": "In-depth Attack Surface Mapping and Asset Discovery",
+        "drawable": "amass",
+        "cmd": "amass",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "spiderfoot",
+        "displayName": "SpiderFoot",
+        "description": "Threat Intelligence and Attack Mapping",
+        "drawable": "spiderfoot",
+        "cmd": "sfcli",
+        "category": "information_gathering"
+      },
+      {
+        "key": "onesixtyone",
+        "displayName": "Onesixtyone",
+        "description": "Fast SNMP Scanner",
+        "drawable": "onesixtyone",
+        "cmd": "onesixtyone",
+        "category": "information_gathering"
+      },
+      {
+        "key": "braa",
+        "displayName": "Braa",
+        "description": "Mass snmp scanner",
+        "drawable": "braa",
+        "cmd": "braa",
+        "category": "information_gathering"
+      },
+      {
+        "key": "snmpwn",
+        "displayName": "SNMPwn",
+        "description": "SNMPv3 user enumerator and attack tool",
+        "drawable": "andraxtool",
+        "cmd": "snmpwn --help",
+        "category": "uncategorized"
+      },
+      {
+        "key": "swaks",
+        "displayName": "Swaks",
+        "description": "Swiss Army Knife for SMTP",
+        "drawable": "swaks",
+        "cmd": "swaks",
+        "category": "information_gathering"
+      },
+      {
+        "key": "ismtp",
+        "displayName": "iSMTP",
+        "description": "SMTP Server Tester",
+        "drawable": "ismtp",
+        "cmd": "iSMTP",
+        "category": "information_gathering"
+      },
+      {
+        "key": "smtpuserenum",
+        "displayName": "SMTP-User-Enum",
+        "description": "SMTP User Enumeration",
+        "drawable": "smtpuserenum",
+        "cmd": "smtp-user-enum",
+        "category": null
+      }
+    ]
+  },
+  "macos_iphone": {
+    "xml_file": "dco_macos_iphone.xml",
+    "java_file": "Dco_macos_iphone.java",
+    "cards": [
+      {
+        "key": "merlin",
+        "displayName": "MerlinC2",
+        "description": "Post-exploitation C2",
+        "drawable": "merlin",
+        "cmd": "merlin-c2",
+        "category": null
+      },
+      {
+        "key": "godoh",
+        "displayName": "GoDoH",
+        "description": "DNS-over-HTTPS C2",
+        "drawable": "godoh",
+        "cmd": "godoh -h",
+        "category": "c2_rat"
+      },
+      {
+        "key": "owl",
+        "displayName": "owl",
+        "description": "Apple Wireless Direct Link",
+        "drawable": "owl",
+        "cmd": "owl",
+        "category": "macos_iphone"
+      },
+      {
+        "key": "applebleee",
+        "displayName": "Apple-BLEEE",
+        "description": "Apple BLE Sniffing",
+        "drawable": "applebleee",
+        "cmd": "apple-bleee",
+        "category": null
+      },
+      {
+        "key": "iblessing",
+        "displayName": "iblessing",
+        "description": "iOS Security Exploiting Toolkit",
+        "drawable": "evilapplecolor",
+        "cmd": "iblessing",
+        "category": "macos_iphone"
+      },
+      {
+        "key": "frida",
+        "displayName": "Frida",
+        "description": "Dynamic instrumentation for Reverse-Engineers",
+        "drawable": "frida",
+        "cmd": "frida",
+        "category": "macos_iphone"
+      },
+      {
+        "key": "objection",
+        "displayName": "OBJection",
+        "description": "Runtime Mobile Exploration",
+        "drawable": "objection",
+        "cmd": "objection",
+        "category": "macos_iphone"
+      }
+    ]
+  },
+  "mainframe": {
+    "xml_file": "dco_mainframe.xml",
+    "java_file": "Dco_Mainframe.java",
+    "cards": [
+      {
+        "key": "psikotik",
+        "displayName": "PSIKOTIK",
+        "description": "TSO User Enumerator",
+        "drawable": "ziron",
+        "cmd": "psikotik -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "mfsniffer",
+        "displayName": "MFSniffer",
+        "description": "Capture TSO user ID and password",
+        "drawable": "ziron",
+        "cmd": "MFSniffer -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "birp",
+        "displayName": "BIRP",
+        "description": "Big Iron Recon &amp; Pwnage",
+        "drawable": "ziron",
+        "cmd": "birp -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "mfdos",
+        "displayName": "MFDoS",
+        "description": "Mainframe TN3270 DoS",
+        "drawable": "ziron",
+        "cmd": "MFDoS -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "phatso",
+        "displayName": "PhaTSO",
+        "description": "TSO User Brute Forcer",
+        "drawable": "ziron",
+        "cmd": "phatso -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "tpxbrute",
+        "displayName": "TPX_Brute",
+        "description": "The z/OS TPX logon brute forcer",
+        "drawable": "ziron",
+        "cmd": "TPX_Brute -h",
+        "category": null
+      },
+      {
+        "key": "mainframe_bruter",
+        "displayName": "Mainframe_Bruter",
+        "description": "z/OS Mainframe Bruteforcer",
+        "drawable": "ziron",
+        "cmd": "mainframe_bruter -h",
+        "category": null
+      },
+      {
+        "key": "cicsshot",
+        "displayName": "CICSSHOT",
+        "description": "Screenshotting CICS transactions",
+        "drawable": "ziron",
+        "cmd": "cicsshot -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "cicspwn",
+        "displayName": "CICSPWN",
+        "description": "Pentest CICS Transaction servers on z/OS",
+        "drawable": "ziron",
+        "cmd": "cicspwn -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "TShOcker",
+        "displayName": "TShOcker",
+        "description": "Meterpreter like TSO reverse shell",
+        "drawable": "ziron",
+        "cmd": "TShOcker -h",
+        "category": null
+      },
+      {
+        "key": "netEBCDICat",
+        "displayName": "netEBCDICat",
+        "description": "Accept z/OS EBCDIC Socket Reverse Shells",
+        "drawable": "ziron",
+        "cmd": "netEBCDICat -h",
+        "category": null
+      },
+      {
+        "key": "maintp",
+        "displayName": "MainTP",
+        "description": "Mainframe Reverse/Bind Root Shell",
+        "drawable": "ziron",
+        "cmd": "MainTP -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "zosprivesc",
+        "displayName": "zOS-PRIVESC",
+        "description": "Privilege escalation on z/OS",
+        "drawable": "ziron",
+        "cmd": "zos-privesc",
+        "category": null
+      }
+    ]
+  },
+  "mainframes": {
+    "xml_file": "dco_mainframes.xml",
+    "java_file": "Dco_Mainframe.java",
+    "cards": [
+      {
+        "key": "tpxbrute",
+        "displayName": "TPX_Brute",
+        "description": "The z/OS TPX logon brute forcer",
+        "drawable": "mainframe",
+        "cmd": "TPX_Brute -h",
+        "category": null
+      },
+      {
+        "key": "cicspwn",
+        "displayName": "CICSPWN",
+        "description": "Pentest CICS Transaction servers on z/OS",
+        "drawable": "cics",
+        "cmd": "cicspwn -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "cicsshot",
+        "displayName": "CICSSHOT",
+        "description": "Screenshotting CICS transactions",
+        "drawable": "cics",
+        "cmd": "cicsshot -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "netEBCDICat",
+        "displayName": "netEBCDICat",
+        "description": "Accept z/OS sockets reverse shells on z/OS and OMVS/USS",
+        "drawable": "mainframe",
+        "cmd": "netEBCDICat -h",
+        "category": null
+      },
+      {
+        "key": "TShOcker",
+        "displayName": "TShOcker",
+        "description": "Meterpreter like TSO reverse shell",
+        "drawable": "mainframe",
+        "cmd": "TShOcker -h",
+        "category": null
+      },
+      {
+        "key": "phatso",
+        "displayName": "PhaTSO",
+        "description": "TSO User Brute Forcer",
+        "drawable": "mainframe",
+        "cmd": "phatso -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "mfsniffer",
+        "displayName": "MFSniffer",
+        "description": "Capture TSO user ID and password",
+        "drawable": "mainframe",
+        "cmd": "MFSniffer -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "mainframe_bruter",
+        "displayName": "Mainframe_Bruter",
+        "description": "z/OS Mainframe Bruteforcer",
+        "drawable": "mainframe",
+        "cmd": "mainframe_bruter -h",
+        "category": null
+      },
+      {
+        "key": "psikotik",
+        "displayName": "PSIKOTIK",
+        "description": "TSO User Enumerator",
+        "drawable": "mainframe",
+        "cmd": "psikotik -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "birp",
+        "displayName": "BIRP",
+        "description": "Big Iron Recon &amp; Pwnage",
+        "drawable": "mainframe",
+        "cmd": "birp -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "maintp",
+        "displayName": "MainTP",
+        "description": "Mainframe Reverse/Bind Root ShELL",
+        "drawable": "mainframe",
+        "cmd": "MainTP -h",
+        "category": "mainframe"
+      },
+      {
+        "key": "mfdos",
+        "displayName": "MFDoS",
+        "description": "Mainframe DoS",
+        "drawable": "mainframe",
+        "cmd": "MFDoS -h",
+        "category": "mainframe"
+      }
+    ]
+  },
+  "network_hacking": {
+    "xml_file": "dco_network_hacking.xml",
+    "java_file": "Dco_network_hacking.java",
+    "cards": [
+      {
+        "key": "ipcalc",
+        "displayName": "IPCalc",
+        "description": "IPv4/IPv6 calculation",
+        "drawable": "ipcalc",
+        "cmd": "ipcalc",
+        "category": "network_hacking"
+      },
+      {
+        "key": "netmask",
+        "displayName": "Netmask",
+        "description": "Netmask helping tool",
+        "drawable": "netmask",
+        "cmd": "netmask --help",
+        "category": "network_hacking"
+      },
+      {
+        "key": "tshark",
+        "displayName": "Tshark",
+        "description": "Network protocol analyzer",
+        "drawable": "wireshark",
+        "cmd": "tshark --help",
+        "category": "network_hacking"
+      },
+      {
+        "key": "dhcping",
+        "displayName": "DHCPing",
+        "description": "DHCP test and autiting tool",
+        "drawable": "andraxtool",
+        "cmd": "sudo dhcping",
+        "category": "uncategorized"
+      },
+      {
+        "key": "dnsdict6",
+        "displayName": "DNSDict6",
+        "description": "Parallized DNS IPv6 dictionary bruteforcer",
+        "drawable": "andraxtool",
+        "cmd": "dnsdict6",
+        "category": "information_gathering"
+      },
+      {
+        "key": "netdiscover",
+        "displayName": "Netdiscover",
+        "description": "Active/Passive ARP Reconnaissance",
+        "drawable": "netdiscover",
+        "cmd": "sudo netdiscover",
+        "category": "scanning"
+      },
+      {
+        "key": "implementation6",
+        "displayName": "Implementation6",
+        "description": "Perform some IPv6 checks",
+        "drawable": "andraxtool",
+        "cmd": "implementation6",
+        "category": "information_gathering"
+      },
+      {
+        "key": "cdpsnarf",
+        "displayName": "CDPSnarf",
+        "description": "Cisco Discovery Protocol Sniffer",
+        "drawable": "cdpsnarf",
+        "cmd": "cdpsnarf",
+        "category": "network_hacking"
+      },
+      {
+        "key": "ipdecap",
+        "displayName": "IPDecap",
+        "description": "Decapsulate GRE, IPIP, 6in4 and ESP traffic",
+        "drawable": "andraxtool",
+        "cmd": "ipdecap",
+        "category": "network_hacking"
+      },
+      {
+        "key": "fragmentation6",
+        "displayName": "Fragmentation6",
+        "description": "Perform fragment firewall tests",
+        "drawable": "andraxtool",
+        "cmd": "fragmentation6",
+        "category": "uncategorized"
+      },
+      {
+        "key": "parasite6",
+        "displayName": "Parasite6",
+        "description": "&quot;ARP spoofer&quot; for IPv6",
+        "drawable": "andraxtool",
+        "cmd": "parasite6",
+        "category": "uncategorized"
+      },
+      {
+        "key": "inverselookup6",
+        "displayName": "Inverse_lookup6",
+        "description": "Inverse address query",
+        "drawable": "andraxtool",
+        "cmd": "inverse_lookup6",
+        "category": null
+      },
+      {
+        "key": "mitm6",
+        "displayName": "Mitm6",
+        "description": "Pwning IPv4 via IPv6",
+        "drawable": "mitm6",
+        "cmd": "mitm6 --help",
+        "category": "network_hacking"
+      },
+      {
+        "key": "dnschef",
+        "displayName": "DNSChef",
+        "description": "DNS proxy for Penetration Test",
+        "drawable": "dnschef",
+        "cmd": "dnschef -h",
+        "category": "network_hacking"
+      },
+      {
+        "key": "fakesolicitate6",
+        "displayName": "Fake_solicitate6",
+        "description": "Solicitate IPv6 on the network",
+        "drawable": "andraxtool",
+        "cmd": "fake_solicitate6",
+        "category": null
+      },
+      {
+        "key": "detctsniffer6",
+        "displayName": "Detect_sniffer6",
+        "description": "Check LAN sniffers",
+        "drawable": "andraxtool",
+        "cmd": "detect_sniffer6",
+        "category": null
+      },
+      {
+        "key": "fakeadvertise6",
+        "displayName": "Fake_advertise6",
+        "description": "Advertise IPv6 on the network",
+        "drawable": "andraxtool",
+        "cmd": "fake_advertise6",
+        "category": null
+      },
+      {
+        "key": "rsmurf6",
+        "displayName": "Rsmurf6",
+        "description": "Smurfs the vctim&apos;s local network",
+        "drawable": "andraxtool",
+        "cmd": "rsmurf6",
+        "category": "uncategorized"
+      },
+      {
+        "key": "smurf6",
+        "displayName": "Smurf6",
+        "description": "Smurf the target with ICMPv6",
+        "drawable": "andraxtool",
+        "cmd": "smurf6",
+        "category": "uncategorized"
+      },
+      {
+        "key": "fakedhcps6",
+        "displayName": "Fake_dhcps6",
+        "description": "Fake DHCPv6 Server",
+        "drawable": "andraxtool",
+        "cmd": "fake_dhcps6",
+        "category": null
+      },
+      {
+        "key": "fakedns6d",
+        "displayName": "Fake_dns6d",
+        "description": "Fake DNS IPv6 server",
+        "drawable": "andraxtool",
+        "cmd": "fake_dns6d",
+        "category": null
+      },
+      {
+        "key": "fakednsupdate6",
+        "displayName": "Fake_dnsupdate6",
+        "description": "Fake DNS update requests",
+        "drawable": "andraxtool",
+        "cmd": "fake_dnsupdate6",
+        "category": null
+      },
+      {
+        "key": "fakemld6",
+        "displayName": "Fake_mld6",
+        "description": "Announce yourself in a multicast using MLD",
+        "drawable": "andraxtool",
+        "cmd": "fake_mld6",
+        "category": null
+      },
+      {
+        "key": "fakemld26",
+        "displayName": "Fake_mld26",
+        "description": "Announce yourself in a multicast using MLDv2",
+        "drawable": "andraxtool",
+        "cmd": "fake_mld26",
+        "category": null
+      },
+      {
+        "key": "fakemldrouter6",
+        "displayName": "Fake_mldrouter6",
+        "description": "Announce, delete or soliciated MLD route",
+        "drawable": "andraxtool",
+        "cmd": "fake_mldrouter6",
+        "category": null
+      },
+      {
+        "key": "fakerouter6",
+        "displayName": "Fake_router6",
+        "description": "Try create a fake IPv6 router",
+        "drawable": "andraxtool",
+        "cmd": "fake_router6",
+        "category": null
+      },
+      {
+        "key": "fakerouter26",
+        "displayName": "Fake_router26",
+        "description": "Try create a fake IPv6 router 2",
+        "drawable": "andraxtool",
+        "cmd": "fake_router26",
+        "category": null
+      },
+      {
+        "key": "redir6",
+        "displayName": "Redir6",
+        "description": "Implante a route into victim-ip",
+        "drawable": "andraxtool",
+        "cmd": "redir6",
+        "category": "uncategorized"
+      },
+      {
+        "key": "killrouter6",
+        "displayName": "Kill_router6",
+        "description": "Down router on routeing table",
+        "drawable": "andraxtool",
+        "cmd": "kill_router6",
+        "category": null
+      },
+      {
+        "key": "delorean",
+        "displayName": "Delorean",
+        "description": "NTP server written in python",
+        "drawable": "delorean",
+        "cmd": "sudo delorean -h",
+        "category": "website_hacking"
+      },
+      {
+        "key": "responder",
+        "displayName": "Responder",
+        "description": "NBT-NS, LLMNR and MDNS Responder",
+        "drawable": "responder",
+        "cmd": "sudo responder -h",
+        "category": "network_hacking"
+      },
+      {
+        "key": "ncat",
+        "displayName": "Ncat",
+        "description": "Feature-packed networking utility ",
+        "drawable": "nmap",
+        "cmd": "ncat -h",
+        "category": "uncategorized"
+      },
+      {
+        "key": "bettercap",
+        "displayName": "Bettercap",
+        "description": "Swiss Army knife for networks recon and attacks",
+        "drawable": "bettercap",
+        "cmd": "sudo bettercap",
+        "category": "network_hacking"
+      },
+      {
+        "key": "yersinia",
+        "displayName": "Yersinia",
+        "description": "A framework for layer 2 attacks",
+        "drawable": "yersinia",
+        "cmd": "sudo yersinia -h",
+        "category": "network_hacking"
+      },
+      {
+        "key": "miranda",
+        "displayName": "Miranda",
+        "description": "Interactive UPnP Client",
+        "drawable": "miranda",
+        "cmd": "sudo miranda",
+        "category": "network_hacking"
+      },
+      {
+        "key": "upnptools",
+        "displayName": "UPnP-Tools",
+        "description": "UPnP Utilities",
+        "drawable": "andraxtool",
+        "cmd": "upnp_tools",
+        "category": null
+      },
+      {
+        "key": "bgpcli",
+        "displayName": "BGP-Cli",
+        "description": "Border Gateway Protocol CLI",
+        "drawable": "andraxtool",
+        "cmd": "bgp_cli -h",
+        "category": null
+      },
+      {
+        "key": "eigrpcli",
+        "displayName": "EIGRP-Cli",
+        "description": "EIGRP Client",
+        "drawable": "andraxtool",
+        "cmd": "eigrp_cli",
+        "category": null
+      },
+      {
+        "key": "ldpcli",
+        "displayName": "LDP_Cli",
+        "description": "Label Distribution Protocol CLI",
+        "drawable": "andraxtool",
+        "cmd": "ldp_cli",
+        "category": null
+      },
+      {
+        "key": "sdnpwn",
+        "displayName": "SDNPwn",
+        "description": "SDN Penetration Testing Toolkit",
+        "drawable": "sdnpwn",
+        "cmd": "sdnpwn",
+        "category": "network_hacking"
+      },
+      {
+        "key": "mplstun",
+        "displayName": "MPLS_Tun",
+        "description": "MPLS L2 and L3 tunnel",
+        "drawable": "andraxtool",
+        "cmd": "mpls_tun -h",
+        "category": null
+      },
+      {
+        "key": "mplsredirect",
+        "displayName": "MPLS_Redirect",
+        "description": "On-the-fly MPLS Redirector",
+        "drawable": "andraxtool",
+        "cmd": "mpls_redirect -h",
+        "category": null
+      },
+      {
+        "key": "fiked",
+        "displayName": "Fiked",
+        "description": "FakeIKEd, fake IKE daemon",
+        "drawable": "andraxtool",
+        "cmd": "fiked",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "socat",
+        "displayName": "Socat",
+        "description": "Relay for bidirectional data transfer",
+        "drawable": "andraxtool",
+        "cmd": "socat -h",
+        "category": "network_hacking"
+      },
+      {
+        "key": "dns2tcp",
+        "displayName": "DNS2TCP",
+        "description": "Designed to relay TCP connections through DNS",
+        "drawable": "dns2tcp",
+        "cmd": "dns2tcpc",
+        "category": "network_hacking"
+      },
+      {
+        "key": "chisel",
+        "displayName": "Chisel",
+        "description": "A fast TCP tunnel over HTTP",
+        "drawable": "chisel",
+        "cmd": "chisel",
+        "category": "network_hacking"
+      },
+      {
+        "key": "ligolong",
+        "displayName": "Ligolo-NG",
+        "description": "Tunneling like a VPN",
+        "drawable": "ligolong",
+        "cmd": "ligolo-ng",
+        "category": null
+      }
+    ]
+  },
+  "packet_crafting": {
+    "xml_file": "dco_packet_crafting.xml",
+    "java_file": "Dco_Packet_Crafting.java",
+    "cards": [
+      {
+        "key": "arping",
+        "displayName": "Arping",
+        "description": "Ping destination by ARP",
+        "drawable": "arping",
+        "cmd": "arping",
+        "category": "packet_crafting"
+      },
+      {
+        "key": "thcping6",
+        "displayName": "THCPing6",
+        "description": "icmpv6 echo request",
+        "drawable": "andraxtool",
+        "cmd": "thcping6",
+        "category": "uncategorized"
+      },
+      {
+        "key": "nping",
+        "displayName": "Nping",
+        "description": "Universal network packet generator",
+        "drawable": "nmap",
+        "cmd": "nping",
+        "category": "packet_crafting"
+      },
+      {
+        "key": "hexinject",
+        "displayName": "HexInject",
+        "description": "Versatile packet injector and sniffer",
+        "drawable": "hexinject",
+        "cmd": "hexinject -h",
+        "category": "packet_crafting"
+      },
+      {
+        "key": "bittwist",
+        "displayName": "Bit-Twist",
+        "description": "Ethernet packet generator",
+        "drawable": "bittwist",
+        "cmd": "bittwist -h",
+        "category": null
+      },
+      {
+        "key": "scapy",
+        "displayName": "Scapy",
+        "description": "Powerful interactive packet manipulation",
+        "drawable": "scapy",
+        "cmd": "sudo scapy",
+        "category": "packet_crafting"
+      },
+      {
+        "key": "nemesis",
+        "displayName": "Nemesis",
+        "description": "CMD-Line Packet Crafting and Injection Tool",
+        "drawable": "nemesis",
+        "cmd": "nemesis",
+        "category": "packet_crafting"
+      }
+    ]
+  },
+  "password_hacking": {
+    "xml_file": "dco_password_hacking.xml",
+    "java_file": "Dco_Password_Hacking.java",
+    "cards": [
+      {
+        "key": "maskprocessor",
+        "displayName": "MaskProcessor",
+        "description": "High-Performance Word Generator",
+        "drawable": "maskprocessor",
+        "cmd": "maskprocessor --help",
+        "category": "password_hacking"
+      },
+      {
+        "key": "cewl",
+        "displayName": "CeWL",
+        "description": "Custom Word List generator",
+        "drawable": "cewl",
+        "cmd": "cewl -h",
+        "category": "password_hacking"
+      },
+      {
+        "key": "bopscrk",
+        "displayName": "Bopscrk",
+        "description": "Generates smart and powerful wordlists",
+        "drawable": "bopscrk",
+        "cmd": "bopscrk",
+        "category": "password_hacking"
+      },
+      {
+        "key": "narthex",
+        "displayName": "narthex",
+        "description": "Modular Personalized Dictionary Generator",
+        "drawable": "narthex",
+        "cmd": "nwiz",
+        "category": "password_hacking"
+      },
+      {
+        "key": "crunch",
+        "displayName": "CRUNCH",
+        "description": "Wordlist Generator",
+        "drawable": "crunch",
+        "cmd": "crunch",
+        "category": "password_hacking"
+      },
+      {
+        "key": "pipal",
+        "displayName": "pipal",
+        "description": "Password analyser",
+        "drawable": "pipal",
+        "cmd": "pipal -h",
+        "category": "password_hacking"
+      },
+      {
+        "key": "hashboy",
+        "displayName": "HASHBoy",
+        "description": "Passive HASH Craker",
+        "drawable": "hashboy",
+        "cmd": "hashboy",
+        "category": "password_hacking"
+      },
+      {
+        "key": "ssh_auditor",
+        "displayName": "SSH-AUDITOR",
+        "description": "The best way to scan for weak ssh passwords",
+        "drawable": "sshauditor",
+        "cmd": "ssh-auditor",
+        "category": null
+      },
+      {
+        "key": "ncrack",
+        "displayName": "NCRACK",
+        "description": "High-SPEED Network AUTH Cracking",
+        "drawable": "ncrack",
+        "cmd": "ncrack",
+        "category": "password_hacking"
+      },
+      {
+        "key": "hydra",
+        "displayName": "HYDRA",
+        "description": "Tool to brute force protocols",
+        "drawable": "hydra",
+        "cmd": "hydra",
+        "category": "password_hacking"
+      },
+      {
+        "key": "medusa",
+        "displayName": "medusa",
+        "description": "Parallel Network Login Auditor",
+        "drawable": "medusa",
+        "cmd": "medusa",
+        "category": "password_hacking"
+      },
+      {
+        "key": "patator",
+        "displayName": "patator",
+        "description": "Multi-purpose brute-forcer",
+        "drawable": "patator",
+        "cmd": "patator",
+        "category": "password_hacking"
+      },
+      {
+        "key": "hashcat",
+        "displayName": "HASHCAT",
+        "description": "World&apos;s fastest password cracker",
+        "drawable": "hashcat",
+        "cmd": "hashcat -h",
+        "category": "password_hacking"
+      },
+      {
+        "key": "john",
+        "displayName": "John The Ripper",
+        "description": "Fast password cracker",
+        "drawable": "john",
+        "cmd": "john",
+        "category": null
+      },
+      {
+        "key": "bgpmd5crack",
+        "displayName": "BGP_MD5Crack",
+        "description": "RFC2385 password cracker",
+        "drawable": "andraxtool",
+        "cmd": "bgp_md5crack -h",
+        "category": null
+      },
+      {
+        "key": "pskcrack",
+        "displayName": "PSK-Crack",
+        "description": "Pre-Shared Key Cracking",
+        "drawable": "ikescan",
+        "cmd": "psk-crack",
+        "category": null
+      },
+      {
+        "key": "mfoc",
+        "displayName": "mfoc",
+        "description": "Mifare Classic Offline Cracker",
+        "drawable": "mfoc",
+        "cmd": "mfoc -h",
+        "category": "password_hacking"
+      },
+      {
+        "key": "eapmd5pass",
+        "displayName": "EAP-MD5-Pass",
+        "description": "Offline EAP-MD5 dictionary attack",
+        "drawable": "andraxtool",
+        "cmd": "eapmd5pass",
+        "category": null
+      }
+    ]
+  },
+  "phishing": {
+    "xml_file": "dco_phishing.xml",
+    "java_file": "Dco_phishing.java",
+    "cards": [
+      {
+        "key": "evilginx2",
+        "displayName": "EVILGINX2",
+        "description": "MITM Attack Framework for Credential Harvesting",
+        "drawable": "evilginx2",
+        "cmd": "sudo evilginx",
+        "category": "phishing"
+      },
+      {
+        "key": "modlishka",
+        "displayName": "Modlishka",
+        "description": "Reverse proxy for next level phishing",
+        "drawable": "andraxtool",
+        "cmd": "sudo modlishka",
+        "category": "phishing"
+      },
+      {
+        "key": "gophish",
+        "displayName": "GOPhish",
+        "description": "Open-Source Phishing Toolkit",
+        "drawable": "gophish",
+        "cmd": "sudo gophish",
+        "category": "phishing"
+      },
+      {
+        "key": "bitb",
+        "displayName": "BITB",
+        "description": "Browser In The Browser Templates",
+        "drawable": "bitb",
+        "cmd": "bitb",
+        "category": "phishing"
+      },
+      {
+        "key": "urlcrazy",
+        "displayName": "URLCrazy",
+        "description": "URL hijacking, Phishing, and Corporate Espionage",
+        "drawable": "urlcrazy",
+        "cmd": "urlcrazy",
+        "category": "phishing"
+      }
+    ]
+  },
+  "phreaking": {
+    "xml_file": "dco_phreaking.xml",
+    "java_file": "Dco_phreaking.java",
+    "cards": [
+      {
+        "key": "sippts",
+        "displayName": null,
+        "description": null,
+        "drawable": "sippts",
+        "cmd": "sippts",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "svmap",
+        "displayName": "svmap",
+        "description": "SIP Scanner",
+        "drawable": "sipvicious",
+        "cmd": "sipvicious_svmap",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "svwar",
+        "displayName": "svwar",
+        "description": "Identifies working lines on a PBX",
+        "drawable": "sipvicious",
+        "cmd": "sipvicious_svwar",
+        "category": "uncategorized"
+      },
+      {
+        "key": "rtpbreak",
+        "displayName": "RTPBREAK",
+        "description": "Detects, reconstructs, and analyzes RTP sessions",
+        "drawable": "andraxtool",
+        "cmd": "rtpbreak",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "svcrack",
+        "displayName": "svcrack",
+        "description": "Crack PBX passwords",
+        "drawable": "sipvicious",
+        "cmd": "sipvicious_svcrack",
+        "category": "uncategorized"
+      },
+      {
+        "key": "enumiax",
+        "displayName": "ENUMIAX",
+        "description": "IAX Protocol Enumerator",
+        "drawable": "andraxtool",
+        "cmd": "enumiax",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "rtpinsertsound",
+        "displayName": "RTPInsertSOUND",
+        "description": "Insert audio into RTP stream",
+        "drawable": "andraxtool",
+        "cmd": "rtpinsertsound",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "iaxflood",
+        "displayName": "IAXFLOOD",
+        "description": "Inter-Asterisk_eXchange Flooder",
+        "drawable": "andraxtool",
+        "cmd": "iaxflood",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "inviteflood",
+        "displayName": "INVITEFLOOD",
+        "description": "SIP/SDP INVITE flooding over UDP/IP",
+        "drawable": "andraxtool",
+        "cmd": "inviteflood",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "rtpflood",
+        "displayName": "RTPFLOOD",
+        "description": "Flood any device that is processing RTP",
+        "drawable": "andraxtool",
+        "cmd": "rtpflood",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "udpfloodVLAN",
+        "displayName": "UDPFloodVLAN",
+        "description": "UDP Flood with VLAN Support",
+        "drawable": "andraxtool",
+        "cmd": "udpfloodVLAN",
+        "category": null
+      },
+      {
+        "key": "voiphopper",
+        "displayName": "VOIPHopper",
+        "description": "VoIP Hopper Network Penetration Testing",
+        "drawable": "voiphopper",
+        "cmd": "voiphopper -h",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "vsaudit",
+        "displayName": "VSAudit",
+        "description": "VOIP Security Audit Framework",
+        "drawable": "andraxtool",
+        "cmd": "vsaudit",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "sipsak",
+        "displayName": "SIPSAK",
+        "description": "SIP swiss army knife",
+        "drawable": "andraxtool",
+        "cmd": "sipsak",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "isip",
+        "displayName": "iSIP",
+        "description": "Interactive sip toolkit for packet manipulations",
+        "drawable": "sip",
+        "cmd": "sudo isip",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "sctpscan",
+        "displayName": "SCTPScan",
+        "description": "SCTP Network Scanner",
+        "drawable": "sctpscan",
+        "cmd": "sctpscan",
+        "category": "scanning"
+      },
+      {
+        "key": "gtpscan",
+        "displayName": "GTP-Scan",
+        "description": "GTP Scanner",
+        "drawable": "gtp_scan",
+        "cmd": "gtp_scan -h",
+        "category": null
+      },
+      {
+        "key": "diameterenum",
+        "displayName": "Diameter-Enum",
+        "description": "Diameter Scanner",
+        "drawable": "ltetower",
+        "cmd": "diameter_enum -h",
+        "category": null
+      },
+      {
+        "key": "s1apenum",
+        "displayName": "S1AP_Enum",
+        "description": "S1AP Enumerator",
+        "drawable": "ltetower",
+        "cmd": "s1ap_enum",
+        "category": null
+      },
+      {
+        "key": "cryptomobile",
+        "displayName": "CryptoMobile",
+        "description": "Rape mobile Crypto",
+        "drawable": "cryptomobile",
+        "cmd": "cryptomobile",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "enodebhack",
+        "displayName": "eNodeB",
+        "description": "Evolved Node B for LTE Hacking and 5G Downgrade",
+        "drawable": "lte",
+        "cmd": "eNodeB",
+        "category": null
+      },
+      {
+        "key": "mme",
+        "displayName": null,
+        "description": null,
+        "drawable": "lte",
+        "cmd": "mme",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "sgwhack",
+        "displayName": "SGW",
+        "description": "Serving Gateway",
+        "drawable": "cellphonetower",
+        "cmd": "sgw",
+        "category": null
+      },
+      {
+        "key": "pgwhack",
+        "displayName": "PGW",
+        "description": "Packet Data Network Gateway",
+        "drawable": "cellphonetower",
+        "cmd": "pgw",
+        "category": null
+      }
+    ]
+  },
+  "scanning": {
+    "xml_file": "dco_scanning.xml",
+    "java_file": "Dco_Scanning.java",
+    "cards": [
+      {
+        "key": "nmap",
+        "displayName": "Nmap",
+        "description": "Advanced Network Mapper",
+        "drawable": "nmap",
+        "cmd": "nmap",
+        "category": "scanning"
+      },
+      {
+        "key": "masscan",
+        "displayName": "MASSCAN",
+        "description": "Mass IP port scanner",
+        "drawable": "masscan",
+        "cmd": "masscan --help",
+        "category": "scanning"
+      },
+      {
+        "key": "nbtscan",
+        "displayName": "NBTScan",
+        "description": "NETBIOS Scanner",
+        "drawable": "nbtscan",
+        "cmd": "nbtscan",
+        "category": "scanning"
+      },
+      {
+        "key": "sctpscan",
+        "displayName": "SCTPScan",
+        "description": "SCTP Network Scanner",
+        "drawable": "sctpscan",
+        "cmd": "sctpscan",
+        "category": "scanning"
+      },
+      {
+        "key": "ikescan",
+        "displayName": "IKE-Scan",
+        "description": "Discover and fingerprint IKE hosts",
+        "drawable": "ikescan",
+        "cmd": "sudo ike-scan",
+        "category": null
+      },
+      {
+        "key": "ssh_auditor",
+        "displayName": "SSH-AUDITOR",
+        "description": "The best way to scan for weak ssh passwords",
+        "drawable": "sshauditor",
+        "cmd": "ssh-auditor",
+        "category": null
+      }
+    ]
+  },
+  "stress_testing": {
+    "xml_file": "dco_stress_testing.xml",
+    "java_file": "Dco_stress_testing.java",
+    "cards": [
+      {
+        "key": "dnsdrdos",
+        "displayName": "dnsdrdos",
+        "description": "Distributed DNS reflection DoS",
+        "drawable": "andraxtool",
+        "cmd": "dnsdrdos -H",
+        "category": "stress_testing"
+      },
+      {
+        "key": "slowhttptest",
+        "displayName": "SlowHTTPTest",
+        "description": "highly configurable stress testing simulator",
+        "drawable": "andraxtool",
+        "cmd": "slowhttptest",
+        "category": "stress_testing"
+      },
+      {
+        "key": "fuzzip6",
+        "displayName": "Fuzz_ip6",
+        "description": "Fuzzes an IPv6 packet",
+        "drawable": "andraxtool",
+        "cmd": "fuzz_ip6",
+        "category": null
+      },
+      {
+        "key": "denial6",
+        "displayName": "Denial6",
+        "description": "Perform various DoS attacks",
+        "drawable": "andraxtool",
+        "cmd": "denial6",
+        "category": "uncategorized"
+      },
+      {
+        "key": "flooddhcpc6",
+        "displayName": "Flood_dhcpc6",
+        "description": "DHCP Client Flooder",
+        "drawable": "andraxtool",
+        "cmd": "flood_dhcpc6",
+        "category": null
+      },
+      {
+        "key": "floodadvertise6",
+        "displayName": "Flood_advertise6",
+        "description": "Flood network with advertise",
+        "drawable": "andraxtool",
+        "cmd": "flood_advertise6",
+        "category": null
+      },
+      {
+        "key": "floodmld6",
+        "displayName": "Flood_mld6",
+        "description": "Flood local network with MLD",
+        "drawable": "andraxtool",
+        "cmd": "flood_mld6",
+        "category": null
+      },
+      {
+        "key": "floodmld26",
+        "displayName": "Flood_mld26",
+        "description": "Flood local network with MLDv2",
+        "drawable": "andraxtool",
+        "cmd": "flood_mld26",
+        "category": null
+      },
+      {
+        "key": "floodmldrouter6",
+        "displayName": "Flood_mldrouter6",
+        "description": "Flood MLD router with advertisements",
+        "drawable": "andraxtool",
+        "cmd": "flood_mldrouter6",
+        "category": null
+      },
+      {
+        "key": "floodredir6",
+        "displayName": "Flood_redir6",
+        "description": "Flood with ICMPv6 redirect",
+        "drawable": "andraxtool",
+        "cmd": "flood_redir6",
+        "category": null
+      },
+      {
+        "key": "floodrouter6",
+        "displayName": "Flood_router6",
+        "description": "Flood with router advertisements",
+        "drawable": "andraxtool",
+        "cmd": "flood_router6",
+        "category": null
+      },
+      {
+        "key": "floodrouter26",
+        "displayName": "Flood_router26",
+        "description": "Flood with router advertisements",
+        "drawable": "andraxtool",
+        "cmd": "flood_router26",
+        "category": null
+      },
+      {
+        "key": "floodrs6",
+        "displayName": "Flood_rs6",
+        "description": "Flood with ICMPv6 Router Solicitation",
+        "drawable": "andraxtool",
+        "cmd": "flood_rs6",
+        "category": null
+      },
+      {
+        "key": "floodsolicitate6",
+        "displayName": "Flood_solicitate6",
+        "description": "Flood with neighbor solicitations",
+        "drawable": "andraxtool",
+        "cmd": "flood_solicitate6",
+        "category": null
+      },
+      {
+        "key": "floodunreach6",
+        "displayName": "Flood_unreach6",
+        "description": "Flood with ICMPv6 unreachable packets",
+        "drawable": "andraxtool",
+        "cmd": "flood_unreach6",
+        "category": null
+      },
+      {
+        "key": "rsmurf6",
+        "displayName": "Rsmurf6",
+        "description": "Smurfs the vctim&apos;s local network",
+        "drawable": "andraxtool",
+        "cmd": "rsmurf6",
+        "category": "uncategorized"
+      },
+      {
+        "key": "dosnewip6",
+        "displayName": "Dos-new-ip6",
+        "description": "DoS new IPv6 on LAN",
+        "drawable": "andraxtool",
+        "cmd": "dos-new-ip6",
+        "category": null
+      },
+      {
+        "key": "randicmp6",
+        "displayName": "Randicmp6",
+        "description": "Send all ICMPv6 types to a destination",
+        "drawable": "andraxtool",
+        "cmd": "randicmp6",
+        "category": "uncategorized"
+      }
+    ]
+  },
+  "voip_3g_4g": {
+    "xml_file": "dco_voip_3g_4g.xml",
+    "java_file": "Dco_voip_3g_4g.java",
+    "cards": [
+      {
+        "key": "enodebhack",
+        "displayName": "eNodeB",
+        "description": "Evolved Node B for LTE Hacking and 5G Downgrade",
+        "drawable": "lte",
+        "cmd": "eNodeB-HACK -h",
+        "category": null
+      },
+      {
+        "key": "mmeenodebhack",
+        "displayName": "MME-eNodeB",
+        "description": "MME enhanced with eNodeB",
+        "drawable": "lte",
+        "cmd": "mme-eNodeB-HACK -h",
+        "category": null
+      },
+      {
+        "key": "sgwhack",
+        "displayName": "SGW",
+        "description": "Serving Gateway",
+        "drawable": "cellphonetower",
+        "cmd": "SGW-HACK -h",
+        "category": null
+      },
+      {
+        "key": "pgwhack",
+        "displayName": "PGW",
+        "description": "Packet Data Network Gateway",
+        "drawable": "cellphonetower",
+        "cmd": "PGW-HACK -h",
+        "category": null
+      },
+      {
+        "key": "diameterenum",
+        "displayName": "Diameter-Enum",
+        "description": "Diameter Scanner",
+        "drawable": "diametertower",
+        "cmd": "diameter_enum -h",
+        "category": null
+      },
+      {
+        "key": "s1apenum",
+        "displayName": "S1AP-Enum",
+        "description": "S1SetupRequest PDU to MME",
+        "drawable": "diametertower",
+        "cmd": "s1ap_enum",
+        "category": null
+      },
+      {
+        "key": "gtpscan",
+        "displayName": "GTP-Scan",
+        "description": "GTP Scanner",
+        "drawable": "diametertower",
+        "cmd": "gtp_scan -h",
+        "category": null
+      },
+      {
+        "key": "cryptomobile",
+        "displayName": "CryptoMobile",
+        "description": "Rape mobile Crypto",
+        "drawable": "cryptomobile",
+        "cmd": "cryptomobile",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "enumiax",
+        "displayName": "ENUMIAX",
+        "description": "Asterisk Exchange protocol",
+        "drawable": "andraxicon_svg",
+        "cmd": "enumiax",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "svmap",
+        "displayName": "SVMap",
+        "description": "SIP Scanner",
+        "drawable": "sipvicious",
+        "cmd": "sipvicious_svmap",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "isip",
+        "displayName": "iSIP",
+        "description": "Interactive sip toolkit for packet manipulations",
+        "drawable": "sip",
+        "cmd": "sudo isip",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "sipsak",
+        "displayName": "SIPSAK",
+        "description": "For developers and administrators of SIP",
+        "drawable": "andraxicon_svg",
+        "cmd": "sipsak",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "vsaudit",
+        "displayName": "VSAudit",
+        "description": "Perform attacks to general voip services",
+        "drawable": "andraxicon_svg",
+        "cmd": "vsaudit",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "protostestsuite",
+        "displayName": "PROTOS Test Suite",
+        "description": "Fuck SIP protocol like a motherfucker",
+        "drawable": "sip",
+        "cmd": "protos-test-suite",
+        "category": null
+      },
+      {
+        "key": "iaxflood",
+        "displayName": "IAXFLOOD",
+        "description": "A UDP Inter-Asterisk_eXchange",
+        "drawable": "andraxicon_svg",
+        "cmd": "iaxflood",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "inviteflood",
+        "displayName": "INVITEFLOOD",
+        "description": "Perform SIP/SDP INVITE flooding over UDP/IP",
+        "drawable": "andraxicon_svg",
+        "cmd": "inviteflood",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "rtpflood",
+        "displayName": "RTPFLOOD",
+        "description": "Flood any device that is processing RTP",
+        "drawable": "andraxicon_svg",
+        "cmd": "rtpflood",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "udpfloodVLAN",
+        "displayName": "UDPFloodVLAN",
+        "description": "Flood UDP VLAN packets",
+        "drawable": "andraxicon_svg",
+        "cmd": "udpfloodVLAN",
+        "category": null
+      },
+      {
+        "key": "rtpbreak",
+        "displayName": "RTPBREAK",
+        "description": "Detects, reconstructs, and analyzes RTP sessions",
+        "drawable": "andraxicon_svg",
+        "cmd": "rtpbreak",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "sipcracker",
+        "displayName": "SipCRACKER",
+        "description": "Remote password cracker for SIP",
+        "drawable": "sip",
+        "cmd": "sipcracker",
+        "category": "voip_3g_4g"
+      },
+      {
+        "key": "rtpinsertsound",
+        "displayName": "RTPINSERTSOUND",
+        "description": "Insert audio into a specified audio RTP stream",
+        "drawable": "andraxicon_svg",
+        "cmd": "rtpinsertsound",
+        "category": "voip_3g_4g"
+      }
+    ]
+  },
+  "website_hacking": {
+    "xml_file": "dco_website_hacking.xml",
+    "java_file": "Dco_website_hacking.java",
+    "cards": [
+      {
+        "key": "wafw00f",
+        "displayName": "WAFw00f",
+        "description": "Identifies and fingerprints WAF",
+        "drawable": "wafw00f",
+        "cmd": "wafw00f -h",
+        "category": "website_hacking"
+      },
+      {
+        "key": "payloadmask",
+        "displayName": "PayloadMask",
+        "description": "Bypass WAF using payload editing",
+        "drawable": "payloadmask",
+        "cmd": "payloadmask",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "aron",
+        "displayName": "Aron",
+        "description": "Find hidden GET/POST",
+        "drawable": "andraxtool",
+        "cmd": "aron -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "arjun",
+        "displayName": "Arjun",
+        "description": "HTTP parameter discovery suite",
+        "drawable": "arjun",
+        "cmd": "arjun -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "cansina",
+        "displayName": "Cansina",
+        "description": "Web Content Discovery",
+        "drawable": "cansina",
+        "cmd": "cansina -h",
+        "category": "uncategorized"
+      },
+      {
+        "key": "lulzbuster",
+        "displayName": "Lulzbuster",
+        "description": "Search Web for Fun",
+        "drawable": "andraxtool",
+        "cmd": "lulzbuster -H",
+        "category": "website_hacking"
+      },
+      {
+        "key": "ffuf",
+        "displayName": "Ffuf",
+        "description": "Fuzz Faster U Fool",
+        "drawable": "ffuf",
+        "cmd": "ffuf -h",
+        "category": "website_hacking"
+      },
+      {
+        "key": "monsoon",
+        "displayName": "Monsoon",
+        "description": "Fast HTTP enumerator",
+        "drawable": "monsoon",
+        "cmd": "monsoon --help",
+        "category": "website_hacking"
+      },
+      {
+        "key": "wfuzz",
+        "displayName": "Wfuzz",
+        "description": "Web Application Fuzzer",
+        "drawable": "wfuzz",
+        "cmd": "wfuzz --help",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "gobuster",
+        "displayName": "Gobuster",
+        "description": "Directory/File, DNS and VHost buster",
+        "drawable": "andraxtool",
+        "cmd": "gobuster",
+        "category": "website_hacking"
+      },
+      {
+        "key": "httpx",
+        "displayName": "HttpX",
+        "description": "Multi-purpose HTTP toolkit",
+        "drawable": "httpx",
+        "cmd": "httpx",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "cmseek",
+        "displayName": "CMSeeK",
+        "description": "CMS Detection and Exploitation suite",
+        "drawable": "cmseek",
+        "cmd": "sudo cmseek",
+        "category": "website_hacking"
+      },
+      {
+        "key": "wpscan",
+        "displayName": "WPScan",
+        "description": "WordPress Security Scanner",
+        "drawable": "wpscan",
+        "cmd": "wpscan -h",
+        "category": "website_hacking"
+      },
+      {
+        "key": "findalllinks",
+        "displayName": "Find-All-Links",
+        "description": "Find links using Wayback Machine",
+        "drawable": "findalllinks",
+        "cmd": "find-all-links",
+        "category": null
+      },
+      {
+        "key": "wbk",
+        "displayName": "WBK",
+        "description": "WayBackURLS Client",
+        "drawable": "waybackmachine",
+        "cmd": "wbk -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "whatweb",
+        "displayName": "WhatWeb",
+        "description": "Next Generation Web Scanner",
+        "drawable": "whatweb",
+        "cmd": "whatweb -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "nuclei",
+        "displayName": "Nuclei",
+        "description": "Advanced targeted scan based on templates",
+        "drawable": "nuclei",
+        "cmd": "nuclei",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "jaeles",
+        "displayName": "Jaeles",
+        "description": "Next Generation Web Application Testing",
+        "drawable": "jaeles",
+        "cmd": "jaeles",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "zap",
+        "displayName": "Zap",
+        "description": "Zed Attack Proxy (ZAP)",
+        "drawable": "zap",
+        "cmd": "zap",
+        "category": "uncategorized"
+      },
+      {
+        "key": "mitmproxy",
+        "displayName": "Mitmproxy",
+        "description": "SSL-capable proxy with a console interface",
+        "drawable": "mitmproxy",
+        "cmd": "mitmproxy",
+        "category": "website_hacking"
+      },
+      {
+        "key": "katana",
+        "displayName": "Katana",
+        "description": "Next GEN Crawling and Spidering",
+        "drawable": "katana",
+        "cmd": "katana",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "s3scanner",
+        "displayName": "S3scanner",
+        "description": "Scan for open S3 buckets and dump the contents",
+        "drawable": "s3scanner",
+        "cmd": "s3scanner -h",
+        "category": "uncategorized"
+      },
+      {
+        "key": "cadaver",
+        "displayName": "Cadaver",
+        "description": "WebDav Command Line",
+        "drawable": "cadaver",
+        "cmd": "cadaver",
+        "category": "website_hacking"
+      },
+      {
+        "key": "davtest",
+        "displayName": "DAVTest",
+        "description": "Exploit WebDAV",
+        "drawable": "webdav",
+        "cmd": "davtest",
+        "category": "uncategorized"
+      },
+      {
+        "key": "sqlmap",
+        "displayName": null,
+        "description": null,
+        "drawable": "sqlmap",
+        "cmd": "sqlmap",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "commix",
+        "displayName": "Commix",
+        "description": "All-in-One OS command injection and exploitation tool",
+        "drawable": "commix",
+        "cmd": "commix",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "dotdotpwn",
+        "displayName": "DotDotPWN",
+        "description": "The Directory Traversal Fuzzer",
+        "drawable": "dotdotpwn",
+        "cmd": "dotdotpwn",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "crlfuzz",
+        "displayName": "CRLFuzz",
+        "description": "Fast CRLF vulnerability scanner",
+        "drawable": "crlfuzz",
+        "cmd": "crlfuzz -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "kadimus",
+        "displayName": "Kadimus",
+        "description": "LFI Scan &amp; Exploit Tool",
+        "drawable": "andraxtool",
+        "cmd": "kadimus",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "odin",
+        "displayName": "0d1n",
+        "description": "Customized attacks against web applications",
+        "drawable": "odin",
+        "cmd": "0d1n",
+        "category": null
+      },
+      {
+        "key": "nodexp",
+        "displayName": "NodeXP",
+        "description": "Server Side JavaScript Injection",
+        "drawable": "nodexp",
+        "cmd": "nodexp --help",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "jsalert",
+        "displayName": "JS-Alert",
+        "description": "Find keywords in javascript files and extract the context",
+        "drawable": "andraxtool",
+        "cmd": "jsalert",
+        "category": null
+      },
+      {
+        "key": "xsstrike",
+        "displayName": "XSSTrike",
+        "description": "Advanced XSS Detection Suite",
+        "drawable": "xsstrike",
+        "cmd": "xsstrike",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "xspear",
+        "displayName": "XSpear",
+        "description": "Powerfull XSS Scanning and Parameter analysis",
+        "drawable": "xspear",
+        "cmd": "XSpear -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "imagejs",
+        "displayName": "ImageJS",
+        "description": "Package javascript into a valid image",
+        "drawable": "andraxtool",
+        "cmd": "imagejs",
+        "category": "website_hacking"
+      },
+      {
+        "key": "xxeinjector",
+        "displayName": "XXEInjector",
+        "description": "XML External Entity Injector",
+        "drawable": "xxe",
+        "cmd": "xxeinjector",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "xxexploiter",
+        "displayName": "XXExploiter",
+        "description": "XXE Exploiter",
+        "drawable": "xxe",
+        "cmd": "xxexploiter",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "xxetimes",
+        "displayName": "XXETimes",
+        "description": "Local File Explorer XXE DTD Entity Expansion",
+        "drawable": "xxe",
+        "cmd": "xxetimes -h",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "phpsploit",
+        "displayName": "PHPSploit",
+        "description": "Remote control framework for web",
+        "drawable": "andraxtool",
+        "cmd": "phpsploit",
+        "category": "c2_rat"
+      },
+      {
+        "key": "htshells",
+        "displayName": "HTShells",
+        "description": "Self contained htaccess shells",
+        "drawable": "andraxtool",
+        "cmd": "htshells",
+        "category": "website_hacking"
+      },
+      {
+        "key": "jwt_tool",
+        "displayName": "JWT_Tool",
+        "description": "The JSON Web Token Toolkit",
+        "drawable": "jwt",
+        "cmd": "jwt_tool -h",
+        "category": null
+      },
+      {
+        "key": "jwtcrack",
+        "displayName": "JWT-Crack",
+        "description": "JWT Brute Force Cracker",
+        "drawable": "jwt",
+        "cmd": "jwtcrack",
+        "category": null
+      },
+      {
+        "key": "nomore403",
+        "displayName": "nomore403",
+        "description": "Bypass 40X response codes",
+        "drawable": "andraxtool",
+        "cmd": "nomore403",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "forbidden",
+        "displayName": "Forbidden",
+        "description": "Bypass 4xx HTTP response",
+        "drawable": "forbidden",
+        "cmd": "forbidden",
+        "category": "bug_bounty"
+      },
+      {
+        "key": "smuggler",
+        "displayName": "Smuggler",
+        "description": "HTTP Request Smuggling/Desync",
+        "drawable": "smuggler",
+        "cmd": "smuggler",
+        "category": "bug_bounty"
+      }
+    ]
+  },
+  "wireless_hacking": {
+    "xml_file": "dco_wireless_hacking.xml",
+    "java_file": "Dco_Wireless_Hacking.java",
+    "cards": [
+      {
+        "key": "aircrack",
+        "displayName": "AIRCRACK-NG",
+        "description": "Suite of tools to assess WiFi network security",
+        "drawable": "aircrackng",
+        "cmd": "aircrack-ng",
+        "category": null
+      },
+      {
+        "key": "eapmd5pass",
+        "displayName": "EAP-MD5-Pass",
+        "description": "Offline EAP-MD5 dictionary attack",
+        "drawable": "andraxtool",
+        "cmd": "eapmd5pass",
+        "category": null
+      },
+      {
+        "key": "wacker",
+        "displayName": "wacker",
+        "description": null,
+        "drawable": "wacker",
+        "cmd": "wacker -h",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "cowpatty",
+        "displayName": "COWPATTY",
+        "description": "Offline dictionary attack against WPA/WPA2",
+        "drawable": "cowpatty",
+        "cmd": "cowpatty",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "mdk4",
+        "displayName": "MDK4",
+        "description": "Exploit common IEEE 802.11 weaknesses",
+        "drawable": "mdk4",
+        "cmd": "mdk4",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "bully",
+        "displayName": "BULLY",
+        "description": "A reaver better than reaver",
+        "drawable": "bully",
+        "cmd": "bully",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "wash",
+        "displayName": "Wash",
+        "description": "WiFi Protected Setup Scan Tool",
+        "drawable": "reaver",
+        "cmd": "wash",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "reaver",
+        "displayName": "REAVER",
+        "description": "WPS Attack Testing Tool",
+        "drawable": "reaver",
+        "cmd": "reaver",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "pixiewps",
+        "displayName": "PixieWPS",
+        "description": "WPS pixie-dust attack tool",
+        "drawable": "pixiewps",
+        "cmd": "pixiewps",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "hcxdumptool",
+        "displayName": "HCXDumpTool",
+        "description": "Capture packets from wlan devices",
+        "drawable": "andraxtool",
+        "cmd": "hcxdumptool",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "blueranger",
+        "displayName": "BlueRanger",
+        "description": null,
+        "drawable": "andraxtool",
+        "cmd": "blueranger",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "bluesnarfer",
+        "displayName": "BLUESnarfer",
+        "description": null,
+        "drawable": "andraxtool",
+        "cmd": "bluesnarfer",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "blescan",
+        "displayName": "BLEScan",
+        "description": null,
+        "drawable": "andraxtool",
+        "cmd": "blescan -h",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "btscanner",
+        "displayName": "BTScanner",
+        "description": null,
+        "drawable": "andraxtool",
+        "cmd": "btscanner -h",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "spooftooph",
+        "displayName": "SpoofTooph",
+        "description": null,
+        "drawable": "spooftooph",
+        "cmd": "spooftooph",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "btlejack",
+        "displayName": "BTLEJack",
+        "description": null,
+        "drawable": "microbit",
+        "cmd": "btlejack",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "crackle",
+        "displayName": "CrackLE",
+        "description": null,
+        "drawable": "crackle",
+        "cmd": "crackle",
+        "category": "wireless_hacking"
+      },
+      {
+        "key": "mfterm",
+        "displayName": "mfterm",
+        "description": null,
+        "drawable": "mfterm",
+        "cmd": "mfterm -h",
+        "category": "wireless_hacking"
+      }
+    ]
+  }
+}

@@ -1,162 +1,97 @@
 package org.aarchdroid;
 
 import android.os.Bundle;
-import android.view.View;
-import androidx.cardview.widget.CardView;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
 
-/* JADX INFO: loaded from: classes2.dex */
 public class Dco_Information_Gathering extends DcoBaseActivity {
     private static final String TAG = "Dco_Information_Gathering";
-    @Override // android.app.Activity
+
+    @Override
     protected void onCreate(Bundle bundle) {
         try {
-        requestWindowFeature(1);
-        super.onCreate(bundle);
-        Log.d(TAG, "onCreate");
-        setContentView(R.layout.dco_information_gathering);
-        getWindow().setFlags(1024, 1024);
-        CardView cardView = (CardView) findViewById(R.id.card_view_spiderfoot);
-        CardView cardView2 = (CardView) findViewById(R.id.card_view_whois);
-        CardView cardView3 = (CardView) findViewById(R.id.card_view_bgpleak);
-        CardView cardView4 = (CardView) findViewById(R.id.card_view_dig);
-        CardView cardView5 = (CardView) findViewById(R.id.card_view_smtpuserenum);
-        CardView cardView6 = (CardView) findViewById(R.id.card_view_ismtp);
-        CardView cardView7 = (CardView) findViewById(R.id.card_view_braa);
-        CardView cardView8 = (CardView) findViewById(R.id.card_view_intrace);
-        CardView cardView9 = (CardView) findViewById(R.id.card_view_shuffledns);
-        CardView cardView10 = (CardView) findViewById(R.id.card_view_massdns);
-        CardView cardView11 = (CardView) findViewById(R.id.card_view_dnsmap);
-        CardView cardView12 = (CardView) findViewById(R.id.card_view_amass);
-        CardView cardView13 = (CardView) findViewById(R.id.card_view_onesixtyone);
-        CardView cardView14 = (CardView) findViewById(R.id.card_view_trace6);
-        CardView cardView15 = (CardView) findViewById(R.id.card_view_snmpwn);
-        CardView cardView16 = (CardView) findViewById(R.id.card_view_dnsx);
-        CardView cardView17 = (CardView) findViewById(R.id.card_view_subfinder);
-        CardView cardView18 = (CardView) findViewById(R.id.card_view_swaks);
-        CardView cardView19 = (CardView) findViewById(R.id.card_view_uncover);
-        cardView.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.1
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("sfcli");
-            }
-        });
-        cardView2.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.2
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("whois");
-            }
-        });
-        cardView3.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.3
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("bgp-leak -h");
-            }
-        });
-        cardView4.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.4
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("dig -h");
-            }
-        });
-        cardView5.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.5
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("smtp-user-enum");
-            }
-        });
-        cardView6.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.6
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("iSMTP");
-            }
-        });
-        cardView13.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.7
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("onesixtyone");
-            }
-        });
-        cardView7.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.8
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("braa");
-            }
-        });
-        cardView8.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.9
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("intrace");
-            }
-        });
-        cardView11.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.10
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("dnsmap");
-            }
-        });
-        cardView12.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.11
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("amass");
-            }
-        });
-        cardView9.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.12
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("shuffledns");
-            }
-        });
-        cardView10.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.13
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("massdns");
-            }
-        });
-        cardView14.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.14
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("trace6");
-            }
-        });
-        cardView15.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.15
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("snmpwn --help");
-            }
-        });
-        cardView16.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.16
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("dnsx");
-            }
-        });
-        cardView17.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.17
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("subfinder");
-            }
-        });
-        cardView18.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.18
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("swaks");
-            }
-        });
-        cardView19.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Information_Gathering.19
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Information_Gathering.this.run_hack_cmd("uncover");
-            }
-        });
+            requestWindowFeature(1);
+            super.onCreate(bundle);
+            Log.d(TAG, "onCreate");
+            setContentView(R.layout.dco_list_scaffold);
+            getWindow().setFlags(1024, 1024);
+
+            TextView titleView = findViewById(R.id.title);
+            titleView.setText("Information Gathering");
+            ((android.widget.ImageView) findViewById(R.id.banner)).setImageResource(R.drawable.information_gathering);
+            ((TextView) findViewById(R.id.stats_tools)).setText("19");
+
+            RecyclerView list = findViewById(R.id.tool_list);
+            list.setLayoutManager(new LinearLayoutManager(this));
+
+            List<ToolItem> tools = buildToolList();
+            ToolAdapter adapter = new ToolAdapter(tools, new ToolAdapter.OnToolClickListener() {
+                @Override
+                public void onToolClick(String cmd) {
+                    run_hack_cmd(cmd);
+                }
+
+                @Override
+                public void onInstallClick(String toolKey) {
+                    String cmd = buildInstallCommandForKey(toolKey);
+                    if (cmd != null) {
+                        run_hack_cmd(cmd);
+                    }
+                }
+            });
+            list.setAdapter(adapter);
+            list.setHasFixedSize(true);
         } catch (Exception e) {
             Log.e(TAG, "onCreate failed", e);
             finish();
         }
     }
 
-    
-@Override // android.app.Activity
+    private List<ToolItem> buildToolList() {
+        List<ToolItem> list = new ArrayList<>();
+        list.add(makeItem("whois", "Whois", "Domain/IP Information", "whois", "andraxtool"));
+        list.add(makeItem("dig", "DIG", "Domain Information Groper", "dig -h", "andraxtool"));
+        list.add(makeItem("dnsx", "dnsX", "Fast multi-purpose DNS toolkit", "dnsx", "dnsx"));
+        list.add(makeItem("shuffledns", "ShuffleDNS", "Mass Subdomain Enumeration", "shuffledns", "shuffledns"));
+        list.add(makeItem("massdns", "MassDNS", "High-performance DNS stub resolver", "massdns", "andraxtool"));
+        list.add(makeItem("dnsmap", "DNSMap", "DNS Network Mapper", "dnsmap", "andraxtool"));
+        list.add(makeItem("subfinder", "Subfinder", "Passive subdomain discovery", "subfinder", "subfinder"));
+        list.add(makeItem("bgpleak", "BGP-Leak", "Exposing your Motherfucker Organization", "bgp-leak -h", "bgpleak"));
+        list.add(makeItem("uncover", "Uncover", "Discover exposed hosts on the internet", "uncover", "andraxtool"));
+        list.add(makeItem("trace6", "Trace6", "Traceroute for IPv6", "trace6", "andraxtool"));
+        list.add(makeItem("intrace", "InTrace", "Enumerate IP hops using TCP", "intrace", "andraxtool"));
+        list.add(makeItem("amass", "Amass", "In-depth Attack Surface Mapping and Asset Discovery", "amass", "amass"));
+        list.add(makeItem("spiderfoot", "SpiderFoot", "Threat Intelligence and Attack Mapping", "sfcli", "spiderfoot"));
+        list.add(makeItem("onesixtyone", "Onesixtyone", "Fast SNMP Scanner", "onesixtyone", "onesixtyone"));
+        list.add(makeItem("braa", "Braa", "Mass snmp scanner", "braa", "braa"));
+        list.add(makeItem("snmpwn", "SNMPwn", "SNMPv3 user enumerator and attack tool", "snmpwn --help", "andraxtool"));
+        list.add(makeItem("swaks", "Swaks", "Swiss Army Knife for SMTP", "swaks", "swaks"));
+        list.add(makeItem("ismtp", "iSMTP", "SMTP Server Tester", "iSMTP", "ismtp"));
+        list.add(makeItem("smtpuserenum", "SMTP-User-Enum", "SMTP User Enumeration", "smtp-user-enum", "smtpuserenum"));
+        return list;
+    }
+
+    private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
+        ToolItem item = new ToolItem();
+        item.key = key;
+        item.displayName = displayName;
+        item.description = description;
+        item.cmd = cmd;
+        if (drawableName == null || drawableName.isEmpty()) {
+            item.iconResId = R.drawable.andraxtool;
+        } else {
+            int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
+            item.iconResId = id != 0 ? id : R.drawable.andraxtool;
+        }
+        return item;
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");

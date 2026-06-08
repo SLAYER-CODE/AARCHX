@@ -1,344 +1,123 @@
 package org.aarchdroid;
 
 import android.os.Bundle;
-import android.view.View;
-import androidx.cardview.widget.CardView;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
 
-/* JADX INFO: loaded from: classes2.dex */
 public class Dco_website_hacking extends DcoBaseActivity {
     private static final String TAG = "Dco_website_hacking";
-    @Override // android.app.Activity
+
+    @Override
     protected void onCreate(Bundle bundle) {
         try {
-        requestWindowFeature(1);
-        super.onCreate(bundle);
-        Log.d(TAG, "onCreate");
-        setContentView(R.layout.dco_website_hacking);
-        getWindow().setFlags(1024, 1024);
-        CardView cardView = (CardView) findViewById(R.id.card_view_odin);
-        CardView cardView2 = (CardView) findViewById(R.id.card_view_dotdotpwn);
-        CardView cardView3 = (CardView) findViewById(R.id.card_view_nodexp);
-        CardView cardView4 = (CardView) findViewById(R.id.card_view_xxeinjector);
-        CardView cardView5 = (CardView) findViewById(R.id.card_view_xxexploiter);
-        CardView cardView6 = (CardView) findViewById(R.id.card_view_xxetimes);
-        CardView cardView7 = (CardView) findViewById(R.id.card_view_mitmproxy);
-        CardView cardView8 = (CardView) findViewById(R.id.card_view_zap);
-        CardView cardView9 = (CardView) findViewById(R.id.card_view_phpsploit);
-        CardView cardView10 = (CardView) findViewById(R.id.card_view_xsstrike);
-        CardView cardView11 = (CardView) findViewById(R.id.card_view_commix);
-        CardView cardView12 = (CardView) findViewById(R.id.card_view_sqlmap);
-        CardView cardView13 = (CardView) findViewById(R.id.card_view_payloadmask);
-        CardView cardView14 = (CardView) findViewById(R.id.card_view_arjun);
-        CardView cardView15 = (CardView) findViewById(R.id.card_view_whatweb);
-        CardView cardView16 = (CardView) findViewById(R.id.card_view_wafw00f);
-        CardView cardView17 = (CardView) findViewById(R.id.card_view_jaeles);
-        CardView cardView18 = (CardView) findViewById(R.id.card_view_nuclei);
-        CardView cardView19 = (CardView) findViewById(R.id.card_view_httpx);
-        CardView cardView20 = (CardView) findViewById(R.id.card_view_wpscan);
-        CardView cardView21 = (CardView) findViewById(R.id.card_view_cmseek);
-        CardView cardView22 = (CardView) findViewById(R.id.card_view_aron);
-        CardView cardView23 = (CardView) findViewById(R.id.card_view_jwtcrack);
-        CardView cardView24 = (CardView) findViewById(R.id.card_view_jwt_tool);
-        CardView cardView25 = (CardView) findViewById(R.id.card_view_wfuzz);
-        CardView cardView26 = (CardView) findViewById(R.id.card_view_monsoon);
-        CardView cardView27 = (CardView) findViewById(R.id.card_view_cadaver);
-        CardView cardView28 = (CardView) findViewById(R.id.card_view_xspear);
-        CardView cardView29 = (CardView) findViewById(R.id.card_view_imagejs);
-        CardView cardView30 = (CardView) findViewById(R.id.card_view_findalllinks);
-        CardView cardView31 = (CardView) findViewById(R.id.card_view_jsalert);
-        CardView cardView32 = (CardView) findViewById(R.id.card_view_wbk);
-        CardView cardView33 = (CardView) findViewById(R.id.card_view_cansina);
-        CardView cardView34 = (CardView) findViewById(R.id.card_view_crlfuzz);
-        CardView cardView35 = (CardView) findViewById(R.id.card_view_davtest);
-        CardView cardView36 = (CardView) findViewById(R.id.card_view_ffuf);
-        CardView cardView37 = (CardView) findViewById(R.id.card_view_nomore403);
-        CardView cardView38 = (CardView) findViewById(R.id.card_view_kadimus);
-        CardView cardView39 = (CardView) findViewById(R.id.card_view_gobuster);
-        CardView cardView40 = (CardView) findViewById(R.id.card_view_lulzbuster);
-        CardView cardView41 = (CardView) findViewById(R.id.card_view_s3scanner);
-        CardView cardView42 = (CardView) findViewById(R.id.card_view_htshells);
-        CardView cardView43 = (CardView) findViewById(R.id.card_view_katana);
-        CardView cardView44 = (CardView) findViewById(R.id.card_view_forbidden);
-        CardView cardView45 = (CardView) findViewById(R.id.card_view_smuggler);
-        cardView.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.1
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("0d1n");
-            }
-        });
-        cardView2.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.2
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("dotdotpwn");
-            }
-        });
-        cardView7.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.3
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("mitmproxy");
-            }
-        });
-        cardView8.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.4
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("zap");
-            }
-        });
-        cardView9.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.5
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("phpsploit");
-            }
-        });
-        cardView10.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.6
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("xsstrike");
-            }
-        });
-        cardView11.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.7
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("commix");
-            }
-        });
-        cardView12.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.8
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("sqlmap");
-            }
-        });
-        cardView13.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.9
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("payloadmask");
-            }
-        });
-        cardView14.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.10
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("arjun -h");
-            }
-        });
-        cardView15.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.11
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("whatweb -h");
-            }
-        });
-        cardView16.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.12
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("wafw00f -h");
-            }
-        });
-        cardView17.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.13
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("jaeles");
-            }
-        });
-        cardView18.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.14
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("nuclei");
-            }
-        });
-        cardView19.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.15
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("httpx");
-            }
-        });
-        cardView20.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.16
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("wpscan -h");
-            }
-        });
-        cardView21.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.17
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("sudo cmseek");
-            }
-        });
-        cardView22.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.18
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("aron -h");
-            }
-        });
-        cardView23.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.19
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("jwtcrack");
-            }
-        });
-        cardView24.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.20
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("jwt_tool -h");
-            }
-        });
-        cardView3.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.21
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("nodexp --help");
-            }
-        });
-        cardView4.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.22
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("xxeinjector");
-            }
-        });
-        cardView5.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.23
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("xxexploiter");
-            }
-        });
-        cardView6.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.24
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("xxetimes -h");
-            }
-        });
-        cardView25.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.25
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("wfuzz --help");
-            }
-        });
-        cardView26.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.26
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("monsoon --help");
-            }
-        });
-        cardView27.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.27
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("cadaver");
-            }
-        });
-        cardView28.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.28
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("XSpear -h");
-            }
-        });
-        cardView29.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.29
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("imagejs");
-            }
-        });
-        cardView30.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.30
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("find-all-links");
-            }
-        });
-        cardView31.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.31
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("jsalert");
-            }
-        });
-        cardView32.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.32
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("wbk -h");
-            }
-        });
-        cardView33.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.33
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("cansina -h");
-            }
-        });
-        cardView34.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.34
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("crlfuzz -h");
-            }
-        });
-        cardView35.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.35
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("davtest");
-            }
-        });
-        cardView36.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.36
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("ffuf -h");
-            }
-        });
-        cardView37.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.37
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("nomore403");
-            }
-        });
-        cardView38.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.38
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("kadimus");
-            }
-        });
-        cardView39.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.39
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("gobuster");
-            }
-        });
-        cardView40.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.40
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("lulzbuster -H");
-            }
-        });
-        cardView41.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.41
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("s3scanner -h");
-            }
-        });
-        cardView42.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.42
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("htshells");
-            }
-        });
-        cardView43.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.43
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("katana");
-            }
-        });
-        cardView44.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.44
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("forbidden");
-            }
-        });
-        cardView45.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_website_hacking.45
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_website_hacking.this.run_hack_cmd("smuggler");
-            }
-        });
+            requestWindowFeature(1);
+            super.onCreate(bundle);
+            Log.d(TAG, "onCreate");
+            setContentView(R.layout.dco_list_scaffold);
+            getWindow().setFlags(1024, 1024);
+
+            TextView titleView = findViewById(R.id.title);
+            titleView.setText("Website Hacking");
+            ((android.widget.ImageView) findViewById(R.id.banner)).setImageResource(R.drawable.websitehacking);
+            ((TextView) findViewById(R.id.stats_tools)).setText("45");
+
+            RecyclerView list = findViewById(R.id.tool_list);
+            list.setLayoutManager(new LinearLayoutManager(this));
+
+            List<ToolItem> tools = buildToolList();
+            ToolAdapter adapter = new ToolAdapter(tools, new ToolAdapter.OnToolClickListener() {
+                @Override
+                public void onToolClick(String cmd) {
+                    run_hack_cmd(cmd);
+                }
+
+                @Override
+                public void onInstallClick(String toolKey) {
+                    String cmd = buildInstallCommandForKey(toolKey);
+                    if (cmd != null) {
+                        run_hack_cmd(cmd);
+                    }
+                }
+            });
+            list.setAdapter(adapter);
+            list.setHasFixedSize(true);
         } catch (Exception e) {
             Log.e(TAG, "onCreate failed", e);
             finish();
         }
     }
 
-    
-@Override // android.app.Activity
+    private List<ToolItem> buildToolList() {
+        List<ToolItem> list = new ArrayList<>();
+        list.add(makeItem("wafw00f", "WAFw00f", "Identifies and fingerprints WAF", "wafw00f -h", "wafw00f"));
+        list.add(makeItem("payloadmask", "PayloadMask", "Bypass WAF using payload editing", "payloadmask", "payloadmask"));
+        list.add(makeItem("aron", "Aron", "Find hidden GET/POST", "aron -h", "andraxtool"));
+        list.add(makeItem("arjun", "Arjun", "HTTP parameter discovery suite", "arjun -h", "arjun"));
+        list.add(makeItem("cansina", "Cansina", "Web Content Discovery", "cansina -h", "cansina"));
+        list.add(makeItem("lulzbuster", "Lulzbuster", "Search Web for Fun", "lulzbuster -H", "andraxtool"));
+        list.add(makeItem("ffuf", "Ffuf", "Fuzz Faster U Fool", "ffuf -h", "ffuf"));
+        list.add(makeItem("monsoon", "Monsoon", "Fast HTTP enumerator", "monsoon --help", "monsoon"));
+        list.add(makeItem("wfuzz", "Wfuzz", "Web Application Fuzzer", "wfuzz --help", "wfuzz"));
+        list.add(makeItem("gobuster", "Gobuster", "Directory/File, DNS and VHost buster", "gobuster", "andraxtool"));
+        list.add(makeItem("httpx", "HttpX", "Multi-purpose HTTP toolkit", "httpx", "httpx"));
+        list.add(makeItem("cmseek", "CMSeeK", "CMS Detection and Exploitation suite", "sudo cmseek", "cmseek"));
+        list.add(makeItem("wpscan", "WPScan", "WordPress Security Scanner", "wpscan -h", "wpscan"));
+        list.add(makeItem("findalllinks", "Find-All-Links", "Find links using Wayback Machine", "find-all-links", "findalllinks"));
+        list.add(makeItem("wbk", "WBK", "WayBackURLS Client", "wbk -h", "waybackmachine"));
+        list.add(makeItem("whatweb", "WhatWeb", "Next Generation Web Scanner", "whatweb -h", "whatweb"));
+        list.add(makeItem("nuclei", "Nuclei", "Advanced targeted scan based on templates", "nuclei", "nuclei"));
+        list.add(makeItem("jaeles", "Jaeles", "Next Generation Web Application Testing", "jaeles", "jaeles"));
+        list.add(makeItem("zap", "Zap", "Zed Attack Proxy (ZAP)", "zap", "zap"));
+        list.add(makeItem("mitmproxy", "Mitmproxy", "SSL-capable proxy with a console interface", "mitmproxy", "mitmproxy"));
+        list.add(makeItem("katana", "Katana", "Next GEN Crawling and Spidering", "katana", "katana"));
+        list.add(makeItem("s3scanner", "S3scanner", "Scan for open S3 buckets and dump the contents", "s3scanner -h", "s3scanner"));
+        list.add(makeItem("cadaver", "Cadaver", "WebDav Command Line", "cadaver", "cadaver"));
+        list.add(makeItem("davtest", "DAVTest", "Exploit WebDAV", "davtest", "webdav"));
+        list.add(makeItem("sqlmap", "Sqlmap", "", "sqlmap", "sqlmap"));
+        list.add(makeItem("commix", "Commix", "All-in-One OS command injection and exploitation tool", "commix", "commix"));
+        list.add(makeItem("dotdotpwn", "DotDotPWN", "The Directory Traversal Fuzzer", "dotdotpwn", "dotdotpwn"));
+        list.add(makeItem("crlfuzz", "CRLFuzz", "Fast CRLF vulnerability scanner", "crlfuzz -h", "crlfuzz"));
+        list.add(makeItem("kadimus", "Kadimus", "LFI Scan &amp; Exploit Tool", "kadimus", "andraxtool"));
+        list.add(makeItem("odin", "0d1n", "Customized attacks against web applications", "0d1n", "odin"));
+        list.add(makeItem("nodexp", "NodeXP", "Server Side JavaScript Injection", "nodexp --help", "nodexp"));
+        list.add(makeItem("jsalert", "JS-Alert", "Find keywords in javascript files and extract the context", "jsalert", "andraxtool"));
+        list.add(makeItem("xsstrike", "XSSTrike", "Advanced XSS Detection Suite", "xsstrike", "xsstrike"));
+        list.add(makeItem("xspear", "XSpear", "Powerfull XSS Scanning and Parameter analysis", "XSpear -h", "xspear"));
+        list.add(makeItem("imagejs", "ImageJS", "Package javascript into a valid image", "imagejs", "andraxtool"));
+        list.add(makeItem("xxeinjector", "XXEInjector", "XML External Entity Injector", "xxeinjector", "xxe"));
+        list.add(makeItem("xxexploiter", "XXExploiter", "XXE Exploiter", "xxexploiter", "xxe"));
+        list.add(makeItem("xxetimes", "XXETimes", "Local File Explorer XXE DTD Entity Expansion", "xxetimes -h", "xxe"));
+        list.add(makeItem("phpsploit", "PHPSploit", "Remote control framework for web", "phpsploit", "andraxtool"));
+        list.add(makeItem("htshells", "HTShells", "Self contained htaccess shells", "htshells", "andraxtool"));
+        list.add(makeItem("jwt_tool", "JWT_Tool", "The JSON Web Token Toolkit", "jwt_tool -h", "jwt"));
+        list.add(makeItem("jwtcrack", "JWT-Crack", "JWT Brute Force Cracker", "jwtcrack", "jwt"));
+        list.add(makeItem("nomore403", "nomore403", "Bypass 40X response codes", "nomore403", "andraxtool"));
+        list.add(makeItem("forbidden", "Forbidden", "Bypass 4xx HTTP response", "forbidden", "forbidden"));
+        list.add(makeItem("smuggler", "Smuggler", "HTTP Request Smuggling/Desync", "smuggler", "smuggler"));
+        return list;
+    }
+
+    private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
+        ToolItem item = new ToolItem();
+        item.key = key;
+        item.displayName = displayName;
+        item.description = description;
+        item.cmd = cmd;
+        if (drawableName == null || drawableName.isEmpty()) {
+            item.iconResId = R.drawable.andraxtool;
+        } else {
+            int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
+            item.iconResId = id != 0 ? id : R.drawable.andraxtool;
+        }
+        return item;
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");

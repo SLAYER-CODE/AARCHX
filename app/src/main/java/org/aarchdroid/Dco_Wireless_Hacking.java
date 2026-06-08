@@ -1,155 +1,96 @@
 package org.aarchdroid;
 
 import android.os.Bundle;
-import android.view.View;
-import androidx.cardview.widget.CardView;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
 
-/* JADX INFO: loaded from: classes2.dex */
 public class Dco_Wireless_Hacking extends DcoBaseActivity {
     private static final String TAG = "Dco_Wireless_Hacking";
-    @Override // android.app.Activity
+
+    @Override
     protected void onCreate(Bundle bundle) {
         try {
-        requestWindowFeature(1);
-        super.onCreate(bundle);
-        Log.d(TAG, "onCreate");
-        setContentView(R.layout.dco_wireless_hacking);
-        getWindow().setFlags(1024, 1024);
-        CardView cardView = (CardView) findViewById(R.id.card_view_aircrack);
-        CardView cardView2 = (CardView) findViewById(R.id.card_view_cowpatty);
-        CardView cardView3 = (CardView) findViewById(R.id.card_view_mdk4);
-        CardView cardView4 = (CardView) findViewById(R.id.card_view_bully);
-        CardView cardView5 = (CardView) findViewById(R.id.card_view_reaver);
-        CardView cardView6 = (CardView) findViewById(R.id.card_view_wash);
-        CardView cardView7 = (CardView) findViewById(R.id.card_view_blueranger);
-        CardView cardView8 = (CardView) findViewById(R.id.card_view_bluesnarfer);
-        CardView cardView9 = (CardView) findViewById(R.id.card_view_crackle);
-        CardView cardView10 = (CardView) findViewById(R.id.card_view_blescan);
-        CardView cardView11 = (CardView) findViewById(R.id.card_view_btlejack);
-        CardView cardView12 = (CardView) findViewById(R.id.card_view_btscanner);
-        CardView cardView13 = (CardView) findViewById(R.id.card_view_spooftooph);
-        CardView cardView14 = (CardView) findViewById(R.id.card_view_hcxdumptool);
-        CardView cardView15 = (CardView) findViewById(R.id.card_view_eapmd5pass);
-        CardView cardView16 = (CardView) findViewById(R.id.card_view_pixiewps);
-        CardView cardView17 = (CardView) findViewById(R.id.card_view_mfterm);
-        CardView cardView18 = (CardView) findViewById(R.id.card_view_wacker);
-        cardView.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.1
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("aircrack-ng");
-            }
-        });
-        cardView2.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.2
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("cowpatty");
-            }
-        });
-        cardView3.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.3
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("mdk4");
-            }
-        });
-        cardView4.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.4
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("bully");
-            }
-        });
-        cardView5.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.5
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("reaver");
-            }
-        });
-        cardView6.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.6
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("wash");
-            }
-        });
-        cardView7.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.7
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("blueranger");
-            }
-        });
-        cardView8.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.8
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("bluesnarfer");
-            }
-        });
-        cardView9.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.9
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("crackle");
-            }
-        });
-        cardView10.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.10
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("blescan -h");
-            }
-        });
-        cardView11.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.11
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("btlejack");
-            }
-        });
-        cardView12.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.12
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("btscanner -h");
-            }
-        });
-        cardView13.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.13
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("spooftooph");
-            }
-        });
-        cardView14.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.14
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("hcxdumptool");
-            }
-        });
-        cardView15.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.15
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("eapmd5pass");
-            }
-        });
-        cardView16.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.16
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("pixiewps");
-            }
-        });
-        cardView17.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.17
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("mfterm -h");
-            }
-        });
-        cardView18.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Wireless_Hacking.18
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Wireless_Hacking.this.run_hack_cmd("wacker -h");
-            }
-        });
+            requestWindowFeature(1);
+            super.onCreate(bundle);
+            Log.d(TAG, "onCreate");
+            setContentView(R.layout.dco_list_scaffold);
+            getWindow().setFlags(1024, 1024);
+
+            TextView titleView = findViewById(R.id.title);
+            titleView.setText("Wireless Hacking");
+            ((android.widget.ImageView) findViewById(R.id.banner)).setImageResource(R.drawable.wirelesshacking);
+            ((TextView) findViewById(R.id.stats_tools)).setText("18");
+
+            RecyclerView list = findViewById(R.id.tool_list);
+            list.setLayoutManager(new LinearLayoutManager(this));
+
+            List<ToolItem> tools = buildToolList();
+            ToolAdapter adapter = new ToolAdapter(tools, new ToolAdapter.OnToolClickListener() {
+                @Override
+                public void onToolClick(String cmd) {
+                    run_hack_cmd(cmd);
+                }
+
+                @Override
+                public void onInstallClick(String toolKey) {
+                    String cmd = buildInstallCommandForKey(toolKey);
+                    if (cmd != null) {
+                        run_hack_cmd(cmd);
+                    }
+                }
+            });
+            list.setAdapter(adapter);
+            list.setHasFixedSize(true);
         } catch (Exception e) {
             Log.e(TAG, "onCreate failed", e);
             finish();
         }
     }
 
-    
-@Override // android.app.Activity
+    private List<ToolItem> buildToolList() {
+        List<ToolItem> list = new ArrayList<>();
+        list.add(makeItem("aircrack", "AIRCRACK-NG", "Suite of tools to assess WiFi network security", "aircrack-ng", "aircrackng"));
+        list.add(makeItem("eapmd5pass", "EAP-MD5-Pass", "Offline EAP-MD5 dictionary attack", "eapmd5pass", "andraxtool"));
+        list.add(makeItem("wacker", "wacker", "", "wacker -h", "wacker"));
+        list.add(makeItem("cowpatty", "COWPATTY", "Offline dictionary attack against WPA/WPA2", "cowpatty", "cowpatty"));
+        list.add(makeItem("mdk4", "MDK4", "Exploit common IEEE 802.11 weaknesses", "mdk4", "mdk4"));
+        list.add(makeItem("bully", "BULLY", "A reaver better than reaver", "bully", "bully"));
+        list.add(makeItem("wash", "Wash", "WiFi Protected Setup Scan Tool", "wash", "reaver"));
+        list.add(makeItem("reaver", "REAVER", "WPS Attack Testing Tool", "reaver", "reaver"));
+        list.add(makeItem("pixiewps", "PixieWPS", "WPS pixie-dust attack tool", "pixiewps", "pixiewps"));
+        list.add(makeItem("hcxdumptool", "HCXDumpTool", "Capture packets from wlan devices", "hcxdumptool", "andraxtool"));
+        list.add(makeItem("blueranger", "BlueRanger", "", "blueranger", "andraxtool"));
+        list.add(makeItem("bluesnarfer", "BLUESnarfer", "", "bluesnarfer", "andraxtool"));
+        list.add(makeItem("blescan", "BLEScan", "", "blescan -h", "andraxtool"));
+        list.add(makeItem("btscanner", "BTScanner", "", "btscanner -h", "andraxtool"));
+        list.add(makeItem("spooftooph", "SpoofTooph", "", "spooftooph", "spooftooph"));
+        list.add(makeItem("btlejack", "BTLEJack", "", "btlejack", "microbit"));
+        list.add(makeItem("crackle", "CrackLE", "", "crackle", "crackle"));
+        list.add(makeItem("mfterm", "mfterm", "", "mfterm -h", "mfterm"));
+        return list;
+    }
+
+    private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
+        ToolItem item = new ToolItem();
+        item.key = key;
+        item.displayName = displayName;
+        item.description = description;
+        item.cmd = cmd;
+        if (drawableName == null || drawableName.isEmpty()) {
+            item.iconResId = R.drawable.andraxtool;
+        } else {
+            int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
+            item.iconResId = id != 0 ? id : R.drawable.andraxtool;
+        }
+        return item;
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");

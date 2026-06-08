@@ -1,78 +1,85 @@
 package org.aarchdroid;
 
 import android.os.Bundle;
-import android.view.View;
-import androidx.cardview.widget.CardView;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
 
-/* JADX INFO: loaded from: classes2.dex */
 public class Dco_macos_iphone extends DcoBaseActivity {
     private static final String TAG = "Dco_macos_iphone";
-    @Override // android.app.Activity
+
+    @Override
     protected void onCreate(Bundle bundle) {
         try {
-        requestWindowFeature(1);
-        super.onCreate(bundle);
-        Log.d(TAG, "onCreate");
-        setContentView(R.layout.dco_macos_iphone);
-        getWindow().setFlags(1024, 1024);
-        CardView cardView = (CardView) findViewById(R.id.card_view_owl);
-        CardView cardView2 = (CardView) findViewById(R.id.card_view_applebleee);
-        CardView cardView3 = (CardView) findViewById(R.id.card_view_iblessing);
-        CardView cardView4 = (CardView) findViewById(R.id.card_view_frida);
-        CardView cardView5 = (CardView) findViewById(R.id.card_view_objection);
-        CardView cardView6 = (CardView) findViewById(R.id.card_view_merlin);
-        CardView cardView7 = (CardView) findViewById(R.id.card_view_godoh);
-        cardView.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_macos_iphone.1
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_macos_iphone.this.run_hack_cmd("owl");
-            }
-        });
-        cardView2.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_macos_iphone.2
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_macos_iphone.this.run_hack_cmd("apple-bleee");
-            }
-        });
-        cardView3.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_macos_iphone.3
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_macos_iphone.this.run_hack_cmd("iblessing");
-            }
-        });
-        cardView4.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_macos_iphone.4
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_macos_iphone.this.run_hack_cmd("frida");
-            }
-        });
-        cardView5.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_macos_iphone.5
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_macos_iphone.this.run_hack_cmd("objection");
-            }
-        });
-        cardView6.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_macos_iphone.6
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_macos_iphone.this.run_hack_cmd("merlin-c2");
-            }
-        });
-        cardView7.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_macos_iphone.7
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_macos_iphone.this.run_hack_cmd("godoh -h");
-            }
-        });
+            requestWindowFeature(1);
+            super.onCreate(bundle);
+            Log.d(TAG, "onCreate");
+            setContentView(R.layout.dco_list_scaffold);
+            getWindow().setFlags(1024, 1024);
+
+            TextView titleView = findViewById(R.id.title);
+            titleView.setText("MacOS/iPhone");
+            ((android.widget.ImageView) findViewById(R.id.banner)).setImageResource(R.drawable.evilapple);
+            ((TextView) findViewById(R.id.stats_tools)).setText("7");
+
+            RecyclerView list = findViewById(R.id.tool_list);
+            list.setLayoutManager(new LinearLayoutManager(this));
+
+            List<ToolItem> tools = buildToolList();
+            ToolAdapter adapter = new ToolAdapter(tools, new ToolAdapter.OnToolClickListener() {
+                @Override
+                public void onToolClick(String cmd) {
+                    run_hack_cmd(cmd);
+                }
+
+                @Override
+                public void onInstallClick(String toolKey) {
+                    String cmd = buildInstallCommandForKey(toolKey);
+                    if (cmd != null) {
+                        run_hack_cmd(cmd);
+                    }
+                }
+            });
+            list.setAdapter(adapter);
+            list.setHasFixedSize(true);
         } catch (Exception e) {
             Log.e(TAG, "onCreate failed", e);
             finish();
         }
     }
 
-    
-@Override // android.app.Activity
+    private List<ToolItem> buildToolList() {
+        List<ToolItem> list = new ArrayList<>();
+        list.add(makeItem("merlin", "MerlinC2", "Post-exploitation C2", "merlin-c2", "merlin"));
+        list.add(makeItem("godoh", "GoDoH", "DNS-over-HTTPS C2", "godoh -h", "godoh"));
+        list.add(makeItem("owl", "owl", "Apple Wireless Direct Link", "owl", "owl"));
+        list.add(makeItem("applebleee", "Apple-BLEEE", "Apple BLE Sniffing", "apple-bleee", "applebleee"));
+        list.add(makeItem("iblessing", "iblessing", "iOS Security Exploiting Toolkit", "iblessing", "evilapplecolor"));
+        list.add(makeItem("frida", "Frida", "Dynamic instrumentation for Reverse-Engineers", "frida", "frida"));
+        list.add(makeItem("objection", "OBJection", "Runtime Mobile Exploration", "objection", "objection"));
+        return list;
+    }
+
+    private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
+        ToolItem item = new ToolItem();
+        item.key = key;
+        item.displayName = displayName;
+        item.description = description;
+        item.cmd = cmd;
+        if (drawableName == null || drawableName.isEmpty()) {
+            item.iconResId = R.drawable.andraxtool;
+        } else {
+            int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
+            item.iconResId = id != 0 ? id : R.drawable.andraxtool;
+        }
+        return item;
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");

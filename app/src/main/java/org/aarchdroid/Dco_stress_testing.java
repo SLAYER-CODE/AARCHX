@@ -1,155 +1,96 @@
 package org.aarchdroid;
 
 import android.os.Bundle;
-import android.view.View;
-import androidx.cardview.widget.CardView;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
 
-/* JADX INFO: loaded from: classes2.dex */
 public class Dco_stress_testing extends DcoBaseActivity {
     private static final String TAG = "Dco_stress_testing";
-    @Override // android.app.Activity
+
+    @Override
     protected void onCreate(Bundle bundle) {
         try {
-        requestWindowFeature(1);
-        super.onCreate(bundle);
-        Log.d(TAG, "onCreate");
-        setContentView(R.layout.dco_stress_testing);
-        getWindow().setFlags(1024, 1024);
-        CardView cardView = (CardView) findViewById(R.id.card_view_fuzzip6);
-        CardView cardView2 = (CardView) findViewById(R.id.card_view_denial6);
-        CardView cardView3 = (CardView) findViewById(R.id.card_view_flooddhcpc6);
-        CardView cardView4 = (CardView) findViewById(R.id.card_view_floodadvertise6);
-        CardView cardView5 = (CardView) findViewById(R.id.card_view_floodmld6);
-        CardView cardView6 = (CardView) findViewById(R.id.card_view_floodmld26);
-        CardView cardView7 = (CardView) findViewById(R.id.card_view_floodmldrouter6);
-        CardView cardView8 = (CardView) findViewById(R.id.card_view_floodredir6);
-        CardView cardView9 = (CardView) findViewById(R.id.card_view_floodrouter6);
-        CardView cardView10 = (CardView) findViewById(R.id.card_view_floodrouter26);
-        CardView cardView11 = (CardView) findViewById(R.id.card_view_floodrs6);
-        CardView cardView12 = (CardView) findViewById(R.id.card_view_floodsolicitate6);
-        CardView cardView13 = (CardView) findViewById(R.id.card_view_floodunreach6);
-        CardView cardView14 = (CardView) findViewById(R.id.card_view_rsmurf6);
-        CardView cardView15 = (CardView) findViewById(R.id.card_view_dosnewip6);
-        CardView cardView16 = (CardView) findViewById(R.id.card_view_randicmp6);
-        CardView cardView17 = (CardView) findViewById(R.id.card_view_slowhttptest);
-        CardView cardView18 = (CardView) findViewById(R.id.card_view_dnsdrdos);
-        cardView.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.1
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("fuzz_ip6");
-            }
-        });
-        cardView2.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.2
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("denial6");
-            }
-        });
-        cardView3.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.3
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("flood_dhcpc6");
-            }
-        });
-        cardView4.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.4
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("flood_advertise6");
-            }
-        });
-        cardView5.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.5
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("flood_mld6");
-            }
-        });
-        cardView6.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.6
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("flood_mld26");
-            }
-        });
-        cardView7.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.7
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("flood_mldrouter6");
-            }
-        });
-        cardView8.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.8
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("flood_redir6");
-            }
-        });
-        cardView9.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.9
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("flood_router6");
-            }
-        });
-        cardView10.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.10
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("flood_router26");
-            }
-        });
-        cardView11.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.11
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("flood_rs6");
-            }
-        });
-        cardView12.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.12
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("flood_solicitate6");
-            }
-        });
-        cardView13.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.13
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("flood_unreach6");
-            }
-        });
-        cardView14.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.14
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("rsmurf6");
-            }
-        });
-        cardView15.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.15
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("dos-new-ip6");
-            }
-        });
-        cardView16.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.16
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("randicmp6");
-            }
-        });
-        cardView17.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.17
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("slowhttptest");
-            }
-        });
-        cardView18.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_stress_testing.18
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_stress_testing.this.run_hack_cmd("dnsdrdos -H");
-            }
-        });
+            requestWindowFeature(1);
+            super.onCreate(bundle);
+            Log.d(TAG, "onCreate");
+            setContentView(R.layout.dco_list_scaffold);
+            getWindow().setFlags(1024, 1024);
+
+            TextView titleView = findViewById(R.id.title);
+            titleView.setText("Stress Testing");
+            ((android.widget.ImageView) findViewById(R.id.banner)).setImageResource(R.drawable.stress_testing);
+            ((TextView) findViewById(R.id.stats_tools)).setText("18");
+
+            RecyclerView list = findViewById(R.id.tool_list);
+            list.setLayoutManager(new LinearLayoutManager(this));
+
+            List<ToolItem> tools = buildToolList();
+            ToolAdapter adapter = new ToolAdapter(tools, new ToolAdapter.OnToolClickListener() {
+                @Override
+                public void onToolClick(String cmd) {
+                    run_hack_cmd(cmd);
+                }
+
+                @Override
+                public void onInstallClick(String toolKey) {
+                    String cmd = buildInstallCommandForKey(toolKey);
+                    if (cmd != null) {
+                        run_hack_cmd(cmd);
+                    }
+                }
+            });
+            list.setAdapter(adapter);
+            list.setHasFixedSize(true);
         } catch (Exception e) {
             Log.e(TAG, "onCreate failed", e);
             finish();
         }
     }
 
-    
-@Override // android.app.Activity
+    private List<ToolItem> buildToolList() {
+        List<ToolItem> list = new ArrayList<>();
+        list.add(makeItem("dnsdrdos", "dnsdrdos", "Distributed DNS reflection DoS", "dnsdrdos -H", "andraxtool"));
+        list.add(makeItem("slowhttptest", "SlowHTTPTest", "highly configurable stress testing simulator", "slowhttptest", "andraxtool"));
+        list.add(makeItem("fuzzip6", "Fuzz_ip6", "Fuzzes an IPv6 packet", "fuzz_ip6", "andraxtool"));
+        list.add(makeItem("denial6", "Denial6", "Perform various DoS attacks", "denial6", "andraxtool"));
+        list.add(makeItem("flooddhcpc6", "Flood_dhcpc6", "DHCP Client Flooder", "flood_dhcpc6", "andraxtool"));
+        list.add(makeItem("floodadvertise6", "Flood_advertise6", "Flood network with advertise", "flood_advertise6", "andraxtool"));
+        list.add(makeItem("floodmld6", "Flood_mld6", "Flood local network with MLD", "flood_mld6", "andraxtool"));
+        list.add(makeItem("floodmld26", "Flood_mld26", "Flood local network with MLDv2", "flood_mld26", "andraxtool"));
+        list.add(makeItem("floodmldrouter6", "Flood_mldrouter6", "Flood MLD router with advertisements", "flood_mldrouter6", "andraxtool"));
+        list.add(makeItem("floodredir6", "Flood_redir6", "Flood with ICMPv6 redirect", "flood_redir6", "andraxtool"));
+        list.add(makeItem("floodrouter6", "Flood_router6", "Flood with router advertisements", "flood_router6", "andraxtool"));
+        list.add(makeItem("floodrouter26", "Flood_router26", "Flood with router advertisements", "flood_router26", "andraxtool"));
+        list.add(makeItem("floodrs6", "Flood_rs6", "Flood with ICMPv6 Router Solicitation", "flood_rs6", "andraxtool"));
+        list.add(makeItem("floodsolicitate6", "Flood_solicitate6", "Flood with neighbor solicitations", "flood_solicitate6", "andraxtool"));
+        list.add(makeItem("floodunreach6", "Flood_unreach6", "Flood with ICMPv6 unreachable packets", "flood_unreach6", "andraxtool"));
+        list.add(makeItem("rsmurf6", "Rsmurf6", "Smurfs the vctim&apos;s local network", "rsmurf6", "andraxtool"));
+        list.add(makeItem("dosnewip6", "Dos-new-ip6", "DoS new IPv6 on LAN", "dos-new-ip6", "andraxtool"));
+        list.add(makeItem("randicmp6", "Randicmp6", "Send all ICMPv6 types to a destination", "randicmp6", "andraxtool"));
+        return list;
+    }
+
+    private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
+        ToolItem item = new ToolItem();
+        item.key = key;
+        item.displayName = displayName;
+        item.description = description;
+        item.cmd = cmd;
+        if (drawableName == null || drawableName.isEmpty()) {
+            item.iconResId = R.drawable.andraxtool;
+        } else {
+            int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
+            item.iconResId = id != 0 ? id : R.drawable.andraxtool;
+        }
+        return item;
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");

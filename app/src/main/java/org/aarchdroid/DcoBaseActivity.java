@@ -91,6 +91,45 @@ public class DcoBaseActivity extends Activity {
         }
     }
 
+    public String buildInstallCommandForKey(String key) {
+        try {
+            if (toolManifest != null && toolManifest.has(key)) {
+                JSONObject entry = toolManifest.getJSONObject(key);
+                String source = entry.optString("source", "blackarch");
+                String pkg = entry.optString("pkg", key);
+                String url = entry.optString("url", "");
+                String note = entry.optString("note", "");
+                switch (source) {
+                    case "blackarch":
+                    case "arch":
+                        return "pacman -Sy --noconfirm " + pkg;
+                    case "pip":
+                        return "pip install " + pkg;
+                    case "gem":
+                        return "gem install " + pkg;
+                    case "go":
+                        return "go install " + pkg;
+                    case "github":
+                    case "local":
+                        return "sh /data/data/org.aarchdroid/files/scripts/install-tool.sh " + key;
+                    case "url":
+                        if (!url.isEmpty()) {
+                            return "mkdir -p /opt/" + key + " && wget -q \"" + url + "\" -O /opt/" + key + "/" + key + " && chmod +x /opt/" + key + "/" + key;
+                        }
+                        return "pacman -Sy --noconfirm " + key;
+                    case "ubuntu_only":
+                        Toast.makeText(this, note.isEmpty() ? "Solo disponible en Ubuntu" : note, Toast.LENGTH_LONG).show();
+                        return null;
+                    default:
+                        return "pacman -Sy --noconfirm " + key;
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error building install command for key", e);
+        }
+        return "pacman -Sy --noconfirm " + key;
+    }
+
     private String buildInstallCommand(String displayName) {
         String normalized = displayName.toLowerCase()
                 .replaceAll("[^a-z0-9-]", "-")

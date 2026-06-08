@@ -1,106 +1,89 @@
 package org.aarchdroid;
 
 import android.os.Bundle;
-import android.view.View;
-import androidx.cardview.widget.CardView;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
 
-/* JADX INFO: loaded from: classes2.dex */
 public class Dco_ics_scada_iot extends DcoBaseActivity {
     private static final String TAG = "Dco_ics_scada_iot";
-    @Override // android.app.Activity
+
+    @Override
     protected void onCreate(Bundle bundle) {
         try {
-        requestWindowFeature(1);
-        super.onCreate(bundle);
-        Log.d(TAG, "onCreate");
-        setContentView(R.layout.dco_ics_scada_iot);
-        getWindow().setFlags(1024, 1024);
-        CardView cardView = (CardView) findViewById(R.id.card_view_plcscan);
-        CardView cardView2 = (CardView) findViewById(R.id.card_view_s7scan);
-        CardView cardView3 = (CardView) findViewById(R.id.card_view_modscan);
-        CardView cardView4 = (CardView) findViewById(R.id.card_view_mbtget);
-        CardView cardView5 = (CardView) findViewById(R.id.card_view_smod);
-        CardView cardView6 = (CardView) findViewById(R.id.card_view_onthefly);
-        CardView cardView7 = (CardView) findViewById(R.id.card_view_homepwn);
-        CardView cardView8 = (CardView) findViewById(R.id.card_view_expliot);
-        CardView cardView9 = (CardView) findViewById(R.id.card_view_sixnettools);
-        CardView cardView10 = (CardView) findViewById(R.id.card_view_scadatools);
-        CardView cardView11 = (CardView) findViewById(R.id.card_view_termineter);
-        cardView.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_ics_scada_iot.1
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_ics_scada_iot.this.run_hack_cmd("plcscan");
-            }
-        });
-        cardView2.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_ics_scada_iot.2
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_ics_scada_iot.this.run_hack_cmd("s7scan");
-            }
-        });
-        cardView3.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_ics_scada_iot.3
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_ics_scada_iot.this.run_hack_cmd("modscan");
-            }
-        });
-        cardView4.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_ics_scada_iot.4
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_ics_scada_iot.this.run_hack_cmd("mbtget -h");
-            }
-        });
-        cardView5.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_ics_scada_iot.5
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_ics_scada_iot.this.run_hack_cmd("sudo smod");
-            }
-        });
-        cardView6.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_ics_scada_iot.6
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_ics_scada_iot.this.run_hack_cmd("on-the-fly");
-            }
-        });
-        cardView7.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_ics_scada_iot.7
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_ics_scada_iot.this.run_hack_cmd("homePwn");
-            }
-        });
-        cardView8.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_ics_scada_iot.8
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_ics_scada_iot.this.run_hack_cmd("expliot");
-            }
-        });
-        cardView9.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_ics_scada_iot.9
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_ics_scada_iot.this.run_hack_cmd("SIXNET-tools");
-            }
-        });
-        cardView10.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_ics_scada_iot.10
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_ics_scada_iot.this.run_hack_cmd("scada-tools");
-            }
-        });
-        cardView11.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_ics_scada_iot.11
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_ics_scada_iot.this.run_hack_cmd("termineter");
-            }
-        });
+            requestWindowFeature(1);
+            super.onCreate(bundle);
+            Log.d(TAG, "onCreate");
+            setContentView(R.layout.dco_list_scaffold);
+            getWindow().setFlags(1024, 1024);
+
+            TextView titleView = findViewById(R.id.title);
+            titleView.setText("ICS/SCADA/IIoT/IoT");
+            ((android.widget.ImageView) findViewById(R.id.banner)).setImageResource(R.drawable.ics);
+            ((TextView) findViewById(R.id.stats_tools)).setText("11");
+
+            RecyclerView list = findViewById(R.id.tool_list);
+            list.setLayoutManager(new LinearLayoutManager(this));
+
+            List<ToolItem> tools = buildToolList();
+            ToolAdapter adapter = new ToolAdapter(tools, new ToolAdapter.OnToolClickListener() {
+                @Override
+                public void onToolClick(String cmd) {
+                    run_hack_cmd(cmd);
+                }
+
+                @Override
+                public void onInstallClick(String toolKey) {
+                    String cmd = buildInstallCommandForKey(toolKey);
+                    if (cmd != null) {
+                        run_hack_cmd(cmd);
+                    }
+                }
+            });
+            list.setAdapter(adapter);
+            list.setHasFixedSize(true);
         } catch (Exception e) {
             Log.e(TAG, "onCreate failed", e);
             finish();
         }
     }
 
-    
-@Override // android.app.Activity
+    private List<ToolItem> buildToolList() {
+        List<ToolItem> list = new ArrayList<>();
+        list.add(makeItem("plcscan", "PLCScan", "MODBus and S7COMM PLC Scanner", "plcscan", "plc"));
+        list.add(makeItem("s7scan", "S7Scan", "S7 Scanner using LLC and TCT/IP", "s7scan", "plc"));
+        list.add(makeItem("modscan", "MODScan", "MODBus Scanner", "modscan", "modbus"));
+        list.add(makeItem("mbtget", "MBTGET", "Modbus/TCP client", "mbtget -h", "modbus"));
+        list.add(makeItem("sixnettools", "SIXNET-Tools", "Exploit sixnet RTUs", "SIXNET-tools", "andraxtool"));
+        list.add(makeItem("scadatools", "SCADA-Tools", "SCADA Scan and Hack tools", "scada-tools", "scadatools"));
+        list.add(makeItem("smod", "SMOD", "MODBUS Penetration Test Framework", "sudo smod", "modbus"));
+        list.add(makeItem("expliot", "eXplIOT", "IOT Security Testing and Exploitation", "expliot", "iot"));
+        list.add(makeItem("homepwn", "HomePWN", "Swiss Army Knife for Pentesting of IoT Devices", "homePwn", "homepwn"));
+        list.add(makeItem("onthefly", "On-The-Fly", "Network Pentesting on IT, ICS &amp; IoT Environments", "on-the-fly", "onthefly"));
+        list.add(makeItem("termineter", "termineter", "Smart Meter Security Testing Framework", "termineter", "termineter"));
+        return list;
+    }
+
+    private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
+        ToolItem item = new ToolItem();
+        item.key = key;
+        item.displayName = displayName;
+        item.description = description;
+        item.cmd = cmd;
+        if (drawableName == null || drawableName.isEmpty()) {
+            item.iconResId = R.drawable.andraxtool;
+        } else {
+            int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
+            item.iconResId = id != 0 ? id : R.drawable.andraxtool;
+        }
+        return item;
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");

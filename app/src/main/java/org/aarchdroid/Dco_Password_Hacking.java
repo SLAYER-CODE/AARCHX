@@ -1,155 +1,96 @@
 package org.aarchdroid;
 
 import android.os.Bundle;
-import android.view.View;
-import androidx.cardview.widget.CardView;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
 
-/* JADX INFO: loaded from: classes2.dex */
 public class Dco_Password_Hacking extends DcoBaseActivity {
     private static final String TAG = "Dco_Password_Hacking";
-    @Override // android.app.Activity
+
+    @Override
     protected void onCreate(Bundle bundle) {
         try {
-        requestWindowFeature(1);
-        super.onCreate(bundle);
-        Log.d(TAG, "onCreate");
-        setContentView(R.layout.dco_password_hacking);
-        getWindow().setFlags(1024, 1024);
-        CardView cardView = (CardView) findViewById(R.id.card_view_hydra);
-        CardView cardView2 = (CardView) findViewById(R.id.card_view_ncrack);
-        CardView cardView3 = (CardView) findViewById(R.id.card_view_john);
-        CardView cardView4 = (CardView) findViewById(R.id.card_view_hashcat);
-        CardView cardView5 = (CardView) findViewById(R.id.card_view_hashboy);
-        CardView cardView6 = (CardView) findViewById(R.id.card_view_crunch);
-        CardView cardView7 = (CardView) findViewById(R.id.card_view_maskprocessor);
-        CardView cardView8 = (CardView) findViewById(R.id.card_view_cewl);
-        CardView cardView9 = (CardView) findViewById(R.id.card_view_ssh_auditor);
-        CardView cardView10 = (CardView) findViewById(R.id.card_view_bopscrk);
-        CardView cardView11 = (CardView) findViewById(R.id.card_view_pskcrack);
-        CardView cardView12 = (CardView) findViewById(R.id.card_view_bgpmd5crack);
-        CardView cardView13 = (CardView) findViewById(R.id.card_view_narthex);
-        CardView cardView14 = (CardView) findViewById(R.id.card_view_medusa);
-        CardView cardView15 = (CardView) findViewById(R.id.card_view_mfoc);
-        CardView cardView16 = (CardView) findViewById(R.id.card_view_pipal);
-        CardView cardView17 = (CardView) findViewById(R.id.card_view_eapmd5pass);
-        CardView cardView18 = (CardView) findViewById(R.id.card_view_patator);
-        cardView12.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.1
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("bgp_md5crack -h");
-            }
-        });
-        cardView.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.2
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("hydra");
-            }
-        });
-        cardView2.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.3
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("ncrack");
-            }
-        });
-        cardView3.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.4
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("john");
-            }
-        });
-        cardView4.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.5
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("hashcat -h");
-            }
-        });
-        cardView5.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.6
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("hashboy");
-            }
-        });
-        cardView6.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.7
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("crunch");
-            }
-        });
-        cardView7.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.8
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("maskprocessor --help");
-            }
-        });
-        cardView8.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.9
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("cewl -h");
-            }
-        });
-        cardView9.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.10
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("ssh-auditor");
-            }
-        });
-        cardView10.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.11
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("bopscrk");
-            }
-        });
-        cardView11.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.12
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("psk-crack");
-            }
-        });
-        cardView13.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.13
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("nwiz");
-            }
-        });
-        cardView14.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.14
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("medusa");
-            }
-        });
-        cardView15.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.15
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("mfoc -h");
-            }
-        });
-        cardView16.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.16
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("pipal -h");
-            }
-        });
-        cardView17.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.17
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("eapmd5pass");
-            }
-        });
-        cardView18.setOnClickListener(new View.OnClickListener() { // from class: org.snakesecurity.andrax.Dco_Password_Hacking.18
-            @Override // android.view.View.OnClickListener
-            public void onClick(View view) {
-                Dco_Password_Hacking.this.run_hack_cmd("patator");
-            }
-        });
+            requestWindowFeature(1);
+            super.onCreate(bundle);
+            Log.d(TAG, "onCreate");
+            setContentView(R.layout.dco_list_scaffold);
+            getWindow().setFlags(1024, 1024);
+
+            TextView titleView = findViewById(R.id.title);
+            titleView.setText("Password Cracking");
+            ((android.widget.ImageView) findViewById(R.id.banner)).setImageResource(R.drawable.passwordhacking);
+            ((TextView) findViewById(R.id.stats_tools)).setText("18");
+
+            RecyclerView list = findViewById(R.id.tool_list);
+            list.setLayoutManager(new LinearLayoutManager(this));
+
+            List<ToolItem> tools = buildToolList();
+            ToolAdapter adapter = new ToolAdapter(tools, new ToolAdapter.OnToolClickListener() {
+                @Override
+                public void onToolClick(String cmd) {
+                    run_hack_cmd(cmd);
+                }
+
+                @Override
+                public void onInstallClick(String toolKey) {
+                    String cmd = buildInstallCommandForKey(toolKey);
+                    if (cmd != null) {
+                        run_hack_cmd(cmd);
+                    }
+                }
+            });
+            list.setAdapter(adapter);
+            list.setHasFixedSize(true);
         } catch (Exception e) {
             Log.e(TAG, "onCreate failed", e);
             finish();
         }
     }
 
-    
-@Override // android.app.Activity
+    private List<ToolItem> buildToolList() {
+        List<ToolItem> list = new ArrayList<>();
+        list.add(makeItem("maskprocessor", "MaskProcessor", "High-Performance Word Generator", "maskprocessor --help", "maskprocessor"));
+        list.add(makeItem("cewl", "CeWL", "Custom Word List generator", "cewl -h", "cewl"));
+        list.add(makeItem("bopscrk", "Bopscrk", "Generates smart and powerful wordlists", "bopscrk", "bopscrk"));
+        list.add(makeItem("narthex", "narthex", "Modular Personalized Dictionary Generator", "nwiz", "narthex"));
+        list.add(makeItem("crunch", "CRUNCH", "Wordlist Generator", "crunch", "crunch"));
+        list.add(makeItem("pipal", "pipal", "Password analyser", "pipal -h", "pipal"));
+        list.add(makeItem("hashboy", "HASHBoy", "Passive HASH Craker", "hashboy", "hashboy"));
+        list.add(makeItem("ssh_auditor", "SSH-AUDITOR", "The best way to scan for weak ssh passwords", "ssh-auditor", "sshauditor"));
+        list.add(makeItem("ncrack", "NCRACK", "High-SPEED Network AUTH Cracking", "ncrack", "ncrack"));
+        list.add(makeItem("hydra", "HYDRA", "Tool to brute force protocols", "hydra", "hydra"));
+        list.add(makeItem("medusa", "medusa", "Parallel Network Login Auditor", "medusa", "medusa"));
+        list.add(makeItem("patator", "patator", "Multi-purpose brute-forcer", "patator", "patator"));
+        list.add(makeItem("hashcat", "HASHCAT", "World&apos;s fastest password cracker", "hashcat -h", "hashcat"));
+        list.add(makeItem("john", "John The Ripper", "Fast password cracker", "john", "john"));
+        list.add(makeItem("bgpmd5crack", "BGP_MD5Crack", "RFC2385 password cracker", "bgp_md5crack -h", "andraxtool"));
+        list.add(makeItem("pskcrack", "PSK-Crack", "Pre-Shared Key Cracking", "psk-crack", "ikescan"));
+        list.add(makeItem("mfoc", "mfoc", "Mifare Classic Offline Cracker", "mfoc -h", "mfoc"));
+        list.add(makeItem("eapmd5pass", "EAP-MD5-Pass", "Offline EAP-MD5 dictionary attack", "eapmd5pass", "andraxtool"));
+        return list;
+    }
+
+    private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
+        ToolItem item = new ToolItem();
+        item.key = key;
+        item.displayName = displayName;
+        item.description = description;
+        item.cmd = cmd;
+        if (drawableName == null || drawableName.isEmpty()) {
+            item.iconResId = R.drawable.andraxtool;
+        } else {
+            int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
+            item.iconResId = id != 0 ? id : R.drawable.andraxtool;
+        }
+        return item;
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");

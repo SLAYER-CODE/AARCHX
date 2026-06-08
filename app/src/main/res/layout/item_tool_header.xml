@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:gravity="center_vertical">
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/banner"
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:scaleType="fitXY"
+        android:layout_centerVertical="true"/>
+    <TextView
+        android:id="@+id/title"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/whitefull"
+        android:gravity="start|center_vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="46dp"
+        android:layout_marginStart="6dp"
+        android:layout_toEndOf="@+id/banner"
+        android:fontFamily="sans-serif-condensed-medium"/>
+    <TextView
+        android:id="@+id/sep1"
+        android:text="|"
+        android:textSize="11sp"
+        android:textColor="@color/divider_green"
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_toEndOf="@+id/title"
+        android:layout_centerVertical="true"/>
+    <TextView
+        android:id="@+id/stats_size"
+        android:text="0mb"
+        android:textSize="24sp"
+        android:textColor="@color/orange_yellow"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="4dp"/>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="46dp"
+        android:layout_toEndOf="@+id/sep1"
+        android:gravity="center_vertical">
+        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:text="Herramientas: " android:textSize="8sp" android:textColor="@color/neon_green" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+            <TextView android:id="@+id/stats_tools" android:text="0" android:textSize="8sp" android:textColor="@color/cyan_bright" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        </LinearLayout>
+        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:text="Descargadas: " android:textSize="8sp" android:textColor="@color/neon_green" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+            <TextView android:id="@+id/stats_downloaded" android:text="0" android:textSize="8sp" android:textColor="@color/light_green" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        </LinearLayout>
+        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:text="Actualizada: " android:textSize="8sp" android:textColor="@color/neon_green" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+            <TextView android:id="@+id/stats_updated" android:text="-" android:textSize="8sp" android:textColor="@color/orange_bright" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
