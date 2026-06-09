@@ -1,7 +1,7 @@
 [
 {
-  "directory": "/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/.cxx/Debug/eld4y2g5/arm64-v8a",
-  "command": "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android21 --sysroot=/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dneoterm_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++11 -fno-limit-debug-info  -fPIC -o CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o -c /home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/neoterm.cpp",
-  "file": "/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/neoterm.cpp"
+  "directory": "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/.cxx/Debug/eld4y2g5/arm64-v8a",
+  "command": "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android21 --sysroot=/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dneoterm_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++11 -fno-limit-debug-info  -fPIC -o CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o -c /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/neoterm.cpp",
+  "file": "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/neoterm.cpp"
 }
 ]

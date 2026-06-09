@@ -1,4 +1,4 @@
-set(CMAKE_CXX_COMPILER "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++")
+set(CMAKE_CXX_COMPILER "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++")
 set(CMAKE_CXX_COMPILER_ARG1 "")
 set(CMAKE_CXX_COMPILER_ID "Clang")
 set(CMAKE_CXX_COMPILER_VERSION "18.0.3")
@@ -22,11 +22,11 @@ set(CMAKE_CXX_SIMULATE_VERSION "")
 
 
 
-set(CMAKE_AR "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
-set(CMAKE_CXX_COMPILER_AR "/home/Tiopaz/NewSystem/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
-set(CMAKE_RANLIB "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib")
-set(CMAKE_CXX_COMPILER_RANLIB "/home/Tiopaz/NewSystem/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib")
-set(CMAKE_LINKER "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/ld.lld")
+set(CMAKE_AR "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
+set(CMAKE_CXX_COMPILER_AR "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
+set(CMAKE_RANLIB "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib")
+set(CMAKE_CXX_COMPILER_RANLIB "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib")
+set(CMAKE_LINKER "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/ld.lld")
 set(CMAKE_MT "")
 set(CMAKE_COMPILER_IS_GNUCXX )
 set(CMAKE_CXX_COMPILER_LOADED 1)
@@ -77,7 +77,7 @@ endif()
 
 
 
-set(CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1;/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/18/include;/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/arm-linux-androideabi;/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include")
+set(CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1;/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/18/include;/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/arm-linux-androideabi;/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include")
 set(CMAKE_CXX_IMPLICIT_LINK_LIBRARIES "c++;m;-l:libunwind.a;dl;c;-l:libunwind.a;dl")
-set(CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/18/lib/linux/arm;/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/arm-linux-androideabi/21;/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/arm-linux-androideabi;/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib")
+set(CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/18/lib/linux/arm;/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/arm-linux-androideabi/21;/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/arm-linux-androideabi;/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib")
 set(CMAKE_CXX_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")

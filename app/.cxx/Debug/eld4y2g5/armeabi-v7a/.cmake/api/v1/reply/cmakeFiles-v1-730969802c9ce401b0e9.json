@@ -11,19 +11,19 @@
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/android.toolchain.cmake"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/android.toolchain.cmake"
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/android-legacy.toolchain.cmake"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/android-legacy.toolchain.cmake"
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/abis.cmake"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/abis.cmake"
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/platforms.cmake"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/platforms.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -32,7 +32,7 @@
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/hooks/pre/Android-Determine.cmake"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/hooks/pre/Android-Determine.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -41,11 +41,11 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : ".cxx/Debug/eld4y2g5/arm64-v8a/CMakeFiles/3.22.1-g37088a8/CMakeSystem.cmake"
+			"path" : ".cxx/Debug/eld4y2g5/armeabi-v7a/CMakeFiles/3.22.1-g37088a8/CMakeSystem.cmake"
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/android.toolchain.cmake"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/android.toolchain.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -59,7 +59,7 @@
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/hooks/pre/Android-Initialize.cmake"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/hooks/pre/Android-Initialize.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -83,7 +83,7 @@
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/hooks/pre/Determine-Compiler.cmake"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/hooks/pre/Determine-Compiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -307,7 +307,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : ".cxx/Debug/eld4y2g5/arm64-v8a/CMakeFiles/3.22.1-g37088a8/CMakeCCompiler.cmake"
+			"path" : ".cxx/Debug/eld4y2g5/armeabi-v7a/CMakeFiles/3.22.1-g37088a8/CMakeCCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -541,7 +541,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : ".cxx/Debug/eld4y2g5/arm64-v8a/CMakeFiles/3.22.1-g37088a8/CMakeCXXCompiler.cmake"
+			"path" : ".cxx/Debug/eld4y2g5/armeabi-v7a/CMakeFiles/3.22.1-g37088a8/CMakeCXXCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -565,7 +565,7 @@
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/hooks/pre/Android.cmake"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/hooks/pre/Android.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -624,11 +624,11 @@
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/hooks/pre/Android-Clang.cmake"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/hooks/pre/Android-Clang.cmake"
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/flags.cmake"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/flags.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -692,7 +692,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : ".cxx/Debug/eld4y2g5/arm64-v8a/CMakeFiles/3.22.1-g37088a8/CMakeCCompiler.cmake"
+			"path" : ".cxx/Debug/eld4y2g5/armeabi-v7a/CMakeFiles/3.22.1-g37088a8/CMakeCCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -786,14 +786,14 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : ".cxx/Debug/eld4y2g5/arm64-v8a/CMakeFiles/3.22.1-g37088a8/CMakeCXXCompiler.cmake"
+			"path" : ".cxx/Debug/eld4y2g5/armeabi-v7a/CMakeFiles/3.22.1-g37088a8/CMakeCXXCompiler.cmake"
 		}
 	],
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/.cxx/Debug/eld4y2g5/arm64-v8a",
-		"source" : "/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app"
+		"build" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/.cxx/Debug/eld4y2g5/armeabi-v7a",
+		"source" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app"
 	},
 	"version" : 
 	{

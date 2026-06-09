@@ -3,7 +3,7 @@ set(CMAKE_HOST_SYSTEM_NAME "Linux")
 set(CMAKE_HOST_SYSTEM_VERSION "6.7.2-arch1-1")
 set(CMAKE_HOST_SYSTEM_PROCESSOR "x86_64")
 
-include("/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/android.toolchain.cmake")
+include("/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/android.toolchain.cmake")
 
 set(CMAKE_SYSTEM "Android-1")
 set(CMAKE_SYSTEM_NAME "Android")

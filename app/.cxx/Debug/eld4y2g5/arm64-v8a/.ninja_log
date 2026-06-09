@@ -1,14 +1,3 @@
 # ninja log v5
-24	1455	1780602630926145483	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	6448b8af0c02dc55
-1455	1519	1780602630992813732	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a/libneoterm.so	92a3abc0249ef54f
-0	4	0	clean	a40f73ebf6034374
-0	1473	1780605714700280164	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	6448b8af0c02dc55
-1473	2254	1780605715480295553	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a/libneoterm.so	92a3abc0249ef54f
-1	4453	1780666704806640920	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	6448b8af0c02dc55
-4453	5921	1780666706519885697	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a/libneoterm.so	92a3abc0249ef54f
-1	46	1780666747365471546	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	6448b8af0c02dc55
-46	65	1780666747385471453	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a/libneoterm.so	92a3abc0249ef54f
-1	3979	1780776165784874991	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	6448b8af0c02dc55
-3991	5503	1780776167358254996	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a/libneoterm.so	92a3abc0249ef54f
-0	48	1780776391731406205	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	6448b8af0c02dc55
-49	67	1780776391751406770	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a/libneoterm.so	92a3abc0249ef54f
+0	1088	1781040518271603561	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	edfa6f01ffede3ce
+1089	1149	1781040518331604922	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a/libneoterm.so	59ab631e295e26db

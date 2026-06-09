@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a/libneoterm.so"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/build/intermediates/cxx/Debug/eld4y2g5/obj/armeabi-v7a/libneoterm.so"
 		}
 	],
 	"backtrace" : 1,
@@ -35,7 +35,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++11 -fno-limit-debug-info  -fPIC"
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -march=armv7-a -mthumb -Wformat -Werror=format-security  -std=c++11 -fno-limit-debug-info  -fPIC"
 				}
 			],
 			"defines" : 
@@ -51,7 +51,7 @@
 			],
 			"sysroot" : 
 			{
-				"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+				"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
 			}
 		}
 	],
@@ -72,7 +72,7 @@
 		"language" : "CXX",
 		"sysroot" : 
 		{
-			"path" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+			"path" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
 		}
 	},
 	"name" : "neoterm",

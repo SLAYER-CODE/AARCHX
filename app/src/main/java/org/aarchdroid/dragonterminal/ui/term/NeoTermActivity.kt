@@ -757,7 +757,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 switchToSession(lastSession)
             }
 
-        } else {
+        } else if (pendingAnchorSession == null) {
             Log.d("AArchDroid", "NeoTermActivity: no existing sessions — creating first session")
             toggleSwitcher(showSwitcher = true, easterEgg = false)
 

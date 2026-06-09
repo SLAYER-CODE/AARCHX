@@ -23,7 +23,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c"
 		},
 		{
 			"name" : "ANDROID_PLATFORM",
@@ -51,7 +51,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-addr2line"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-addr2line"
 		},
 		{
 			"name" : "CMAKE_ANDROID_ARCH_ABI",
@@ -75,7 +75,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c"
 		},
 		{
 			"name" : "CMAKE_AR",
@@ -91,7 +91,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
 		},
 		{
 			"name" : "CMAKE_ASM_FLAGS",
@@ -151,7 +151,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/.cxx/Debug/eld4y2g5/arm64-v8a"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/.cxx/Debug/eld4y2g5/arm64-v8a"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -255,7 +255,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/NewSystem/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
 		},
 		{
 			"name" : "CMAKE_CXX_COMPILER_RANLIB",
@@ -271,7 +271,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/NewSystem/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib"
 		},
 		{
 			"name" : "CMAKE_CXX_FLAGS",
@@ -399,7 +399,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/NewSystem/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
 		},
 		{
 			"name" : "CMAKE_C_COMPILER_RANLIB",
@@ -415,7 +415,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/NewSystem/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib"
 		},
 		{
 			"name" : "CMAKE_C_FLAGS",
@@ -527,7 +527,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-dlltool"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-dlltool"
 		},
 		{
 			"name" : "CMAKE_EXECUTABLE_FORMAT",
@@ -703,7 +703,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -739,7 +739,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a"
 		},
 		{
 			"name" : "CMAKE_LINKER",
@@ -755,7 +755,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/ld.lld"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/ld.lld"
 		},
 		{
 			"name" : "CMAKE_MAKE_PROGRAM",
@@ -863,7 +863,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"
 		},
 		{
 			"name" : "CMAKE_NUMBER_OF_MAKEFILES",
@@ -891,7 +891,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objcopy"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objcopy"
 		},
 		{
 			"name" : "CMAKE_OBJDUMP",
@@ -907,7 +907,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objdump"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objdump"
 		},
 		{
 			"name" : "CMAKE_PLATFORM_INFO_INITIALIZED",
@@ -971,7 +971,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib"
 		},
 		{
 			"name" : "CMAKE_READELF",
@@ -987,7 +987,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
 		},
 		{
 			"name" : "CMAKE_ROOT",
@@ -1011,7 +1011,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a"
 		},
 		{
 			"name" : "CMAKE_SHARED_LINKER_FLAGS",
@@ -1219,7 +1219,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"
 		},
 		{
 			"name" : "CMAKE_SYSTEM_NAME",
@@ -1255,7 +1255,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/Tiopaz/Android/Sdk/ndk/27.2.12479018/build/cmake/android.toolchain.cmake"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Compiladores/android-ndk/android-ndk-r27c/build/cmake/android.toolchain.cmake"
 		},
 		{
 			"name" : "CMAKE_UNAME",
@@ -1295,7 +1295,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app/.cxx/Debug/eld4y2g5/arm64-v8a"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/.cxx/Debug/eld4y2g5/arm64-v8a"
 		},
 		{
 			"name" : "Project_IS_TOP_LEVEL",
@@ -1319,7 +1319,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/Tiopaz/NewSystem/Movil/Experimentos/AndraxDevelop/AArchDroid/app"
+			"value" : "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app"
 		}
 	],
 	"kind" : "cache",
