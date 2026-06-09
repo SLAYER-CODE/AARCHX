@@ -1,82 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="56dp"
-    android:gravity="center_vertical">
+    android:layout_height="wrap_content"
+    android:minHeight="40dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/banner"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:scaleType="fitXY"
-        android:layout_centerVertical="true"
-        android:layout_marginStart="4dp"/>
-
-    <TextView
-        android:id="@+id/stats_size"
-        android:text="0mb"
-        android:textSize="14sp"
-        android:textColor="@color/orange_yellow"
-        android:textStyle="bold"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:maxWidth="60dp"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:layout_marginEnd="6dp"/>
-
-    <LinearLayout
-        android:id="@+id/stats_wrapper"
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:layout_toEndOf="@+id/sep1"
-        android:layout_toStartOf="@+id/stats_size"
-        android:layout_marginEnd="4dp"
-        android:gravity="center_vertical">
-        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
-            <TextView android:text="Herramientas: " android:textSize="7sp" android:textColor="@color/neon_green" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-            <TextView android:id="@+id/stats_tools" android:text="0" android:textSize="7sp" android:textColor="@color/cyan_bright" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        </LinearLayout>
-        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
-            <TextView android:text="Descargadas: " android:textSize="7sp" android:textColor="@color/neon_green" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-            <TextView android:id="@+id/stats_downloaded" android:text="0" android:textSize="7sp" android:textColor="@color/light_green" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        </LinearLayout>
-        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
-            <TextView android:text="Actualizada: " android:textSize="7sp" android:textColor="@color/neon_green" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-            <TextView android:id="@+id/stats_updated" android:text="-" android:textSize="7sp" android:textColor="@color/orange_bright" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        </LinearLayout>
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/sep1"
-        android:text="|"
-        android:textSize="11sp"
-        android:textColor="@color/divider_green"
-        android:gravity="center"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="3dp"
-        android:layout_marginEnd="3dp"
-        android:layout_toEndOf="@+id/title"
-        android:layout_toStartOf="@+id/stats_wrapper"
-        android:layout_centerVertical="true"/>
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:scaleType="fitXY"/>
 
     <TextView
         android:id="@+id/title"
-        android:textSize="15sp"
+        android:textSize="13sp"
         android:textStyle="bold"
         android:textColor="@color/whitefull"
         android:gravity="start|center_vertical"
         android:layout_width="0dp"
-        android:layout_height="40dp"
-        android:layout_toEndOf="@+id/banner"
-        android:layout_toStartOf="@+id/sep1"
-        android:layout_marginStart="4dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:maxLines="1"
         android:ellipsize="end"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
         android:fontFamily="sans-serif-condensed-medium"/>
 
-</RelativeLayout>
+    <TextView
+        android:id="@+id/stats_compact"
+        android:text="H:0 D:0 A:-"
+        android:textSize="9sp"
+        android:textColor="@color/cyan_bright"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:layout_marginEnd="4dp"/>
+
+    <TextView
+        android:id="@+id/stats_size"
+        android:text="0mb"
+        android:textSize="11sp"
+        android:textColor="@color/orange_yellow"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"/>
+
+    <TextView
+        android:id="@+id/stats_tools"
+        android:text="0"
+        android:visibility="gone"
+        android:layout_width="0dp"
+        android:layout_height="0dp"/>
+
+    <TextView
+        android:id="@+id/stats_downloaded"
+        android:text="0"
+        android:visibility="gone"
+        android:layout_width="0dp"
+        android:layout_height="0dp"/>
+
+    <TextView
+        android:id="@+id/stats_updated"
+        android:text="-"
+        android:visibility="gone"
+        android:layout_width="0dp"
+        android:layout_height="0dp"/>
+
+</androidx.appcompat.widget.LinearLayoutCompat>

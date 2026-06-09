@@ -31,7 +31,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.FrameLayout.LayoutParams;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -256,18 +255,7 @@ public class PhoneRecyclerAdapter extends AbstractViewRecycler.Adapter<TabItem, 
      *         tab may not be null
      */
     private void adaptCloseButtonIcon(@NonNull final PhoneTabViewHolder viewHolder,
-                                      @NonNull final Tab tab) {
-        Drawable icon = tab.getCloseButtonIcon(model.getContext());
-
-        if (icon == null) {
-            icon = model.getTabCloseButtonIcon();
-        }
-
-        if (icon != null) {
-            viewHolder.closeButton.setImageDrawable(icon);
-        } else {
-            viewHolder.closeButton.setImageResource(R.drawable.ic_close_tab_18dp);
-        }
+                                       @NonNull final Tab tab) {
     }
 
     /**
@@ -275,7 +263,7 @@ public class PhoneRecyclerAdapter extends AbstractViewRecycler.Adapter<TabItem, 
      * is clicked.
      *
      * @param closeButton
-     *         The tab's close button as an instance of the class {@link ImageButton}. The button
+     *         The tab's close button as an instance of the class {@link View}. The button
      *         may not be null
      * @param tab
      *         The tab, which should be closed, as an instance of the class {@link Tab}. The tab may
@@ -284,8 +272,8 @@ public class PhoneRecyclerAdapter extends AbstractViewRecycler.Adapter<TabItem, 
      * OnClickListener}. The listener may not be null
      */
     @NonNull
-    private OnClickListener createCloseButtonClickListener(@NonNull final ImageButton closeButton,
-                                                           @NonNull final Tab tab) {
+    private OnClickListener createCloseButtonClickListener(@NonNull final View closeButton,
+                                                            @NonNull final Tab tab) {
         return new OnClickListener() {
 
             @Override
@@ -528,7 +516,7 @@ public class PhoneRecyclerAdapter extends AbstractViewRecycler.Adapter<TabItem, 
         view.setPadding(padding, tabInset, padding, padding);
         viewHolder.titleContainer = (ViewGroup) view.findViewById(R.id.tab_title_container);
         viewHolder.titleTextView = (TextView) view.findViewById(R.id.tab_title_text_view);
-        viewHolder.closeButton = (ImageButton) view.findViewById(R.id.close_tab_button);
+        viewHolder.closeButton = (TextView) view.findViewById(R.id.close_tab_button);
         viewHolder.childContainer = (ViewGroup) view.findViewById(R.id.child_container);
         viewHolder.previewImageView = (ImageView) view.findViewById(R.id.preview_image_view);
         adaptPadding(viewHolder);

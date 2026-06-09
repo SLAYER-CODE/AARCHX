@@ -13,7 +13,6 @@
  */
 package de.mrapp.android.tabswitcher.layout;
 
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import de.mrapp.android.tabswitcher.TabSwitcher;
@@ -35,6 +34,6 @@ public abstract class AbstractTabViewHolder {
     /**
      * The close button of a tab.
      */
-    public ImageButton closeButton;
+    public TextView closeButton;
 
 }

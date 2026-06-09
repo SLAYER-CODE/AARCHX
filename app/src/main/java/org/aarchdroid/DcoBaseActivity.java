@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.util.Log;
 import android.util.DisplayMetrics;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import org.aarchdroid.dragonterminal.bridge.Bridge;
 import org.json.JSONObject;
@@ -27,6 +30,7 @@ public class DcoBaseActivity extends Activity {
     private static Boolean hasRoot = null;
     private static JSONObject toolManifest = null;
     private boolean layoutSet = false;
+    private boolean scrollListenerAttached = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +99,7 @@ public class DcoBaseActivity extends Activity {
                             rv.setLayoutParams(lp);
                         }
 
+                        setupScrollIndicator(rv);
                         updateStatsSize();
 
                         decorView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
@@ -103,42 +108,63 @@ public class DcoBaseActivity extends Activity {
         }
     }
 
+    private String getCurrentCategory() {
+        String className = getClass().getSimpleName();
+        if (className.startsWith("Dco_")) {
+            return className.substring(4).toLowerCase();
+        }
+        return "";
+    }
+
     private void updateStatsSize() {
         TextView sizeView = findViewById(R.id.stats_size);
         TextView toolsView = findViewById(R.id.stats_tools);
+        TextView compactView = findViewById(R.id.stats_compact);
+        TextView downView = findViewById(R.id.stats_downloaded);
+        TextView updView = findViewById(R.id.stats_updated);
         if (sizeView == null || toolsView == null) return;
-        String toolsText = toolsView.getText().toString();
-        int toolCount = 0;
-        try { toolCount = Integer.parseInt(toolsText); } catch (Exception e) {}
-        long totalMb = toolCount * 25L;
-        sizeView.setText(totalMb + "mb");
-        if (totalMb == 0) {
+        String category = getCurrentCategory();
+        CategoryInfo stats = ToolDatabase.getInstance().getCategoryStats(category);
+        long totalSizeMb = stats != null ? stats.installedSizeMb : 0;
+        if (totalSizeMb == 0) totalSizeMb = stats != null ? 0 : 25;
+        sizeView.setText(totalSizeMb + "mb");
+        if (totalSizeMb == 0) {
             sizeView.setTextColor(Color.parseColor("#3D6B3D"));
-        } else if (totalMb < 500) {
+        } else if (totalSizeMb < 500) {
             sizeView.setTextColor(Color.parseColor("#B87333"));
         } else {
             sizeView.setTextColor(Color.parseColor("#8B0000"));
         }
+        if (toolsView != null && stats != null) {
+            toolsView.setText(String.valueOf(stats.totalTools));
+        }
+        if (compactView != null) {
+            String h = toolsView != null ? toolsView.getText().toString() : "0";
+            String d = downView != null ? downView.getText().toString() : "0";
+            String a = updView != null ? updView.getText().toString() : "-";
+            int neon = Color.parseColor("#39FF14");
+            int cyan = Color.parseColor("#00FFFF");
+            int green = Color.parseColor("#90EE90");
+            int orange = Color.parseColor("#FF8C00");
+            SpannableStringBuilder ssb = new SpannableStringBuilder();
+            int start = ssb.length(); ssb.append("H:"); ssb.setSpan(new ForegroundColorSpan(neon), start, ssb.length(), 0);
+            start = ssb.length(); ssb.append(h);      ssb.setSpan(new ForegroundColorSpan(cyan), start, ssb.length(), 0);
+            start = ssb.length(); ssb.append(" D:");  ssb.setSpan(new ForegroundColorSpan(neon), start, ssb.length(), 0);
+            start = ssb.length(); ssb.append(d);      ssb.setSpan(new ForegroundColorSpan(green), start, ssb.length(), 0);
+            start = ssb.length(); ssb.append(" A:");  ssb.setSpan(new ForegroundColorSpan(neon), start, ssb.length(), 0);
+            start = ssb.length(); ssb.append(a);      ssb.setSpan(new ForegroundColorSpan(orange), start, ssb.length(), 0);
+            compactView.setText(ssb);
+        }
     }
 
     public void onInstallClick(View v) {
-        ViewGroup cardContent = (ViewGroup) v.getParent();
-        String toolDisplayName = "";
-        for (int i = 0; i < cardContent.getChildCount(); i++) {
-            View child = cardContent.getChildAt(i);
-            if (child instanceof TextView) {
-                String text = ((TextView) child).getText().toString().trim();
-                if (!text.isEmpty()) {
-                    toolDisplayName = text;
-                    break;
-                }
-            }
-        }
-        if (!toolDisplayName.isEmpty()) {
-            String cmd = buildInstallCommand(toolDisplayName);
-            if (cmd != null) {
-                run_hack_cmd(cmd);
-            }
+        Object tag = v.getTag();
+        String toolKey = tag instanceof String ? (String) tag : "";
+        if (toolKey.isEmpty()) return;
+        String cmd = buildInstallCommandForKey(toolKey);
+        if (cmd != null) {
+            ToolDatabase.getInstance().markInstalling(toolKey, cmd);
+            run_hack_cmd(cmd);
         }
     }
 
@@ -270,5 +296,65 @@ public class DcoBaseActivity extends Activity {
             Log.e(TAG, "Root check failed", e);
             return false;
         }
+    }
+
+    private void setupScrollIndicator(RecyclerView rv) {
+        if (scrollListenerAttached || rv == null) return;
+        scrollListenerAttached = true;
+
+        final View indicator = findViewById(R.id.scroll_indicator);
+        final View thumb = findViewById(R.id.scroll_thumb);
+        if (indicator == null || thumb == null) return;
+
+        rv.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                updateScrollThumb(recyclerView, indicator, thumb);
+            }
+        });
+
+        rv.post(() -> updateScrollThumb(rv, indicator, thumb));
+    }
+
+    private void updateScrollThumb(RecyclerView rv, View indicator, View thumb) {
+        LinearLayoutManager lm = (LinearLayoutManager) rv.getLayoutManager();
+        if (lm == null) return;
+
+        int totalItems = lm.getItemCount();
+        int firstVisible = lm.findFirstCompletelyVisibleItemPosition();
+        int lastVisible = lm.findLastCompletelyVisibleItemPosition();
+
+        if (firstVisible == -1 || lastVisible == -1) {
+            firstVisible = lm.findFirstVisibleItemPosition();
+            lastVisible = lm.findLastVisibleItemPosition();
+        }
+
+        int visibleItems = lastVisible - firstVisible + 1;
+        if (visibleItems <= 0) visibleItems = 1;
+        if (totalItems <= 0) return;
+
+        if (visibleItems >= totalItems) {
+            indicator.setVisibility(View.GONE);
+            return;
+        }
+        indicator.setVisibility(View.VISIBLE);
+
+        float progress = (float) firstVisible / Math.max(1, totalItems - visibleItems);
+        progress = Math.max(0, Math.min(1, progress));
+
+        float visibleRatio = (float) visibleItems / totalItems;
+
+        int trackWidth = indicator.getWidth();
+        if (trackWidth <= 0) return;
+
+        thumb.setPivotX(0);
+        thumb.setScaleX(Math.max(visibleRatio, (float) dpToPx(8) / trackWidth));
+
+        float available = trackWidth * (1 - visibleRatio);
+        thumb.setTranslationX(available * progress);
+    }
+
+    private int dpToPx(int dp) {
+        return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
     }
 }

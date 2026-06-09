@@ -156,8 +156,8 @@ class FloatService : Service() {
         val prefs = v.preferences
         val defaultW = prefs.windowWidth.coerceAtLeast(50)
         val defaultH = prefs.windowHeight.coerceAtLeast(50)
-        val pos = calculateTilePosition(floatWindows.size, defaultW, defaultH)
-        Log.d(TAG, "New window #${floatWindows.size} at x=${pos[0]} y=${pos[1]} w=${pos[2]} h=${pos[3]}")
+        val pos = calculateCascadePosition(floatWindows.size, defaultW, defaultH)
+        Log.d(TAG, "New window #${floatWindows.size} at x=${pos[0]} y=${pos[1]}")
 
         try {
             v.launchOverlay(pos[0], pos[1], pos[2], pos[3])
@@ -224,7 +224,7 @@ class FloatService : Service() {
         return builder.create(this)
     }
 
-    private fun calculateTilePosition(index: Int, winW: Int, winH: Int): IntArray {
+    private fun calculateCascadePosition(index: Int, winW: Int, winH: Int): IntArray {
         val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val display = wm.defaultDisplay
         val size = Point()
@@ -234,22 +234,23 @@ class FloatService : Service() {
 
         val density = resources.displayMetrics.density
         val margin = (8 * density).toInt()
-        val gap = (4 * density).toInt()
+        val offset = (30 * density).toInt()
         val statusBarH = (50 * density).toInt()
+        val baseX = margin
+        val baseY = statusBarH + margin
 
-        val usableH = (screenH * 0.55).toInt()
+        val maxInRow = ((screenW - winW) / offset).coerceAtLeast(1)
+        val col = index % maxInRow
+        val row = index / maxInRow
+        var x = baseX + col * offset
+        var y = baseY + row * offset
 
-        val cols = 2
-        val col = index % cols
-        val row = index / cols
-        val slotW = (screenW - margin * 2 - gap) / cols
-        val w = winW.coerceAtMost(slotW)
-        val h = winH.coerceAtMost((usableH - margin) / 3)
+        if (y + winH > screenH) {
+            x = baseX
+            y = baseY
+        }
 
-        val x = margin + col * (slotW + gap)
-        val y = statusBarH + margin + row * (h + gap)
-
-        return intArrayOf(x, y, w, h)
+        return intArrayOf(x, y, winW, winH)
     }
 
     private fun runForeground() {

@@ -12,6 +12,7 @@ import java.util.List;
 public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
     private List<ToolItem> tools;
     private OnToolClickListener listener;
+    private ToolDatabase db;
 
     public interface OnToolClickListener {
         void onToolClick(String cmd);
@@ -21,6 +22,7 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
     public ToolAdapter(List<ToolItem> tools, OnToolClickListener listener) {
         this.tools = tools;
         this.listener = listener;
+        this.db = ToolDatabase.getInstance();
     }
 
     @Override
@@ -49,6 +51,33 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
                 if (listener != null) listener.onInstallClick(t.key);
             }
         });
+        String status = db.getStatus(t.key);
+        updateInstallButton(h.installBtn, status);
+        updateStatusBar(h.statusBar, status);
+    }
+
+    private void updateInstallButton(ImageView btn, String status) {
+        if ("installed".equals(status)) {
+            btn.setColorFilter(0xFF00FF00);
+        } else if ("installing".equals(status)) {
+            btn.setColorFilter(0xFFFF8C00);
+        } else if ("failed".equals(status)) {
+            btn.setColorFilter(0xFFFF0000);
+        } else {
+            btn.setColorFilter(0xFF006400);
+        }
+    }
+
+    private void updateStatusBar(View bar, String status) {
+        if ("installed".equals(status)) {
+            bar.setBackgroundColor(0xFF00FF00);
+        } else if ("installing".equals(status)) {
+            bar.setBackgroundColor(0xFFFF8C00);
+        } else if ("failed".equals(status)) {
+            bar.setBackgroundColor(0xFFFF0000);
+        } else {
+            bar.setBackgroundColor(0xFF006400);
+        }
     }
 
     @Override
@@ -62,6 +91,7 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         TextView title;
         TextView description;
         ImageView installBtn;
+        View statusBar;
 
         ViewHolder(View v) {
             super(v);
@@ -70,6 +100,7 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
             title = v.findViewById(R.id.title);
             description = v.findViewById(R.id.description);
             installBtn = v.findViewById(R.id.install_btn);
+            statusBar = v.findViewById(R.id.status_bar);
         }
     }
 }

@@ -35,14 +35,19 @@ License.
             android:paddingLeft="@dimen/tab_title_padding"
             android:paddingRight="@dimen/tab_title_padding"/>
 
-        <ImageButton
+        <TextView
             android:id="@+id/close_tab_button"
             android:layout_width="@dimen/tab_title_container_height"
             android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@null"
-            android:src="@drawable/phone_close_tab_icon"/>
+            android:gravity="center"
+            android:text="X"
+            android:textColor="#FF08FF00"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@null"/>
 
     </LinearLayout>
 

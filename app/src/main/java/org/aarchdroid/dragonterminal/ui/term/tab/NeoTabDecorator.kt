@@ -2,17 +2,18 @@ package org.aarchdroid.dragonterminal.ui.term.tab
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import de.mrapp.android.tabswitcher.Tab
 import de.mrapp.android.tabswitcher.TabSwitcher
 import de.mrapp.android.tabswitcher.TabSwitcherDecorator
@@ -98,14 +99,15 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                 val titleContainer = rootLayout?.getChildAt(0) as? ViewGroup
                 if (titleContainer != null) {
                     Log.d("NeoTabDecor", "titleContainer found")
-                    var floatBtn = titleContainer.findViewWithTag<ImageButton>("float_button_tag")
+                    var floatBtn = titleContainer.findViewWithTag<TextView>("float_button_tag")
                     if (floatBtn == null) {
                         Log.d("NeoTabDecor", "creating float button")
-                        floatBtn = ImageButton(context)
+                        floatBtn = TextView(context)
                         floatBtn.tag = "float_button_tag"
-                        floatBtn.setImageResource(R.drawable.ic_float)
-                        floatBtn.setPadding(12, 12, 12, 12)
-                        floatBtn.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                        floatBtn.text = "↗"
+                        floatBtn.setTextColor(Color.parseColor("#FF08FF00"))
+                        floatBtn.textSize = 18f
+                        floatBtn.gravity = Gravity.CENTER
                         floatBtn.layoutParams = LinearLayout.LayoutParams(
                             context.resources.getDimensionPixelSize(TabSwitcherR.dimen.tab_title_container_height),
                             ViewGroup.LayoutParams.MATCH_PARENT
