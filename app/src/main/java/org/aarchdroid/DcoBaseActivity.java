@@ -3,6 +3,7 @@ package org.aarchdroid;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -94,9 +95,29 @@ public class DcoBaseActivity extends Activity {
                             rv.setLayoutParams(lp);
                         }
 
+                        updateStatsSize();
+
                         decorView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                     }
                 });
+        }
+    }
+
+    private void updateStatsSize() {
+        TextView sizeView = findViewById(R.id.stats_size);
+        TextView toolsView = findViewById(R.id.stats_tools);
+        if (sizeView == null || toolsView == null) return;
+        String toolsText = toolsView.getText().toString();
+        int toolCount = 0;
+        try { toolCount = Integer.parseInt(toolsText); } catch (Exception e) {}
+        long totalMb = toolCount * 25L;
+        sizeView.setText(totalMb + "mb");
+        if (totalMb == 0) {
+            sizeView.setTextColor(Color.parseColor("#3D6B3D"));
+        } else if (totalMb < 500) {
+            sizeView.setTextColor(Color.parseColor("#B87333"));
+        } else {
+            sizeView.setTextColor(Color.parseColor("#8B0000"));
         }
     }
 

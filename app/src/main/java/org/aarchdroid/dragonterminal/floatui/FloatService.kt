@@ -6,13 +6,16 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.Point
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import org.aarchdroid.AArchDroidApp
 import org.aarchdroid.R
+import org.aarchdroid.dragonterminal.ui.term.NeoTermActivity
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.backend.TerminalSession.SessionChangedCallback
 import org.aarchdroid.dragonterminal.frontend.config.DefaultValues
@@ -95,11 +98,32 @@ class FloatService : Service() {
         }
     }
 
+    fun anchorWindow(window: FloatWindowView) {
+        Log.d(TAG, "Anchoring window back to terminal activity")
+        val session = window.session
+        window.session = null
+        window.closeOverlay()
+        floatWindows.remove(window)
+        if (floatWindows.isEmpty()) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        } else {
+            updateNotification()
+        }
+        if (session != null) {
+            AArchDroidApp.transferredSession = session
+            startActivity(
+                Intent(this, NeoTermActivity::class.java)
+                    .setAction(NeoTermActivity.ACTION_ANCHOR)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            )
+        }
+    }
+
     private fun addWindow(takenSession: TerminalSession? = null) {
         val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val v = inflater.inflate(R.layout.float_window, null) as FloatWindowView
         v.bindToService(this)
-        floatWindows.add(v)
 
         if (takenSession != null) {
             val callback = object : SessionChangedCallback {
@@ -129,11 +153,17 @@ class FloatService : Service() {
             createSessionFor(v)
         }
 
+        val prefs = v.preferences
+        val defaultW = prefs.windowWidth.coerceAtLeast(50)
+        val defaultH = prefs.windowHeight.coerceAtLeast(50)
+        val pos = calculateTilePosition(floatWindows.size, defaultW, defaultH)
+        Log.d(TAG, "New window #${floatWindows.size} at x=${pos[0]} y=${pos[1]} w=${pos[2]} h=${pos[3]}")
+
         try {
-            v.launchOverlay()
+            v.launchOverlay(pos[0], pos[1], pos[2], pos[3])
+            floatWindows.add(v)
         } catch (e: Exception) {
             Log.e(TAG, "Overlay failed: ${e.message}")
-            floatWindows.remove(v)
             startActivity(
                 Intent(this, OverlayPermissionActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -192,6 +222,34 @@ class FloatService : Service() {
         }
 
         return builder.create(this)
+    }
+
+    private fun calculateTilePosition(index: Int, winW: Int, winH: Int): IntArray {
+        val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val display = wm.defaultDisplay
+        val size = Point()
+        display.getSize(size)
+        val screenW = size.x
+        val screenH = size.y
+
+        val density = resources.displayMetrics.density
+        val margin = (8 * density).toInt()
+        val gap = (4 * density).toInt()
+        val statusBarH = (50 * density).toInt()
+
+        val usableH = (screenH * 0.55).toInt()
+
+        val cols = 2
+        val col = index % cols
+        val row = index / cols
+        val slotW = (screenW - margin * 2 - gap) / cols
+        val w = winW.coerceAtMost(slotW)
+        val h = winH.coerceAtMost((usableH - margin) / 3)
+
+        val x = margin + col * (slotW + gap)
+        val y = statusBarH + margin + row * (h + gap)
+
+        return intArrayOf(x, y, w, h)
     }
 
     private fun runForeground() {

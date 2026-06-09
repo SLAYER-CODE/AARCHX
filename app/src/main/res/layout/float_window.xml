@@ -68,6 +68,20 @@
             android:contentDescription="@string/toggle_ime" />
 
         <TextView
+            android:id="@+id/anchor_button"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:text="↓"
+            android:textColor="#00FF00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginEnd="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/float_anchor" />
+
+        <TextView
             android:id="@+id/exit_button"
             android:layout_width="24dp"
             android:layout_height="24dp"

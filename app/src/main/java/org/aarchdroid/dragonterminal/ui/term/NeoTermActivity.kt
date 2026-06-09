@@ -70,6 +70,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     companion object {
         const val KEY_NO_RESTORE = "no_restore"
         const val REQUEST_SETUP = 22313
+        const val ACTION_ANCHOR = "aarchdroid.terminal.action.anchor"
     }
 
     private lateinit var errorDialog: Dialog
@@ -89,6 +90,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     @Volatile
     var transferringHandle: String? = null
+
+    private var pendingAnchorSession: TerminalSession? = null
 
     private var sessionHistoryAdapter: SessionHistoryAdapter? = null
     private val tabSessionMap = HashMap<String, String>() // TerminalSession.handle -> sessionId
@@ -151,6 +154,12 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 history.flagActive = false
                 SessionHistory.saveNow(this)
             }
+        }
+
+        if (intent?.action == ACTION_ANCHOR) {
+            pendingAnchorSession = AArchDroidApp.transferredSession
+            AArchDroidApp.transferredSession = null
+            Log.d("AArchDroid", "NeoTermActivity: ACTION_ANCHOR — pending session=${pendingAnchorSession != null}")
         }
 
         setContentView(R.layout.ui_main)
@@ -664,6 +673,14 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         } else {
             Log.d("AArchDroid", "NeoTermActivity: onServiceConnected but recreating — skipping asset extraction")
         }
+
+        pendingAnchorSession?.let { session ->
+            pendingAnchorSession = null
+            Log.d("AArchDroid", "NeoTermActivity: handling anchored session")
+            session.setChangeCallback(TermSessionCallback())
+            termService!!.addExistingSession(session)
+            addNewSessionFromExisting(session)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -957,7 +974,11 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 .filter { it is TermTab && it.termData.termSession == session }
                 .forEach { return }
 
-        val sessionCallback = session.sessionChangedCallback as TermSessionCallback
+        val sessionCallback = if (session.sessionChangedCallback is TermSessionCallback) {
+            session.sessionChangedCallback as TermSessionCallback
+        } else {
+            TermSessionCallback().also { session.setChangeCallback(it) }
+        }
         val viewClient = TermViewClient(this)
 
         val tab = createTab(session.title) as TermTab

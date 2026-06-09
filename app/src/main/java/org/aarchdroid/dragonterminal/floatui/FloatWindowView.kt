@@ -37,7 +37,7 @@ class FloatWindowView @JvmOverloads constructor(
         )
     }
 
-    private var currentSizeIndex = 1
+    private var currentSizeIndex = 0
 
     lateinit var service: FloatService
         private set
@@ -56,6 +56,7 @@ class FloatWindowView @JvmOverloads constructor(
     private var minimizeButton: View? = null
     private var resizeButton: View? = null
     private var exitButton: View? = null
+    private var anchorButton: View? = null
 
     lateinit var bubbleManager: BubbleManager
         private set
@@ -116,6 +117,7 @@ class FloatWindowView @JvmOverloads constructor(
         minimizeButton = findViewById(R.id.minimize_button)
         resizeButton = findViewById(R.id.resize_button)
         exitButton = findViewById(R.id.exit_button)
+        anchorButton = findViewById(R.id.anchor_button)
         bubbleManager = BubbleManager(this)
         initControls()
     }
@@ -127,17 +129,35 @@ class FloatWindowView @JvmOverloads constructor(
         minimizeButton?.setOnClickListener { bubbleManager.toggle() }
         resizeButton?.setOnClickListener { cycleSize() }
         exitButton?.setOnClickListener { service.removeWindow(this@FloatWindowView) }
+        anchorButton?.setOnClickListener { service.anchorWindow(this@FloatWindowView) }
     }
 
     private fun cycleSize() {
         val nextIndex = (currentSizeIndex + 1) % SIZES.size
         currentSizeIndex = nextIndex
         val (w, h) = SIZES[nextIndex]
+
+        val cx = layoutParams.x + layoutParams.width / 2
+        val cy = layoutParams.y + layoutParams.height / 2
+
+        val density = resources.displayMetrics.density
+        val statusBarH = (50 * density).toInt()
+
+        val minX = 0
+        val maxX = (displayWidth - w).coerceAtLeast(0)
+        val minY = statusBarH
+        val maxY = (displayHeight - h).coerceAtLeast(statusBarH)
+
+        layoutParams.x = (cx - w / 2).coerceIn(minX, maxX)
+        layoutParams.y = (cy - h / 2).coerceIn(minY, maxY)
         layoutParams.width = w
         layoutParams.height = h
         updateLayout()
+
         preferences.windowWidth = w
         preferences.windowHeight = h
+        preferences.windowX = layoutParams.x
+        preferences.windowY = layoutParams.y
     }
 
     override fun onAttachedToWindow() {
@@ -157,10 +177,8 @@ class FloatWindowView @JvmOverloads constructor(
         sessionClient.onDetachedFromWindow()
     }
 
-    fun launchOverlay() {
+    fun launchOverlay(tileX: Int? = null, tileY: Int? = null, tileW: Int? = null, tileH: Int? = null) {
         layoutParams.flags = computeFlags(true)
-        layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
-        layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
         layoutParams.type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
@@ -170,10 +188,10 @@ class FloatWindowView @JvmOverloads constructor(
         layoutParams.gravity = Gravity.TOP or Gravity.LEFT
 
         val prefs = preferences
-        layoutParams.x = prefs.windowX.coerceAtLeast(0)
-        layoutParams.y = prefs.windowY.coerceAtLeast(0)
-        layoutParams.width = prefs.windowWidth.coerceAtLeast(MIN_SIZE)
-        layoutParams.height = prefs.windowHeight.coerceAtLeast(MIN_SIZE)
+        layoutParams.x = tileX ?: prefs.windowX.coerceAtLeast(0)
+        layoutParams.y = tileY ?: prefs.windowY.coerceAtLeast(0)
+        layoutParams.width = (tileW ?: prefs.windowWidth.coerceAtLeast(MIN_SIZE))
+        layoutParams.height = (tileH ?: prefs.windowHeight.coerceAtLeast(MIN_SIZE))
 
         windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         if (windowToken == null) {
@@ -264,7 +282,7 @@ class FloatWindowView @JvmOverloads constructor(
 
     private fun isTouchOnButton(rawX: Float, rawY: Float): Boolean {
         val coords = IntArray(2)
-        for (btn in listOfNotNull(keyboardButton, minimizeButton, resizeButton, exitButton)) {
+        for (btn in listOfNotNull(keyboardButton, minimizeButton, resizeButton, anchorButton, exitButton)) {
             if (btn.visibility != View.VISIBLE) continue
             btn.getLocationOnScreen(coords)
             if (rawX >= coords[0] && rawX <= coords[0] + btn.width &&

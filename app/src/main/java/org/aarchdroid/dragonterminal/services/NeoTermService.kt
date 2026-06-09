@@ -137,6 +137,13 @@ class NeoTermService : Service() {
         return null
     }
 
+    fun addExistingSession(session: TerminalSession) {
+        synchronized(mTerminalSessions) {
+            mTerminalSessions.add(session)
+        }
+        updateNotification()
+    }
+
     fun createXSession(activity: Activity, parameter: XParameter): XSession {
         val session = TerminalUtils.createSession(activity, parameter)
         synchronized(mXSessions) {
