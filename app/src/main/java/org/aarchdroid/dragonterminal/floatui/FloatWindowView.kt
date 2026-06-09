@@ -17,6 +17,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.util.AttributeSet
 import org.aarchdroid.R
+import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.frontend.terminal.TerminalView
 
 class FloatWindowView @JvmOverloads constructor(
@@ -62,6 +63,8 @@ class FloatWindowView @JvmOverloads constructor(
         private set
     lateinit var sessionClient: FloatSessionClient
         private set
+
+    var session: TerminalSession? = null
 
     val preferences: FloatPreferences by lazy { FloatPreferences(context) }
 
@@ -123,7 +126,7 @@ class FloatWindowView @JvmOverloads constructor(
         keyboardButton?.setOnClickListener { toggleKeyboard() }
         minimizeButton?.setOnClickListener { bubbleManager.toggle() }
         resizeButton?.setOnClickListener { cycleSize() }
-        exitButton?.setOnClickListener { service.requestStopService() }
+        exitButton?.setOnClickListener { service.removeWindow(this@FloatWindowView) }
     }
 
     private fun cycleSize() {

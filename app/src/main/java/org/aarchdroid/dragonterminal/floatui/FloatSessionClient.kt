@@ -41,7 +41,7 @@ class FloatSessionClient(
     }
 
     fun onSessionFinished(session: TerminalSession) {
-        service.requestStopService()
+        service.removeWindow(view)
     }
 
     fun onCopyText(text: String) {
@@ -90,7 +90,7 @@ class FloatSessionClient(
                 }
             }
 
-            val session = service.currentSession
+            val session = view.session
             if (session != null && session.emulator != null) {
                 session.emulator.mColors.reset()
             }
@@ -111,7 +111,7 @@ class FloatSessionClient(
     }
 
     private fun updateBackgroundColor() {
-        val session = service.currentSession
+        val session = view.session
         if (session != null && session.emulator != null) {
             view.terminalView.setBackgroundColor(
                 session.emulator.mColors.mCurrentColors[TextStyle.COLOR_INDEX_BACKGROUND]

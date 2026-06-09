@@ -16,23 +16,18 @@ import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.backend.TerminalSession.SessionChangedCallback
 import org.aarchdroid.dragonterminal.frontend.config.DefaultValues
-import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.config.NeoTermPath
 import org.aarchdroid.dragonterminal.frontend.session.shell.ShellProfile
 import org.aarchdroid.dragonterminal.frontend.session.shell.ShellTermSession
 
 class FloatService : Service() {
 
-    private var floatView: FloatWindowView? = null
-    private var session: TerminalSession? = null
-    private var visible = true
+    private val floatWindows = mutableListOf<FloatWindowView>()
 
     companion object {
         private const val TAG = "FloatService"
         private const val NOTIFICATION_ID = 1002
         const val ACTION_STOP = "aarchdroid.float.action.stop"
-        const val ACTION_SHOW = "aarchdroid.float.action.show"
-        const val ACTION_HIDE = "aarchdroid.float.action.hide"
         const val ACTION_TAKEOVER = "aarchdroid.float.action.takeover"
         private const val CHANNEL_ID = "aarchdroid_float_channel"
     }
@@ -56,29 +51,19 @@ class FloatService : Service() {
                 stopSelf()
                 return START_NOT_STICKY
             }
-            if (floatView == null && !initFloatView(skipSession = true)) {
-                taken.finishIfRunning()
-                return START_NOT_STICKY
-            }
-            adoptSession(taken)
-            if (!visible) setVisible(true)
-            return START_NOT_STICKY
-        }
-
-        if (floatView == null && !initFloatView()) {
+            addWindow(taken)
             return START_NOT_STICKY
         }
 
         when (intent?.action) {
             ACTION_STOP -> {
-                session?.finishIfRunning()
-                stopSelf()
+                for (w in floatWindows.toList()) {
+                    removeWindow(w)
+                }
                 return START_NOT_STICKY
             }
-            ACTION_SHOW -> setVisible(true)
-            ACTION_HIDE -> setVisible(false)
             else -> {
-                if (!visible) setVisible(true)
+                addWindow()
             }
         }
 
@@ -88,23 +73,126 @@ class FloatService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "Service destroying")
-        floatView?.closeOverlay()
-        floatView = null
-        session?.finishIfRunning()
-        session = null
+        for (w in floatWindows.toList()) {
+            w.session?.finishIfRunning()
+            w.closeOverlay()
+        }
+        floatWindows.clear()
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
-    fun requestStopService() {
-        Log.d(TAG, "Requesting stop")
-        session?.finishIfRunning()
-        session = null
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
+    fun removeWindow(window: FloatWindowView) {
+        Log.d(TAG, "Removing window, ${floatWindows.size - 1} remaining")
+        window.session?.finishIfRunning()
+        window.session = null
+        window.closeOverlay()
+        floatWindows.remove(window)
+        if (floatWindows.isEmpty()) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        } else {
+            updateNotification()
+        }
     }
 
-    val currentSession: TerminalSession?
-        get() = session
+    private fun addWindow(takenSession: TerminalSession? = null) {
+        val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        val v = inflater.inflate(R.layout.float_window, null) as FloatWindowView
+        v.bindToService(this)
+        floatWindows.add(v)
+
+        if (takenSession != null) {
+            val callback = object : SessionChangedCallback {
+                override fun onTextChanged(session: TerminalSession) {
+                    v.sessionClient?.onTextChanged(session)
+                }
+                override fun onSessionFinished(session: TerminalSession) {
+                    v.sessionClient?.onSessionFinished(session)
+                    removeWindow(v)
+                }
+                override fun onTitleChanged(session: TerminalSession) {}
+                override fun onClipboardText(session: TerminalSession, text: String) {
+                    v.sessionClient?.onCopyText(text)
+                }
+                override fun onBell(session: TerminalSession) {
+                    v.sessionClient?.onBell()
+                }
+                override fun onColorsChanged(session: TerminalSession) {
+                    v.sessionClient?.onColorsChanged()
+                }
+            }
+            takenSession.setChangeCallback(callback)
+            v.session = takenSession
+            v.terminalView.attachSession(takenSession)
+            v.sessionClient.checkFontAndColors()
+        } else {
+            createSessionFor(v)
+        }
+
+        try {
+            v.launchOverlay()
+        } catch (e: Exception) {
+            Log.e(TAG, "Overlay failed: ${e.message}")
+            floatWindows.remove(v)
+            startActivity(
+                Intent(this, OverlayPermissionActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+            if (floatWindows.isEmpty()) {
+                stopSelf()
+            }
+        }
+    }
+
+    private fun createSessionFor(view: FloatWindowView) {
+        val callback = object : SessionChangedCallback {
+            override fun onTextChanged(session: TerminalSession) {
+                view.sessionClient?.onTextChanged(session)
+            }
+            override fun onSessionFinished(session: TerminalSession) {
+                view.sessionClient?.onSessionFinished(session)
+                removeWindow(view)
+            }
+            override fun onTitleChanged(session: TerminalSession) {}
+            override fun onClipboardText(session: TerminalSession, text: String) {
+                view.sessionClient?.onCopyText(text)
+            }
+            override fun onBell(session: TerminalSession) {
+                view.sessionClient?.onBell()
+            }
+            override fun onColorsChanged(session: TerminalSession) {
+                view.sessionClient?.onColorsChanged()
+            }
+        }
+
+        val s = createShellSession(callback)
+        s?.let {
+            it.initializeEmulator(80, 24)
+            view.session = it
+            view.terminalView.attachSession(it)
+            view.sessionClient.checkFontAndColors()
+        }
+    }
+
+    internal fun createShellSession(callback: SessionChangedCallback): TerminalSession? {
+        val profile = ShellProfile()
+        val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/" + DefaultValues.loginShell
+
+        val builder = ShellTermSession.Builder()
+            .currentWorkingDirectory(NeoTermPath.HOME_PATH)
+            .callback(callback)
+            .systemShell(false)
+            .profile(profile)
+
+        if (!profile.enableExecveWrapper && profile.loginShell == defaultScript) {
+            builder.executablePath("su")
+            builder.argArray(arrayOf("su", "-c", "/system/bin/sh " + profile.loginShell))
+        } else {
+            builder.executablePath(profile.loginShell)
+        }
+
+        return builder.create(this)
+    }
 
     private fun runForeground() {
         createChannel()
@@ -124,153 +212,28 @@ class FloatService : Service() {
     }
 
     private fun buildNotification(): Notification {
-        val text = if (visible) getString(R.string.float_notification_visible)
-            else getString(R.string.float_notification_hidden)
-        val toggleAction = if (visible) ACTION_HIDE else ACTION_SHOW
+        val count = floatWindows.size
+        val text = "$count ventana(s) flotante(s)"
 
-        val toggleIntent = Intent(this, FloatService::class.java).setAction(toggleAction)
-        val togglePending = PendingIntent.getService(
-            this, 0, toggleIntent,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                PendingIntent.FLAG_IMMUTABLE else 0
-        )
-
+        val exitIntent = Intent(this, FloatService::class.java).setAction(ACTION_STOP)
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.float_notification_title))
             .setContentText(text)
             .setSmallIcon(android.R.drawable.ic_menu_edit)
-            .setContentIntent(togglePending)
             .setOngoing(true)
             .setShowWhen(false)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-
-        val exitIntent = Intent(this, FloatService::class.java).setAction(ACTION_STOP)
-        builder.addAction(
-            android.R.drawable.ic_delete,
-            getString(R.string.float_notification_exit),
-            PendingIntent.getService(
-                this, 1, exitIntent,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                    PendingIntent.FLAG_IMMUTABLE else 0
+            .addAction(
+                android.R.drawable.ic_delete,
+                getString(R.string.float_notification_exit),
+                PendingIntent.getService(
+                    this, 1, exitIntent,
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                        PendingIntent.FLAG_IMMUTABLE else 0
+                )
             )
-        )
 
         return builder.build()
-    }
-
-    private fun initFloatView(skipSession: Boolean = false): Boolean {
-        val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val v = inflater.inflate(R.layout.float_window, null) as FloatWindowView
-        v.bindToService(this)
-        floatView = v
-
-        if (!skipSession) {
-            createSession()
-        }
-
-        try {
-            v.launchOverlay()
-        } catch (e: Exception) {
-            Log.e(TAG, "Overlay failed: ${e.message}")
-            startActivity(
-                Intent(this, OverlayPermissionActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
-            stopSelf()
-            return false
-        }
-
-        return true
-    }
-
-    private fun createSession() {
-        val profile = ShellProfile()
-        val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/" + DefaultValues.loginShell
-
-        val callback = object : SessionChangedCallback {
-            override fun onTextChanged(session: TerminalSession) {
-                floatView?.sessionClient?.onTextChanged(session)
-            }
-            override fun onSessionFinished(session: TerminalSession) {
-                floatView?.sessionClient?.onSessionFinished(session)
-                requestStopService()
-            }
-            override fun onTitleChanged(session: TerminalSession) {}
-            override fun onClipboardText(session: TerminalSession, text: String) {
-                floatView?.sessionClient?.onCopyText(text)
-            }
-            override fun onBell(session: TerminalSession) {
-                floatView?.sessionClient?.onBell()
-            }
-            override fun onColorsChanged(session: TerminalSession) {
-                floatView?.sessionClient?.onColorsChanged()
-            }
-        }
-
-        session = createShellSession(callback)
-        session?.let { s ->
-            s.initializeEmulator(80, 24)
-            floatView?.terminalView?.attachSession(s)
-            floatView?.sessionClient?.checkFontAndColors()
-        }
-    }
-
-    private fun adoptSession(taken: TerminalSession) {
-        // Finish existing float session if any
-        session?.finishIfRunning()
-        session = null
-
-        val callback = object : SessionChangedCallback {
-            override fun onTextChanged(session: TerminalSession) {
-                floatView?.sessionClient?.onTextChanged(session)
-            }
-            override fun onSessionFinished(session: TerminalSession) {
-                floatView?.sessionClient?.onSessionFinished(session)
-                requestStopService()
-            }
-            override fun onTitleChanged(session: TerminalSession) {}
-            override fun onClipboardText(session: TerminalSession, text: String) {
-                floatView?.sessionClient?.onCopyText(text)
-            }
-            override fun onBell(session: TerminalSession) {
-                floatView?.sessionClient?.onBell()
-            }
-            override fun onColorsChanged(session: TerminalSession) {
-                floatView?.sessionClient?.onColorsChanged()
-            }
-        }
-        taken.setChangeCallback(callback)
-        session = taken
-        floatView?.terminalView?.attachSession(taken)
-        floatView?.sessionClient?.checkFontAndColors()
-    }
-
-    private fun createShellSession(callback: SessionChangedCallback): TerminalSession? {
-        val profile = ShellProfile()
-        val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/" + DefaultValues.loginShell
-
-        val builder = ShellTermSession.Builder()
-            .currentWorkingDirectory(NeoTermPath.HOME_PATH)
-            .callback(callback)
-            .systemShell(false)
-            .profile(profile)
-
-        // SELinux Enforcing blocks execvp() of app_data_file by untrusted_app.
-        // Run archdroid.sh via su so it runs as root (ksu domain), matching NeoTermActivity.
-        if (!profile.enableExecveWrapper && profile.loginShell == defaultScript) {
-            builder.executablePath("su")
-            builder.argArray(arrayOf("su", "-c", "/system/bin/sh " + profile.loginShell))
-        } else {
-            builder.executablePath(profile.loginShell)
-        }
-
-        return builder.create(this)
-    }
-
-    private fun setVisible(show: Boolean) {
-        visible = show
-        floatView?.setWindowVisibility(show)
-        updateNotification()
     }
 
     private fun updateNotification() {
