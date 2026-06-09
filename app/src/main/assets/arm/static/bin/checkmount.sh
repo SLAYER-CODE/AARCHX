@@ -2,7 +2,7 @@
 
 CHROOT_DIR="/data/local/aarchdroid"
 
-if [ -f "${CHROOT_DIR}/.aarchdroid_chroot" ] && [ -d "${CHROOT_DIR}/bin" ]; then
+if [ -f "${CHROOT_DIR}/.aarchdroid_chroot" ]; then
     exit 0
 else
     exit 1

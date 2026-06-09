@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">ANDRAX Hacker\'s Platform</string>
+    <string name="app_name" translatable="false">ANDRAX</string>
 
     <string name="andrax_version_link">https://andrax.thecrackertechnology.com/version</string>
 
@@ -262,15 +262,15 @@
 
     <string name="versionstr">1.0</string>
 
-    <string name="float_launcher_name" translatable="false">AArchFloat</string>
+    <string name="float_launcher_name" translatable="false">Float</string>
 
     <!-- Float Overlay -->
     <string name="float_overlay_permission_title">Overlay Permission Required</string>
-    <string name="float_overlay_permission_desc">AArchFloat needs overlay permission to display the floating terminal window over other apps.</string>
+    <string name="float_overlay_permission_desc">Float needs overlay permission to display the floating terminal window over other apps.</string>
     <string name="float_open_settings">Open Settings</string>
-    <string name="float_notification_channel_name">AArchFloat Overlay</string>
+    <string name="float_notification_channel_name">Float Overlay</string>
     <string name="float_notification_channel_desc">Controls the floating terminal overlay</string>
-    <string name="float_notification_title">AArchFloat</string>
+    <string name="float_notification_title">Float</string>
     <string name="float_notification_visible">Floating terminal is visible</string>
     <string name="float_notification_hidden">Floating terminal is hidden</string>
     <string name="float_notification_exit">Exit</string>

@@ -34,7 +34,7 @@
                 <item
                     android:id="@+id/nav_codehackide"
                     android:icon="@drawable/andraxicon_svg"
-                    android:title="CodeHack IDE" />
+                    android:title="Editor" />
                 <item
                     android:id="@+id/nav_hidrastrike"
                     android:icon="@drawable/hydra"

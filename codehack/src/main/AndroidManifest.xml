@@ -11,7 +11,7 @@
         <activity
             android:excludeFromRecents="false"
             android:persistent="true"
-            android:label="CodeHACK IDE"
+            android:label="Editor"
             android:windowSoftInputMode="adjustResize|adjustPan"
             android:launchMode="singleTask"
             android:icon="@drawable/codehack"

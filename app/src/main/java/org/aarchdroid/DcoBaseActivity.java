@@ -7,10 +7,12 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.util.Log;
 import android.util.DisplayMetrics;
+import androidx.recyclerview.widget.RecyclerView;
 import org.aarchdroid.dragonterminal.bridge.Bridge;
 import org.json.JSONObject;
 import java.io.DataOutputStream;
@@ -65,8 +67,36 @@ public class DcoBaseActivity extends Activity {
             layoutSet = true;
             DisplayMetrics dm = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(dm);
-            getWindow().setLayout((int)(dm.widthPixels * 0.85),
-                (int)(dm.heightPixels * 0.90));
+            final int maxW = (int)(dm.widthPixels * 0.90);
+            final int maxH = (int)(dm.heightPixels * 0.85);
+            getWindow().setLayout(maxW, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+            final View decorView = getWindow().getDecorView();
+            decorView.getViewTreeObserver().addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
+                    private boolean done = false;
+                    @Override
+                    public void onGlobalLayout() {
+                        if (done) return;
+                        RecyclerView rv = findViewById(R.id.tool_list);
+                        if (rv == null || rv.getAdapter() == null) return;
+                        if (rv.getHeight() == 0) return;
+                        done = true;
+
+                        float density = getResources().getDisplayMetrics().density;
+                        int occupied = (int)(56 * density + 2 * density + 12 * density + 16 * density);
+                        int rvMax = maxH - occupied;
+                        if (rvMax < 0) rvMax = 0;
+
+                        if (rv.getHeight() > rvMax) {
+                            ViewGroup.LayoutParams lp = rv.getLayoutParams();
+                            lp.height = rvMax;
+                            rv.setLayoutParams(lp);
+                        }
+
+                        decorView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    }
+                });
         }
     }
 

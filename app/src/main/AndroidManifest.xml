@@ -37,6 +37,7 @@
             android:name="org.aarchdroid.SplashActivity"
             android:exported="true"
             android:screenOrientation="portrait"
+            android:taskAffinity=".task.Launcher"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -77,55 +78,55 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <!-- Tool Categories (Dco_*) — Launcher icons -->
-        <activity android:name="org.aarchdroid.Dco_Information_Gathering" android:enabled="false" android:exported="true" android:icon="@mipmap/information_gathering_al" android:roundIcon="@mipmap/information_gathering_al_round" android:label="01 Information Gathering" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_Information_Gathering" android:enabled="false" android:exported="true" android:icon="@mipmap/information_gathering_al" android:roundIcon="@mipmap/information_gathering_al_round" android:label="Gathering" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_Scanning" android:enabled="false" android:exported="true" android:icon="@mipmap/scanning_al" android:roundIcon="@mipmap/scanning_al_round" android:label="02 Scanning" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_Scanning" android:enabled="false" android:exported="true" android:icon="@mipmap/scanning_al" android:roundIcon="@mipmap/scanning_al_round" android:label="Scanning" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_Packet_Crafting" android:enabled="false" android:exported="true" android:icon="@mipmap/packet_crafting_al" android:roundIcon="@mipmap/packet_crafting_al_round" android:label="03 Packet Crafting" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_Packet_Crafting" android:enabled="false" android:exported="true" android:icon="@mipmap/packet_crafting_al" android:roundIcon="@mipmap/packet_crafting_al_round" android:label="Crafting" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_network_hacking" android:enabled="false" android:exported="true" android:icon="@mipmap/network_hacking_al" android:roundIcon="@mipmap/network_hacking_al_round" android:label="04 Network Hacking" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_network_hacking" android:enabled="false" android:exported="true" android:icon="@mipmap/network_hacking_al" android:roundIcon="@mipmap/network_hacking_al_round" android:label="Network" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_bug_bounty" android:enabled="false" android:exported="true" android:icon="@mipmap/best_al" android:roundIcon="@mipmap/best_al_round" android:label="05 Bug Bounty" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_bug_bounty" android:enabled="false" android:exported="true" android:icon="@mipmap/best_al" android:roundIcon="@mipmap/best_al_round" android:label="Bounty" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_website_hacking" android:enabled="false" android:exported="true" android:icon="@mipmap/website_hacking_al" android:roundIcon="@mipmap/website_hacking_al_round" android:label="06 WebSite Hacking" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_website_hacking" android:enabled="false" android:exported="true" android:icon="@mipmap/website_hacking_al" android:roundIcon="@mipmap/website_hacking_al_round" android:label="WebSite" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_phishing" android:enabled="false" android:exported="true" android:icon="@mipmap/phishing" android:roundIcon="@mipmap/phishing_round" android:label="07 Phishing" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_phishing" android:enabled="false" android:exported="true" android:icon="@mipmap/phishing" android:roundIcon="@mipmap/phishing_round" android:label="Phishing" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_exploitation" android:enabled="false" android:exported="true" android:icon="@mipmap/exploit_al" android:roundIcon="@mipmap/exploit_al_round" android:label="08 Exploitation" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_exploitation" android:enabled="false" android:exported="true" android:icon="@mipmap/exploit_al" android:roundIcon="@mipmap/exploit_al_round" android:label="Exploitation" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_c2_rat" android:enabled="false" android:exported="true" android:icon="@drawable/c2_rat_foreground" android:label="09 C2/RAT" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_c2_rat" android:enabled="false" android:exported="true" android:icon="@mipmap/ic_c2_rat" android:roundIcon="@mipmap/ic_c2_rat_round" android:label="C2/RAT" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_macos_iphone" android:enabled="false" android:exported="true" android:icon="@mipmap/mobile_network_hacking" android:roundIcon="@mipmap/mobile_network_hacking_round" android:label="10 MacOS/iPhone" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_macos_iphone" android:enabled="false" android:exported="true" android:icon="@mipmap/mobile_network_hacking" android:roundIcon="@mipmap/mobile_network_hacking_round" android:label="MacOS" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_Password_Hacking" android:enabled="false" android:exported="true" android:icon="@mipmap/password_hacking_al" android:roundIcon="@mipmap/password_hacking_al_round" android:label="11 Password Cracking" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_Password_Hacking" android:enabled="false" android:exported="true" android:icon="@mipmap/password_hacking_al" android:roundIcon="@mipmap/password_hacking_al_round" android:label="Cracking" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_phreaking" android:enabled="false" android:exported="true" android:icon="@drawable/phreaking" android:label="12 Phreaking" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_phreaking" android:enabled="false" android:exported="true" android:icon="@mipmap/ic_phreaking" android:roundIcon="@mipmap/ic_phreaking_round" android:label="Phreaking" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_ics_scada_iot" android:enabled="false" android:exported="true" android:icon="@mipmap/industrial_control_system" android:roundIcon="@mipmap/industrial_control_system_round" android:label="13 ICS/SCADA/IIoT/IoT" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_ics_scada_iot" android:enabled="false" android:exported="true" android:icon="@mipmap/industrial_control_system" android:roundIcon="@mipmap/industrial_control_system_round" android:label="ICS/SCADA" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_Mainframe" android:enabled="false" android:exported="true" android:icon="@mipmap/mainframes" android:roundIcon="@mipmap/mainframes_round" android:label="14 Mainframe" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_Mainframe" android:enabled="false" android:exported="true" android:icon="@mipmap/mainframes" android:roundIcon="@mipmap/mainframes_round" android:label="Mainframe" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_stress_testing" android:enabled="false" android:exported="true" android:icon="@mipmap/stress_testing" android:roundIcon="@mipmap/stress_testing_round" android:label="15 Stress Testing" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_stress_testing" android:enabled="false" android:exported="true" android:icon="@mipmap/stress_testing" android:roundIcon="@mipmap/stress_testing_round" android:label="Stress" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_Wireless_Hacking" android:enabled="false" android:exported="true" android:icon="@mipmap/wireless_hacking_al" android:roundIcon="@mipmap/wireless_hacking_al_round" android:label="16 Wireless Hacking" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_Wireless_Hacking" android:enabled="false" android:exported="true" android:icon="@mipmap/wireless_hacking_al" android:roundIcon="@mipmap/wireless_hacking_al_round" android:label="Wireless" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="org.aarchdroid.Dco_voip_3g_4g" android:enabled="false" android:exported="true" android:icon="@drawable/voiphopper" android:label="VoIP/3G/4G Hacking" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
+        <activity android:name="org.aarchdroid.Dco_voip_3g_4g" android:enabled="false" android:exported="true" android:icon="@mipmap/ic_voip_3g_4g" android:roundIcon="@mipmap/ic_voip_3g_4g_round" android:label="VoIP" android:theme="@style/AppTheme.DcoDialog" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
 
@@ -141,9 +142,10 @@
             android:enabled="false"
             android:configChanges="keyboardHidden|screenSize|orientation"
             android:icon="@mipmap/dragon_terminal_al"
-            android:label="Dragon Terminal"
+            android:label="Terminal"
             android:roundIcon="@mipmap/dragon_terminal_al_round"
             android:screenOrientation="fullUser"
+            android:taskAffinity=".task.Terminal"
             android:theme="@style/AppTheme.NoActionBar.Dark2"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:exported="true">
@@ -208,9 +210,10 @@
         <activity
             android:name="org.aarchdroid.dragonterminal.floatui.FloatActivity"
             android:exported="true"
-            android:icon="@mipmap/dragon_terminal_al"
-            android:roundIcon="@mipmap/dragon_terminal_al_round"
+            android:icon="@mipmap/float_terminal_al"
+            android:roundIcon="@mipmap/float_terminal_al_round"
             android:label="@string/float_launcher_name"
+            android:taskAffinity=".task.Float"
             android:theme="@style/AppTheme.Transparent"
             android:screenOrientation="portrait">
             <intent-filter>

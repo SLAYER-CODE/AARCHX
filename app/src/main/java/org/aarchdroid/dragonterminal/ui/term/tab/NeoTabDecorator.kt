@@ -11,9 +11,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
 import de.mrapp.android.tabswitcher.Tab
 import de.mrapp.android.tabswitcher.TabSwitcher
 import de.mrapp.android.tabswitcher.TabSwitcherDecorator
+import de.mrapp.android.tabswitcher.R as TabSwitcherR
 import org.aarchdroid.AArchDroidApp
 import org.aarchdroid.dragonterminal.Globals
 import org.aarchdroid.dragonterminal.NeoGLView
@@ -68,7 +71,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
 
     override fun onShowTab(context: Context, tabSwitcher: TabSwitcher,
                            view: View, tab: Tab, index: Int, viewType: Int, savedInstanceState: Bundle?) {
-        // TODO: Improve
+        android.util.Log.d("NeoTabDecor", "onShowTab idx=$index viewType=$viewType shown=${tabSwitcher.isSwitcherShown}")
 
         val toolbar = this@NeoTabDecorator.context.toolbar
         toolbar.title = if (tabSwitcher.isSwitcherShown) null else tab.title
@@ -89,18 +92,50 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                     terminalView.requestFocus()
                 }
 
-                val floatBtn = view.findViewById<ImageButton>(R.id.float_button)
                 val session = termTab.termData.termSession
-                if (tabSwitcher.isSwitcherShown && session != null) {
-                    floatBtn?.visibility = View.VISIBLE
-                    floatBtn?.setOnClickListener {
-                        val act = this@NeoTabDecorator.context
-                        act.transferringHandle = session.mHandle
-                        tabSwitcher.removeTab(tab)
+                val childContainer = view.parent as? ViewGroup
+                val rootLayout = childContainer?.parent as? ViewGroup
+                val titleContainer = rootLayout?.getChildAt(0) as? ViewGroup
+                if (titleContainer != null) {
+                    Log.d("NeoTabDecor", "titleContainer found")
+                    var floatBtn = titleContainer.findViewWithTag<ImageButton>("float_button_tag")
+                    if (floatBtn == null) {
+                        Log.d("NeoTabDecor", "creating float button")
+                        floatBtn = ImageButton(context)
+                        floatBtn.tag = "float_button_tag"
+                        floatBtn.setImageResource(R.drawable.ic_float)
+                        floatBtn.setPadding(12, 12, 12, 12)
+                        floatBtn.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                        floatBtn.layoutParams = LinearLayout.LayoutParams(
+                            context.resources.getDimensionPixelSize(TabSwitcherR.dimen.tab_title_container_height),
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                        floatBtn.contentDescription = context.getString(R.string.float_up)
+                        val ta = context.obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackgroundBorderless))
+                        floatBtn.background = ta.getDrawable(0)
+                        ta.recycle()
+                        val closeBtn = titleContainer.findViewById<View>(TabSwitcherR.id.close_tab_button)
+                        val closeIdx = closeBtn?.let { titleContainer.indexOfChild(it) } ?: titleContainer.childCount
+                        titleContainer.addView(floatBtn, closeIdx)
+                        Log.d("NeoTabDecor", "float button added at index $closeIdx, childCount=${titleContainer.childCount}")
+                    } else {
+                        Log.d("NeoTabDecor", "float button reused")
+                    }
+                    if (tabSwitcher.isSwitcherShown && session != null) {
+                        floatBtn.visibility = View.VISIBLE
+                        Log.d("NeoTabDecor", "float button VISIBLE for handle=${session.mHandle}")
+                        floatBtn.setOnClickListener {
+                            Log.d("NeoTabDecor", "float button clicked, handle=${session.mHandle}")
+                            val act = this@NeoTabDecorator.context
+                            act.transferringHandle = session.mHandle
+                            tabSwitcher.removeTab(tab)
+                        }
+                    } else {
+                        floatBtn.visibility = View.GONE
+                        floatBtn.setOnClickListener(null)
                     }
                 } else {
-                    floatBtn?.visibility = View.GONE
-                    floatBtn?.setOnClickListener(null)
+                    Log.d("NeoTabDecor", "titleContainer NOT found — childContainer=$childContainer rootLayout=$rootLayout")
                 }
             }
 

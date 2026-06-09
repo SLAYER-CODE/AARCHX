@@ -418,23 +418,29 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 }
 
                 override fun onTabRemoved(tabSwitcher: TabSwitcher, index: Int, tab: Tab, animation: Animation) {
+                    Log.d("NeoTermAct", "onTabRemoved idx=$index type=${tab::class.simpleName}")
                     if (tab is TermTab) {
                         val session = tab.termData.termSession
                         val isTransfer = session != null && session.mHandle == this@NeoTermActivity.transferringHandle
+                        Log.d("NeoTermAct", "onTabRemoved session=${session?.mHandle} isTransfer=$isTransfer transferringHandle=${this@NeoTermActivity.transferringHandle}")
                         if (isTransfer) {
                             // Transfer to float: don't kill session, don't close history
                             this@NeoTermActivity.transferringHandle = null
                             val taken = termService?.takeSession(session!!.mHandle)
+                            Log.d("NeoTermAct", "takeSession returned: ${taken != null}")
                             AArchDroidApp.transferredSession = taken
                             if (taken != null) {
                                 val intent = Intent(this@NeoTermActivity, FloatService::class.java)
                                     .setAction(FloatService.ACTION_TAKEOVER)
                                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                Log.d("NeoTermAct", "starting FloatService with ACTION_TAKEOVER")
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     startForegroundService(intent)
                                 } else {
                                     startService(intent)
                                 }
+                            } else {
+                                Log.w("NeoTermAct", "takeSession returned null!")
                             }
                         } else {
                             // Normal close: kill session and close history

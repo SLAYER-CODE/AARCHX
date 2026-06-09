@@ -1,28 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/myrl"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0D1F0D">
-    <include
-        android:id="@+id/header"
-        layout="@layout/item_tool_header"
-        android:layout_alignParentTop="true"/>
-    <View
-        android:id="@+id/divider"
-        android:layout_below="@id/header"
+    android:background="#CC0D1F0D"
+    android:clickable="true">
+
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:background="@color/divider_green"/>
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/tool_list"
-        android:layout_below="@id/divider"
-        android:scrollbars="vertical"
-        android:scrollbarStyle="insideOverlay"
-        android:fadeScrollbars="true"
-        android:scrollbarTrackVertical="@drawable/scrollbar_track_vertical"
-        android:scrollbarThumbVertical="@drawable/scrollbar_thumb_vertical"
-        android:clipToPadding="false"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-</RelativeLayout>
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/layout_for_dco"
+        android:layout_margin="8dp">
+
+        <include
+            android:id="@+id/header"
+            layout="@layout/item_tool_header"
+            android:layout_alignParentTop="true"/>
+
+        <View
+            android:id="@+id/divider"
+            android:layout_below="@id/header"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="@color/divider_green"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/tool_list"
+            android:layout_below="@id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="vertical"
+            android:scrollbarStyle="insideOverlay"
+            android:fadeScrollbars="true"
+            android:scrollbarTrackVertical="@drawable/scrollbar_track_vertical"
+            android:scrollbarThumbVertical="@drawable/scrollbar_thumb_vertical"
+            android:clipToPadding="false"
+            android:nestedScrollingEnabled="false"/>
+
+    </RelativeLayout>
+</FrameLayout>

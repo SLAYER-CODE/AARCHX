@@ -156,25 +156,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawerLayout.setDrawerListener(actionBarDrawerToggle);
         actionBarDrawerToggle.syncState();
         ((NavigationView) findViewById(R.id.nav_view)).setNavigationItemSelectedListener(this);
-        new Handler().postDelayed(new Runnable() { // from class: org.snakesecurity.andrax.MainActivity.3
-            @Override // java.lang.Runnable
-            public void run() {
-                try {
-                    Log.d("AArchDroid", "MainActivity: running checkmount.sh");
-                    Process processExec = Runtime.getRuntime().exec("su -c /data/data/org.aarchdroid/files/scripts/checkmount.sh");
-                    processExec.waitFor();
-                    MainActivity.this.install_return = processExec.exitValue();
-                    Log.d("AArchDroid", "MainActivity: checkmount.sh exit code = " + MainActivity.this.install_return);
-                } catch (Exception e2) {
-                    Log.e("AArchDroid", "MainActivity: checkmount.sh failed — " + e2.getMessage());
-                    e2.printStackTrace();
-                }
-                if (MainActivity.this.install_return != 0) {
-                    Log.d("AArchDroid", "MainActivity: core not mounted — calling install dialog");
-                    MainActivity.this.call_install_dialog();
-                }
-            }
-        }, 1000L);
+        // checkmount skipped — SplashActivity ya verificó el rootfs antes de llegar aquí
         isRooted(this);
         if (this.is_debug_build == 1) {
             Log.d("AArchDroid", "MainActivity: debug build — launching InstallActivity");

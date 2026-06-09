@@ -77,12 +77,10 @@ public class SplashActivity extends AppCompatActivity {
                     appendLog("[*] Directorio: " + CHROOT_DIR);
                     appendLog("[*] Marcador: " + MARKER);
                     appendLog("[*] Rootfs listo para usar.");
-                    appendLog("[>] Iniciando terminal...");
+                    appendLog("[>] Iniciando AArchDroid...");
                     setButtonsIniciando();
-                    appendLog("[>] Abriendo terminal...");
-                    startActivity(new Intent(SplashActivity.this,
-                        org.aarchdroid.dragonterminal.ui.term.NeoTermActivity.class));
-                    finish();
+                    appendLog("[>] Abriendo panel principal...");
+                    proceedToMain();
                     return;
                 }
                 boolean installed = checkRootfsInstalled();
@@ -93,12 +91,10 @@ public class SplashActivity extends AppCompatActivity {
                     appendLog("[*] Directorio: " + CHROOT_DIR);
                     appendLog("[*] Marcador: " + MARKER + " encontrado");
                     appendLog("[*] Rootfs listo para usar.");
-                    appendLog("[>] Iniciando terminal...");
+                    appendLog("[>] Iniciando AArchDroid...");
                     setButtonsIniciando();
-                    appendLog("[>] Abriendo terminal...");
-                    startActivity(new Intent(SplashActivity.this,
-                        org.aarchdroid.dragonterminal.ui.term.NeoTermActivity.class));
-                    finish();
+                    appendLog("[>] Abriendo panel principal...");
+                    proceedToMain();
                 } else if (rooted) {
                     runOnUiThread(() -> {
                         appendLog("[+] Root detectado.");
@@ -255,10 +251,8 @@ public class SplashActivity extends AppCompatActivity {
             retryBtn.setBackgroundResource(R.drawable.button_hacker);
             retryBtn.setTextColor(0xFF00FF00);
             retryBtn.setOnClickListener(v -> {
-                appendLog("[>] Abriendo terminal...");
-                startActivity(new Intent(SplashActivity.this,
-                    org.aarchdroid.dragonterminal.ui.term.NeoTermActivity.class));
-                finish();
+                appendLog("[>] Reintentando...");
+                doInstall();
             });
         });
     }
@@ -269,12 +263,10 @@ public class SplashActivity extends AppCompatActivity {
             try {
                 if (checkRootfsInstalled() || isInstallComplete()) {
                     appendLog("[+] Rootfs ya instalado.");
-                    appendLog("[>] Iniciando terminal...");
+                    appendLog("[>] Iniciando AArchDroid...");
                     setButtonsIniciando();
-                    appendLog("[>] Abriendo terminal...");
-                    startActivity(new Intent(SplashActivity.this,
-                        org.aarchdroid.dragonterminal.ui.term.NeoTermActivity.class));
-                    finish();
+                    appendLog("[>] Abriendo panel principal...");
+                    proceedToMain();
                     return;
                 }
 

@@ -10,7 +10,7 @@
         android:layout_margin="@dimen/preview_layout_margin"
         android:orientation="vertical">
 
-        <androidx.material.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/command_shortcut_display_title_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -20,9 +20,9 @@
                 android:id="@+id/command_shortcut_display_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
-        </androidx.material.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <androidx.material.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/command_shortcut_command_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -32,11 +32,11 @@
                 android:id="@+id/command_shortcut_command"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
-        </androidx.material.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
 
-    <androidx.material.widget.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/command_shortcut_create_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
