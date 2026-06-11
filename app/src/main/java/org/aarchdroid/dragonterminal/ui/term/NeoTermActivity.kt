@@ -141,22 +141,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             }
         }
 
-        // Session history init + crash detection
-        SessionHistory.verifyDateAndReset(this)
-        val history = SessionHistory.getHistory(this)
-        Log.d("AArchDroid", "NeoTermActivity: flagActive=${history.flagActive}, sessions=${history.sessions.size}")
-        if (history.flagActive) {
-            val crashedSessions = history.sessions.filter { it.closedNormally == null }
-            if (crashedSessions.isNotEmpty()) {
-                val crashTime = SimpleDateFormat("h:mm a", Locale.US).format(Date())
-                for (s in crashedSessions) {
-                    SessionHistory.closeSession(this, s.id, "Aplicacion terminada inesperadamente a las $crashTime")
-                }
-                history.flagActive = false
-                SessionHistory.saveNow(this)
-            }
-        }
-
         if (intent?.action == ACTION_ANCHOR) {
             pendingAnchorSession = AArchDroidApp.transferredSession
             AArchDroidApp.transferredSession = null
@@ -182,21 +166,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         tabSwitcher.decorator = NeoTabDecorator(this)
         ViewCompat.setOnApplyWindowInsetsListener(tabSwitcher, createWindowInsetsListener())
         tabSwitcher.showToolbars(false)
-
-        // Session history RecyclerView
-        val historyList = findViewById<RecyclerView>(R.id.sessionHistoryList)
-        historyList.layoutManager = LinearLayoutManager(this)
-        historyList.setHasFixedSize(true)
-        historyList.setPadding(6, 0, 0, 0)
-        historyList.clipToPadding = false
-        val adapter = SessionHistoryAdapter(
-            data = history,
-            onRestoreSession = { session ->
-                restoreSession(session)
-            }
-        )
-        sessionHistoryAdapter = adapter
-        historyList.adapter = adapter
 
         Log.d("AArchDroid", "NeoTermActivity: starting and binding NeoTermService")
         val serviceIntent = Intent(this, NeoTermService::class.java)
@@ -525,7 +494,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 .unregisterOnSharedPreferenceChangeListener(this)
 
         // Close all remaining session history records
-        tabSessionMap.forEach { (_, sid) ->
+        tabSessionMap.forEach { (handle, sid) ->
+            CommandInterceptor.getContext(handle)?.let { ctx ->
+                SessionHistory.updateTerminalDestiny(this, ctx.terminalId, "cerrada")
+            }
             SessionHistory.closeSession(this, sid)
         }
         tabSessionMap.clear()
@@ -624,6 +596,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             if (issafepts) {
                 Log.d("AArchDroid", "NeoTermActivity: fast path — assets already extracted")
                 enterMain()
+                loadSessionHistoryAsync()
                 update_colors()
                 updatePlaceholderVisibility()
                 get_motherfucker_battery()
@@ -679,6 +652,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
                 checkinstallterm()
                 enterMain()
+                loadSessionHistoryAsync()
                 update_colors()
                 updatePlaceholderVisibility()
                 get_motherfucker_battery()
@@ -820,6 +794,45 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             }
 
         }
+    }
+
+    private fun loadSessionHistoryAsync() {
+        Thread {
+            val history = SessionHistory.getHistory(this@NeoTermActivity)
+            if (history.flagActive) {
+                val crashedSessions = history.sessions.filter { it.closedNormally == null }
+                if (crashedSessions.isNotEmpty()) {
+                    val crashTime = SimpleDateFormat("h:mm a", Locale.US).format(Date())
+                    for (s in crashedSessions) {
+                        SessionHistory.closeSession(this, s.id, "Aplicacion terminada inesperadamente a las $crashTime")
+                    }
+                    history.flagActive = false
+                    SessionHistory.saveNow(this)
+                }
+            }
+            runOnUiThread {
+                val historyList = findViewById<RecyclerView>(R.id.sessionHistoryList)
+                historyList.layoutManager = LinearLayoutManager(this@NeoTermActivity)
+                historyList.setHasFixedSize(true)
+                historyList.setPadding(6, 0, 0, 0)
+                historyList.clipToPadding = false
+                val adapter = SessionHistoryAdapter(
+                    data = history,
+                    onRestoreSession = { session ->
+                        restoreSession(session)
+                    },
+                    onDeleteSession = { session ->
+                        SessionHistory.deleteSession(this@NeoTermActivity, session.id)
+                        val freshData = SessionHistory.getHistory(this@NeoTermActivity)
+                        sessionHistoryAdapter?.updateData(freshData)
+                        updatePlaceholderVisibility()
+                    }
+                )
+                sessionHistoryAdapter = adapter
+                historyList.adapter = adapter
+                updatePlaceholderVisibility()
+            }
+        }.apply { name = "SessionHistoryLoader" }.start()
     }
 
     override fun recreate() {
