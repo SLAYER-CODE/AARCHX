@@ -22,6 +22,7 @@ import androidx.appcompat.widget.Toolbar
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -100,7 +101,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         super.onCreate(savedInstanceState)
         Log.d("AArchDroid", "NeoTermActivity: onCreate() — entering terminal activity")
         Log.d("AArchDroid", "NeoTermActivity: intent action=" + (intent?.action ?: "null") +
-                " extras=" + (intent?.extras?.keySet()?.joinToString() ?: "null"))
+                " extras=" + (intent?.extras?.keySet()?.joinToString() ?: "null") +
+                " flags=" + (intent?.flags?.toString() ?: "null") +
+                " component=" + (intent?.component?.className ?: "null"))
 
         Log.d("AArchDroid", "NeoTermActivity: queue root check in background")
         Thread {
@@ -138,19 +141,17 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         // Session history init + crash detection
         SessionHistory.verifyDateAndReset(this)
         val history = SessionHistory.getHistory(this)
+        Log.d("AArchDroid", "NeoTermActivity: flagActive=${history.flagActive}, sessions=${history.sessions.size}, crashGroup=${history.crashGroup != null}")
         if (history.flagActive) {
             // Previous session crashed — find sessions that never closed normally
             val crashedSessions = history.sessions.filter { it.closedNormally == null }
+            Log.d("AArchDroid", "NeoTermActivity: crashedSessions=${crashedSessions.size} (closedNormally==null)")
             if (crashedSessions.isNotEmpty()) {
                 Log.d("AArchDroid", "NeoTermActivity: crash detected — ${crashedSessions.size} sessions never closed")
-                // Merge all unclosed sessions into crashGroup
-                val cg = history.crashGroup ?: org.aarchdroid.dragonterminal.data.CrashGroup(sessionCount = 0)
-                cg.sessionCount += crashedSessions.size
+                // Remove crashed sessions from normal list (terminals already in crashGroup from getHistory())
                 for (s in crashedSessions) {
-                    cg.terminals.addAll(s.terminals)
                     history.sessions.remove(s)
                 }
-                history.crashGroup = cg
                 history.flagActive = false
                 SessionHistory.saveNow(this)
             }
@@ -333,6 +334,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 true
             }
 
+            R.id.menu_item_clear_logs -> {
+                SessionHistory.clearAll(this)
+                sessionHistoryAdapter?.updateData(SessionHistory.ensure(this))
+                updatePlaceholderVisibility()
+                true
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -437,6 +445,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                             this@NeoTermActivity.transferringHandle = null
                             val taken = termService?.takeSession(session!!.mHandle)
                             Log.d("NeoTermAct", "takeSession returned: ${taken != null}")
+                            // Mark exit destiny as float
+                            CommandInterceptor.getContext(session!!.mHandle)?.let { ctx ->
+                                SessionHistory.updateTerminalDestiny(this@NeoTermActivity, ctx.terminalId, "flotante")
+                            }
                             AArchDroidApp.transferredSession = taken
                             if (taken != null) {
                                 val intent = Intent(this@NeoTermActivity, FloatService::class.java)
@@ -454,6 +466,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                         } else {
                             // Normal close: kill session and close history
                             if (session != null) {
+                                CommandInterceptor.getContext(session.mHandle)?.let { ctx ->
+                                    SessionHistory.updateTerminalDestiny(this@NeoTermActivity, ctx.terminalId, "cerrada")
+                                }
                                 val sid = tabSessionMap.remove(session.mHandle)
                                 if (sid != null) {
                                     SessionHistory.closeSession(this@NeoTermActivity, sid)
@@ -582,6 +597,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                     tab.updateColorScheme()
                 }
             }
+        } else if (key == getString(R.string.key_general_disable_logs)) {
+            updatePlaceholderVisibility()
         }
     }
 
@@ -675,12 +692,39 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
 
         pendingAnchorSession?.let { session ->
-            pendingAnchorSession = null
-            Log.d("AArchDroid", "NeoTermActivity: handling anchored session")
-            session.setChangeCallback(TermSessionCallback())
-            termService!!.addExistingSession(session)
-            addNewSessionFromExisting(session)
+            processPendingAnchor()
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        Log.d("AArchDroid", "NeoTermActivity: onNewIntent — action=" + (intent.action ?: "null"))
+        if (intent.action == ACTION_ANCHOR) {
+            pendingAnchorSession = AArchDroidApp.transferredSession
+            AArchDroidApp.transferredSession = null
+            Log.d("AArchDroid", "NeoTermActivity: onNewIntent — pending session=${pendingAnchorSession != null}")
+            if (termService != null) {
+                processPendingAnchor()
+            }
+        } else if (termService != null) {
+            Log.d("AArchDroid", "NeoTermActivity: onNewIntent — picking up new sessions, count=" + termService!!.sessions.size)
+            val stored = NeoPreference.getCurrentSession(termService)
+            for (session in termService!!.sessions) {
+                addNewSessionFromExisting(session)
+            }
+            if (stored != null) {
+                switchToSession(stored)
+            }
+        }
+    }
+
+    private fun processPendingAnchor() {
+        val session = pendingAnchorSession ?: return
+        pendingAnchorSession = null
+        Log.d("AArchDroid", "NeoTermActivity: handling anchored session")
+        session.setChangeCallback(TermSessionCallback())
+        termService!!.addExistingSession(session)
+        addNewSessionFromExisting(session)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -741,8 +785,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             Log.d("AArchDroid", "NeoTermActivity: restoring " + termService!!.sessions.size + " existing sessions")
 
             for (session in termService!!.sessions) {
+                Log.d("AArchDroid", "NeoTermActivity: iterating session handle=" + session.mHandle + " title=" + session.mSessionName)
                 addNewSessionFromExisting(session)
             }
+            Log.d("AArchDroid", "NeoTermActivity: lastSession=" + (lastSession?.mHandle ?: "null"))
 
             for (session in termService!!.xSessions) {
                 addXSession(session)
@@ -878,8 +924,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
         // Create a new session history record for this tab
         val sessionId = SessionHistory.startSession(this).id
-        CommandInterceptor.registerSession(session.mHandle, sessionId)
-        val term = SessionHistory.startTerminal(this, sessionId, "terminal")
+        CommandInterceptor.registerSession(session.mHandle, sessionId, "terminal")
+        val term = SessionHistory.startTerminal(this, sessionId, "terminal", "terminal")
         CommandInterceptor.setTerminalId(session.mHandle, term.id)
         tabSessionMap[session.mHandle] = sessionId
 
@@ -929,8 +975,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             newSession.mSessionName = generateSessionName("Restored")
 
             val sessionId = SessionHistory.startSession(this).id
-            CommandInterceptor.registerSession(newSession.mHandle, sessionId)
-            val term = SessionHistory.startTerminal(this, sessionId, "terminal")
+            CommandInterceptor.registerSession(newSession.mHandle, sessionId, terminal.launchSource)
+            val term = SessionHistory.startTerminal(this, sessionId, terminal.type,
+                terminal.launchSource, terminal.iconResId)
             CommandInterceptor.setTerminalId(newSession.mHandle, term.id)
             tabSessionMap[newSession.mHandle] = sessionId
 
@@ -963,16 +1010,21 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     private fun addNewSessionFromExisting(session: TerminalSession?) {
         if (session == null) {
+            Log.d("AArchDroid", "NSFE: session is null — returning")
             return
         }
+        Log.d("AArchDroid", "NSFE: entering — session handle=" + session.mHandle + " title=" + session.title + " tabCount=" + tabSwitcher.count)
 
         // Do not add the same session again
         // Or app will crash when rotate
         val tabCount = tabSwitcher.count
-        (0..(tabCount - 1))
+        val dup = (0..(tabCount - 1))
                 .map { tabSwitcher.getTab(it) }
-                .filter { it is TermTab && it.termData.termSession == session }
-                .forEach { return }
+                .any { it is TermTab && it.termData.termSession == session }
+        if (dup) {
+            Log.d("AArchDroid", "NSFE: session already in tabs — skipping handle=" + session.mHandle)
+            return
+        }
 
         val sessionCallback = if (session.sessionChangedCallback is TermSessionCallback) {
             session.sessionChangedCallback as TermSessionCallback
@@ -984,8 +1036,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         val tab = createTab(session.title) as TermTab
         tab.termData.initializeSessionWith(session, sessionCallback, viewClient)
 
+        Log.d("AArchDroid", "NSFE: adding tab for handle=" + session.mHandle)
         addNewTab(tab, createRevealAnimation())
         switchToSession(tab)
+        Log.d("AArchDroid", "NSFE: tab added and switched for handle=" + session.mHandle)
     }
 
     private fun addXSession() {
@@ -1262,11 +1316,32 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
         toolbar.menu?.findItem(R.id.toggle_tab_switcher_menu_item)?.isVisible = tabSwitcher.count > 0
         if (tabSwitcher.count == 0) {
-            sessionHistoryAdapter?.let { adapter ->
+            val logsDisabled = org.aarchdroid.dragonterminal.frontend.config.NeoPreference.isLoggingDisabled()
+            if (logsDisabled) {
+                toolbar.title = "Logs deshabilitados"
+                toolbar.menu?.findItem(R.id.menu_item_clear_logs)?.isVisible = false
+                findViewById<TextView>(R.id.empty_logs_text).apply {
+                    text = "Historial deshabilitado en Ajustes"
+                    visibility = View.VISIBLE
+                }
+                findViewById<View>(R.id.sessionHistoryList).visibility = View.GONE
+            } else {
                 val freshData = SessionHistory.getHistory(this@NeoTermActivity)
-                adapter.updateData(freshData)
-                toolbar.title = "(${freshData.sessions.size}) Logs"
+                val hasLogs = freshData.sessions.isNotEmpty()
+
+                sessionHistoryAdapter?.updateData(freshData)
+                toolbar.title = if (hasLogs) "(${freshData.sessions.size}) Logs" else "Sin eventos"
+                toolbar.menu?.findItem(R.id.menu_item_clear_logs)?.isVisible = hasLogs
+
+                findViewById<TextView>(R.id.empty_logs_text).visibility =
+                    if (hasLogs) View.GONE else View.VISIBLE
+                findViewById<View>(R.id.sessionHistoryList).visibility =
+                    if (hasLogs) View.VISIBLE else View.GONE
             }
+
+            val launchBtn = findViewById<Button>(R.id.launch_terminal_button)
+            launchBtn.visibility = View.VISIBLE
+            launchBtn.setOnClickListener { addNewSession() }
         }
     }
 

@@ -9,6 +9,8 @@ import android.graphics.PixelFormat
 import android.graphics.Point
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -68,6 +70,10 @@ class FloatWindowView @JvmOverloads constructor(
     var session: TerminalSession? = null
 
     val preferences: FloatPreferences by lazy { FloatPreferences(context) }
+
+    private var keyboardVisible = false
+    private var originalKeyboardY: Int? = null
+    private val handler = Handler(Looper.getMainLooper())
 
     var overlayFocused = true
     var isDragging = false
@@ -137,6 +143,8 @@ class FloatWindowView @JvmOverloads constructor(
         currentSizeIndex = nextIndex
         val (w, h) = SIZES[nextIndex]
 
+        originalKeyboardY = null
+
         val cx = layoutParams.x + layoutParams.width / 2
         val cy = layoutParams.y + layoutParams.height / 2
 
@@ -201,15 +209,15 @@ class FloatWindowView @JvmOverloads constructor(
     }
 
     private fun computeFlags(focused: Boolean): Int {
-        return if (focused) 0
-        else WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        val base = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                   WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+        return if (focused) base
+        else base or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
     }
 
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
         if (isDragging) return true
 
-        getLocationOnScreen(location)
         val touchX = event.rawX
         val touchY = event.rawY
 
@@ -225,27 +233,18 @@ class FloatWindowView @JvmOverloads constructor(
             return false
         }
 
-        val clickedInside = touchX >= location[0] &&
-            touchX <= location[0] + layoutParams.width &&
-            touchY >= location[1] &&
-            touchY <= location[1] + layoutParams.height
-
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                if (!clickedInside) loseFocus()
-            }
-            MotionEvent.ACTION_UP -> {
-                if (clickedInside) {
-                    gainFocus()
-                    showKeyboard()
-                }
-            }
+        if (event.action == MotionEvent.ACTION_DOWN) {
+            gainFocus()
         }
         return false
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_OUTSIDE) {
+            if (!isDragging) loseFocus()
+            return true
+        }
         if (isDragging) {
             scaleDetector.onTouchEvent(event)
             if (scaleDetector.isInProgress) return true
@@ -307,6 +306,7 @@ class FloatWindowView @JvmOverloads constructor(
         layoutParams.flags = computeFlags(true)
         updateLayout()
         alpha = ALPHA_FOCUS
+        showKeyboard()
     }
 
     fun loseFocus() {
@@ -315,10 +315,12 @@ class FloatWindowView @JvmOverloads constructor(
         windowControls?.background = ColorDrawable(Color.parseColor("#FF661111"))
         updateLayout()
         alpha = ALPHA_NO_FOCUS
+        handler.postDelayed({ if (!overlayFocused) restoreKeyboardPosition() }, 500)
     }
 
     fun enterDragMode() {
         isDragging = true
+        originalKeyboardY = null
         windowControls?.background = ColorDrawable(Color.parseColor("#FF661111"))
         alpha = 1.0f
     }
@@ -329,24 +331,73 @@ class FloatWindowView @JvmOverloads constructor(
     }
 
     fun showKeyboard() {
+        keyboardVisible = true
+        handler.removeCallbacksAndMessages(null)
         terminalView.post {
             terminalView.requestFocus()
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
             imm.showSoftInput(terminalView, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+            handler.postDelayed({ if (keyboardVisible) adjustForKeyboard() }, 300)
         }
     }
 
     fun hideKeyboard() {
+        keyboardVisible = false
+        handler.removeCallbacksAndMessages(null)
         terminalView.post {
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
             imm.hideSoftInputFromWindow(terminalView.windowToken, 0)
+            handler.postDelayed({ if (!keyboardVisible) restoreKeyboardPosition() }, 300)
         }
     }
 
     fun toggleKeyboard() {
-        terminalView.post {
+        if (getKeyboardHeight() > 0) {
+            hideKeyboard()
+        } else {
+            showKeyboard()
+        }
+    }
+
+    private fun getKeyboardHeight(): Int {
+        return try {
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-            imm.toggleSoftInput(0, 0)
+            val method = imm.javaClass.getMethod("getInputMethodWindowVisibleHeight")
+            (method.invoke(imm) as? Int) ?: 0
+        } catch (_: Exception) {
+            0
+        }
+    }
+
+    private fun getNavBarHeight(): Int {
+        return try {
+            val resId = resources.getIdentifier("navigation_bar_height", "dimen", "android")
+            if (resId > 0) resources.getDimensionPixelSize(resId) else 0
+        } catch (_: Exception) { 0 }
+    }
+
+    private fun adjustForKeyboard() {
+        val kh = getKeyboardHeight()
+        if (kh <= 0) return
+        val density = resources.displayMetrics.density
+        val navBarH = getNavBarHeight()
+        val extraMargin = (8 * density).toInt()
+        val keyboardTop = displayHeight - kh - navBarH - extraMargin
+        val winBottom = layoutParams.y + layoutParams.height
+        if (winBottom > keyboardTop) {
+            if (originalKeyboardY == null) originalKeyboardY = layoutParams.y
+            layoutParams.y = (keyboardTop - layoutParams.height).coerceAtLeast(60)
+            updateLayout()
+            preferences.windowY = layoutParams.y
+        }
+    }
+
+    private fun restoreKeyboardPosition() {
+        originalKeyboardY?.let { y ->
+            layoutParams.y = y
+            updateLayout()
+            preferences.windowY = y
+            originalKeyboardY = null
         }
     }
 

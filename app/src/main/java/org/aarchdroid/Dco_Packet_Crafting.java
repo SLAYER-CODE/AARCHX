@@ -29,22 +29,27 @@ public class Dco_Packet_Crafting extends DcoBaseActivity {
             RecyclerView list = findViewById(R.id.tool_list);
             list.setLayoutManager(new LinearLayoutManager(this));
 
-            List<ToolItem> tools = buildToolList();
-            ToolAdapter adapter = new ToolAdapter(tools, new ToolAdapter.OnToolClickListener() {
+            createAdapter(list, buildToolList(), new ToolAdapter.OnToolClickListener() {
                 @Override
-                public void onToolClick(String cmd) {
-                    run_hack_cmd(cmd);
+                public void onToolClick(ToolItem item) {
+                    run_hack_cmd(item.cmd, item.iconResId);
                 }
 
                 @Override
                 public void onInstallClick(String toolKey) {
-                    String cmd = buildInstallCommandForKey(toolKey);
-                    if (cmd != null) {
-                        run_hack_cmd(cmd);
-                    }
+                    processInstallTool(toolKey);
+                }
+
+                @Override
+                public void onUninstallClick(String toolKey) {
+                    Dco_Packet_Crafting.this.onUninstallClick(toolKey);
+                }
+
+                @Override
+                public void onLaunchTool(String toolKey) {
+                    Dco_Packet_Crafting.this.onLaunchTool(toolKey);
                 }
             });
-            list.setAdapter(adapter);
             list.setHasFixedSize(true);
         } catch (Exception e) {
             Log.e(TAG, "onCreate failed", e);

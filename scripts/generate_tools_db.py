@@ -49,6 +49,29 @@ c.execute("""
     )
 """)
 
+def build_commands(key, entry):
+    source = entry.get("source", "blackarch")
+    pkg = entry.get("pkg", key)
+    url = entry.get("url", "")
+    
+    if source in ("blackarch", "arch"):
+        install = f"pacman -Sy --noconfirm {pkg}"
+        uninstall = f"pacman -Rns --noconfirm {pkg}"
+    elif source == "github":
+        install = f"sh /data/data/org.aarchdroid/files/scripts/install-tool.sh {key}"
+        uninstall = f"rm -rf /opt/{key}"
+    elif source == "local":
+        install = f"sh /data/data/org.aarchdroid/files/scripts/install-tool.sh {key}"
+        uninstall = f"rm -rf /opt/{key}"
+    elif source == "url":
+        install = f"mkdir -p /opt/{key} && wget -q \"{url}\" -O /opt/{key}/{key} && chmod +x /opt/{key}/{key}"
+        uninstall = f"rm -rf /opt/{key}"
+    else:
+        install = f"pacman -Sy --noconfirm {pkg}"
+        uninstall = f"pacman -Rns --noconfirm {pkg}"
+    
+    return install, uninstall
+
 cat_tools = defaultdict(list)
 count = 0
 
@@ -58,14 +81,14 @@ for key, entry in manifest.items():
     description = entry.get("description", "")
     pkg = entry.get("pkg", "")
     size_bytes = entry.get("size_bytes", 0)
-    size_mb = size_bytes // (1024 * 1024)
 
+    install_cmd, uninstall_cmd = build_commands(key, entry)
     cat_tools[category].append(key)
 
     c.execute(
-        "INSERT INTO 'tools' (toolKey, displayName, description, source, category, estimatedSizeBytes, status) "
-        "VALUES (?, ?, ?, ?, ?, ?, 'not_installed')",
-        (key, key, description, source, category, size_bytes)
+        "INSERT INTO 'tools' (toolKey, displayName, description, source, category, installCommand, uninstallCommand, estimatedSizeBytes, status) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'not_installed')",
+        (key, key, description, source, category, install_cmd, uninstall_cmd, size_bytes)
     )
     count += 1
 

@@ -1,6 +1,7 @@
 package org.aarchdroid.dragonterminal.ui.term
 
 import android.app.Activity
+import android.util.Log
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -18,6 +19,8 @@ import org.aarchdroid.dragonterminal.bridge.Bridge.*
 import org.aarchdroid.dragonterminal.bridge.SessionId
 import org.aarchdroid.dragonterminal.component.userscript.UserScript
 import org.aarchdroid.dragonterminal.component.userscript.UserScriptComponent
+import org.aarchdroid.dragonterminal.data.CommandInterceptor
+import org.aarchdroid.dragonterminal.data.SessionHistory
 import org.aarchdroid.dragonterminal.frontend.component.ComponentManager
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.session.shell.ShellParameter
@@ -89,8 +92,10 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
                 val command = intent.getStringExtra(EXTRA_COMMAND)
                 val foreground = intent.getBooleanExtra(EXTRA_FOREGROUND, true)
                 val session = intent.getStringExtra(EXTRA_SESSION_ID)
+                val iconResId = intent.getIntExtra(EXTRA_ICON_RES_ID, 0)
+                val toolKey = intent.getStringExtra("tool_key") ?: ""
 
-                openTerm(command, SessionId.of(session), foreground)
+                openTerm(command, SessionId.of(session), foreground, iconResId, toolKey)
             }
 
             else -> openTerm(null, null)
@@ -196,8 +201,27 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
     }
 
     private fun openTerm(parameter: ShellParameter,
-                         foreground: Boolean = true) {
+                         foreground: Boolean = true,
+                         iconResId: Int = 0,
+                         toolName: String = "") {
         val session = termService!!.createTermSession(parameter)
+        Log.d("AArchDroid", "NTRI: openTerm — session created handle=" + session.mHandle + " foreground=" + foreground + " toolName=" + toolName)
+
+        // Delete pending marker — session was created, wrapper will run
+        if (toolName.isNotEmpty()) {
+            val pending = File(filesDir, "install-state/${toolName}.pending")
+            if (pending.exists()) {
+                pending.delete()
+                Log.d("AArchDroid", "NTRI: deleted pending marker for $toolName")
+            }
+        }
+
+        // Register in session history with launchSource="herramienta"
+        val sessId = SessionHistory.startSession(this).id
+        val type = if (toolName.isNotEmpty()) "herramienta:$toolName" else "herramienta"
+        val term = SessionHistory.startTerminal(this, sessId, type, "herramienta", iconResId)
+        CommandInterceptor.registerSession(session.mHandle, sessId, "herramienta")
+        CommandInterceptor.setTerminalId(session.mHandle, term.id)
 
         val data = Intent()
         data.putExtra(EXTRA_SESSION_ID, session.mHandle)
@@ -207,17 +231,24 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
             // Set current session to our new one
             // In order to switch to it when entering NeoTermActivity
             NeoPreference.storeCurrentSession(session)
+            Log.d("AArchDroid", "NTRI: session stored as current — handle=" + session.mHandle)
 
             val intent = Intent(this, NeoTermActivity::class.java)
             intent.addCategory(Intent.CATEGORY_DEFAULT)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            Log.d("AArchDroid", "NTRI: starting NeoTermActivity with NEW_TASK|REORDER_TO_FRONT")
             startActivity(intent)
+            Log.d("AArchDroid", "NTRI: startActivity returned")
+        } else {
+            Log.d("AArchDroid", "NTRI: foreground=false — NOT starting NeoTermActivity")
         }
     }
 
     private fun openTerm(initialCommand: String?,
                          sessionId: SessionId? = null,
-                         foreground: Boolean = true) {
+                         foreground: Boolean = true,
+                         iconResId: Int = 0,
+                         toolKey: String = "") {
         val parameter = ShellParameter()
                 .initialCommand(initialCommand)
                 .callback(TermSessionCallback())
@@ -232,7 +263,10 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
             parameter.arguments(arrayOf("su", "-c", "/system/bin/sh " + defaultScript))
         }
 
-        openTerm(parameter, foreground)
+        val toolName = toolKey.ifEmpty {
+            initialCommand?.split(" ")?.firstOrNull()?.trim() ?: ""
+        }
+        openTerm(parameter, foreground, iconResId, toolName)
     }
 
     private fun openCustomExecTerm(executablePath: String?, arguments: Array<String>?, cwd: String?) {
@@ -242,7 +276,8 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
                 .currentWorkingDirectory(cwd)
                 .callback(TermSessionCallback())
                 .systemShell(detectSystemShell())
-        openTerm(parameter)
+        val toolName = executablePath?.substringAfterLast("/")?.trim() ?: ""
+        openTerm(parameter, toolName = toolName)
     }
 
     private fun detectSystemShell(): Boolean {

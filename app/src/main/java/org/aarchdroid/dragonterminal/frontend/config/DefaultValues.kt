@@ -21,6 +21,7 @@ object DefaultValues {
     val enableBackButtonBeMappedToEscape = false
     val enableSpecialVolumeKeys = false
     val enableWordBasedIme = false
+    val disableLogs = true
 
     val loginShell = "archdroid.sh"
     val initialCommand = ""

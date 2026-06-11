@@ -28,21 +28,10 @@
             android:targetPackage="org.aarchdroid" />
     </Preference>
 
-    <!--Preference
-        android:icon="@drawable/ic_apps_white_36dp"
-        android:summary="@string/package_settings_desc"
-        android:title="@string/package_settings">
-        <intent
-            android:targetClass="org.aarchdroid.dragonterminal.ui.pm.PackageManagerActivity"
-            android:targetPackage="org.aarchdroid.dragonterminal" />
-    </Preference-->
-
-    <!--Preference
-        android:icon="@drawable/ic_info_white_36dp"
-        android:title="@string/about" >
-        <intent
-            android:targetClass="org.aarchdroid.dragonterminal.ui.support.AboutActivity"
-            android:targetPackage="org.aarchdroid.dragonterminal" />
-    </Preference-->
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="notif_silent"
+        android:summary="Notificación silenciosa sin sonido ni pop-up"
+        android:title="Notificación silenciosa" />
 
 </PreferenceScreen>

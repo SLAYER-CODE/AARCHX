@@ -24,6 +24,9 @@ class HistoryDatabase(context: Context) : SQLiteOpenHelper(
                 id TEXT PRIMARY KEY,
                 created INTEGER NOT NULL,
                 type TEXT NOT NULL,
+                launchSource TEXT DEFAULT '',
+                exitDestiny TEXT DEFAULT '',
+                iconResId INTEGER DEFAULT 0,
                 sessionId TEXT NOT NULL,
                 FOREIGN KEY (sessionId) REFERENCES session(id) ON DELETE CASCADE
             )
@@ -47,10 +50,11 @@ class HistoryDatabase(context: Context) : SQLiteOpenHelper(
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS command")
-        db.execSQL("DROP TABLE IF EXISTS terminal")
-        db.execSQL("DROP TABLE IF EXISTS session")
-        onCreate(db)
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE terminal ADD COLUMN launchSource TEXT DEFAULT ''")
+            db.execSQL("ALTER TABLE terminal ADD COLUMN exitDestiny TEXT DEFAULT ''")
+            db.execSQL("ALTER TABLE terminal ADD COLUMN iconResId INTEGER DEFAULT 0")
+        }
     }
 
     override fun onConfigure(db: SQLiteDatabase) {
@@ -60,7 +64,7 @@ class HistoryDatabase(context: Context) : SQLiteOpenHelper(
 
     companion object {
         private const val DATABASE_NAME = "session_history.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
 
         @Volatile
         private var INSTANCE: HistoryDatabase? = null

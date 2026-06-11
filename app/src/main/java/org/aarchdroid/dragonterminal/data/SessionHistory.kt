@@ -2,6 +2,7 @@ package org.aarchdroid.dragonterminal.data
 
 import android.content.ContentValues
 import android.content.Context
+import android.util.Log
 import org.aarchdroid.dragonterminal.data.room.HistoryDatabase
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -17,6 +18,9 @@ data class TerminalRecord(
     val id: String,
     val created: Long,
     val type: String,
+    val launchSource: String = "",
+    var exitDestiny: String = "",
+    val iconResId: Int = 0,
     val commands: MutableList<CommandRecord> = mutableListOf()
 )
 
@@ -55,6 +59,18 @@ object SessionHistory {
         if (db == null) {
             db = HistoryDatabase.getInstance(context)
             prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            // Restore terminalIdCounter from DB to avoid PK conflicts after process restart
+            runCatching {
+                db?.readableDatabase?.rawQuery("SELECT MAX(id) FROM terminal", null)?.use { c ->
+                    if (c.moveToFirst()) {
+                        val last = c.getString(0)
+                        if (last?.startsWith("term_") == true) {
+                            val n = last.removePrefix("term_").toIntOrNull()
+                            if (n != null && n >= terminalIdCounter) terminalIdCounter = n
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -67,6 +83,7 @@ object SessionHistory {
 
     fun startSession(context: Context): SessionRecord {
         init(context)
+        Log.d("SessionHistory", "startSession() called, current=null? ${current == null}, prefs=$prefs")
         val session = SessionRecord(
             id = java.util.UUID.randomUUID().toString(),
             created = System.currentTimeMillis()
@@ -81,30 +98,58 @@ object SessionHistory {
         }
         currentSession = session
         prefs?.edit()?.putBoolean(KEY_FLAG_ACTIVE, true)?.apply()
+        Log.d("SessionHistory", "startSession -> id=${session.id}, flagActive set to true")
         return session
     }
 
-    fun startTerminal(context: Context, sessionId: String, type: String = "terminal"): TerminalRecord {
+    fun startTerminal(context: Context, sessionId: String, type: String = "terminal",
+                      launchSource: String = "", iconResId: Int = 0): TerminalRecord {
         init(context)
         val term = TerminalRecord(
             id = "term_${++terminalIdCounter}",
             created = System.currentTimeMillis(),
-            type = type
+            type = type,
+            launchSource = launchSource,
+            iconResId = iconResId
         )
         runCatching {
             val cv = ContentValues().apply {
                 put("id", term.id)
                 put("created", term.created)
                 put("type", term.type)
+                put("launchSource", term.launchSource)
+                put("exitDestiny", term.exitDestiny)
+                put("iconResId", term.iconResId)
                 put("sessionId", sessionId)
             }
             db?.writableDatabase?.insert("terminal", null, cv)
             current?.sessions?.find { it.id == sessionId }?.terminals?.add(term)
         }
+        Log.d("SessionHistory", "startTerminal -> id=${term.id}, sessionId=$sessionId, launchSource=${term.launchSource}")
         return term
     }
 
+    fun updateTerminalDestiny(context: Context, terminalId: String, exitDestiny: String) {
+        init(context)
+        Log.d("SessionHistory", "updateTerminalDestiny -> terminalId=$terminalId, exitDestiny=$exitDestiny")
+        runCatching {
+            val cv = ContentValues().apply {
+                put("exitDestiny", exitDestiny)
+            }
+            db?.writableDatabase?.update("terminal", cv, "id = ?", arrayOf(terminalId))
+        }
+        for (s in current?.sessions.orEmpty()) {
+            for (t in s.terminals) {
+                if (t.id == terminalId) {
+                    (t as TerminalRecord).exitDestiny = exitDestiny
+                    return
+                }
+            }
+        }
+    }
+
     fun logCommand(context: Context, sessionId: String, terminalId: String, path: String, cmd: String) {
+        Log.d("SessionHistory", "logCommand -> sessionId=$sessionId, terminalId=$terminalId, cmd=$cmd")
         val trimmed = cmd.trim()
         if (trimmed == "ls" || trimmed == "cd" || trimmed.startsWith("ls ") || trimmed.startsWith("cd ")) {
             return
@@ -140,10 +185,9 @@ object SessionHistory {
 
     fun closeSession(context: Context, sessionId: String, crashReason: String? = null) {
         init(context)
-        val session = current?.sessions?.find { it.id == sessionId } ?: return
-        session.closedNormally = crashReason == null
-        session.crashReason = crashReason
+        Log.d("SessionHistory", "closeSession -> sessionId=$sessionId, crashReason=$crashReason, current=null? ${current == null}")
 
+        // Always write to DB first, regardless of in-memory cache state
         runCatching {
             val cv = ContentValues().apply {
                 put("closedNormally", if (crashReason == null) 1 else 0)
@@ -152,10 +196,18 @@ object SessionHistory {
             db?.writableDatabase?.update("session", cv, "id = ?", arrayOf(sessionId))
         }
 
-        val hasActiveSessions = current?.sessions?.any { s -> s.closedNormally == null && s.id != sessionId } ?: false
-        if (!hasActiveSessions && current?.sessions?.all { it.closedNormally != null } == true) {
-            prefs?.edit()?.putBoolean(KEY_FLAG_ACTIVE, false)?.apply()
-            currentSession = null
+        // Update in-memory cache if available
+        val session = current?.sessions?.find { it.id == sessionId }
+        Log.d("SessionHistory", "closeSession -> found in cache? ${session != null}")
+        if (session != null) {
+            session.closedNormally = crashReason == null
+            session.crashReason = crashReason
+
+            val hasActiveSessions = current?.sessions?.any { s -> s.closedNormally == null && s.id != sessionId } ?: false
+            if (!hasActiveSessions && current?.sessions?.all { it.closedNormally != null } == true) {
+                prefs?.edit()?.putBoolean(KEY_FLAG_ACTIVE, false)?.apply()
+                currentSession = null
+            }
         }
     }
 
@@ -185,7 +237,12 @@ object SessionHistory {
                             val tId = tCursor.getString(tCursor.getColumnIndexOrThrow("id"))
                             val tCreated = tCursor.getLong(tCursor.getColumnIndexOrThrow("created"))
                             val tType = tCursor.getString(tCursor.getColumnIndexOrThrow("type"))
-                            val tRecord = TerminalRecord(id = tId, created = tCreated, type = tType, commands = mutableListOf())
+                            val tLaunchSource = if (tCursor.isNull(tCursor.getColumnIndexOrThrow("launchSource"))) "" else tCursor.getString(tCursor.getColumnIndexOrThrow("launchSource"))
+                            val tExitDestiny = if (tCursor.isNull(tCursor.getColumnIndexOrThrow("exitDestiny"))) "" else tCursor.getString(tCursor.getColumnIndexOrThrow("exitDestiny"))
+                            val tIconResId = if (tCursor.isNull(tCursor.getColumnIndexOrThrow("iconResId"))) 0 else tCursor.getInt(tCursor.getColumnIndexOrThrow("iconResId"))
+                            val tRecord = TerminalRecord(id = tId, created = tCreated, type = tType,
+                                launchSource = tLaunchSource, exitDestiny = tExitDestiny,
+                                iconResId = tIconResId, commands = mutableListOf())
 
                             readDb.rawQuery("SELECT * FROM command WHERE terminalId = ? ORDER BY ord ASC", arrayOf(tId)).use { cCursor ->
                                 while (cCursor.moveToNext()) {
@@ -209,19 +266,38 @@ object SessionHistory {
             var unclosedCount = 0
             for (s in data.sessions) {
                 if (s.closedNormally == null) {
+                    Log.d("SessionHistory", "getHistory -> CRASH session id=${s.id} created=${s.created} terms=${s.terminals.size} launchSource=${s.terminals.firstOrNull()?.launchSource}")
                     unclosedCount++
                     s.terminals.filter { it.commands.isNotEmpty() }.forEach { unclosedTerms.add(it) }
                 }
             }
-            if (unclosedTerms.isNotEmpty()) data.crashGroup = CrashGroup(sessionCount = unclosedCount, terminals = unclosedTerms)
+            if (unclosedTerms.isNotEmpty()) {
+                Log.d("SessionHistory", "getHistory -> crashGroup: $unclosedCount sessions, ${unclosedTerms.size} terminals")
+                data.crashGroup = CrashGroup(sessionCount = unclosedCount, terminals = unclosedTerms)
+            }
+            // Remove crashed sessions from main list (they appear only in crashGroup)
+            data.sessions.removeAll { it.closedNormally == null }
         }
 
         current = data
+        Log.d("SessionHistory", "getHistory -> loaded ${data.sessions.size} sessions, flagActive=$flagActive, crashGroup=${data.crashGroup != null}")
         return data
     }
 
     fun saveNow(context: Context) {
         // SQLite persists immediately — no-op needed
+    }
+
+    fun clearAll(context: Context) {
+        init(context)
+        current = null
+        currentSession = null
+        runCatching {
+            db?.writableDatabase?.execSQL("DELETE FROM command")
+            db?.writableDatabase?.execSQL("DELETE FROM terminal")
+            db?.writableDatabase?.execSQL("DELETE FROM session")
+        }
+        prefs?.edit()?.putBoolean(KEY_FLAG_ACTIVE, false)?.apply()
     }
 
     fun verifyDateAndReset(context: Context) {

@@ -2,7 +2,6 @@ package org.aarchdroid;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
@@ -18,45 +17,53 @@ import android.util.DisplayMetrics;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import org.aarchdroid.dragonterminal.bridge.Bridge;
-import org.json.JSONObject;
 import java.io.DataOutputStream;
 import java.io.BufferedReader;
-import java.io.InputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class DcoBaseActivity extends Activity {
     private static final String TAG = "DcoBaseActivity";
     private static Boolean hasRoot = null;
-    private static JSONObject toolManifest = null;
     private boolean layoutSet = false;
     private boolean scrollListenerAttached = false;
+    protected ToolAdapter adapter;
+    private final Set<String> processingTools = new HashSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         overridePendingTransition(0, 0);
+        getWindow().setWindowAnimations(0);
         getWindow().setGravity(Gravity.CENTER);
         getWindow().setDimAmount(0.25f);
         setFinishOnTouchOutside(true);
-        loadManifest();
     }
 
-    private void loadManifest() {
-        if (toolManifest != null) return;
-        try {
-            AssetManager am = getAssets();
-            InputStream is = am.open("tool-manifest.json");
-            byte[] buffer = new byte[is.available()];
-            is.read(buffer);
-            is.close();
-            String json = new String(buffer, StandardCharsets.UTF_8);
-            toolManifest = new JSONObject(json);
-            Log.d(TAG, "Manifest loaded: " + toolManifest.length() + " tools");
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to load manifest", e);
-            toolManifest = new JSONObject();
-        }
+    protected void createAdapter(RecyclerView rv, List<ToolItem> tools, ToolAdapter.OnToolClickListener listener) {
+        adapter = new ToolAdapter(tools, listener);
+        rv.setAdapter(adapter);
+    }
+
+    private void refreshStatusesAsync() {
+        new Thread(() -> {
+            String category = getCurrentCategory();
+            Map<String, String> statuses = ToolDatabase.getInstance().getStatusMap(category);
+            Map<String, ToolInfo> toolInfos = ToolDatabase.getInstance().getToolInfoMap(category);
+            runOnUiThread(() -> {
+                if (adapter != null) {
+                    adapter.updateCache(statuses, toolInfos);
+                    adapter.notifyDataSetChanged();
+                }
+                updateStatsSize();
+            });
+        }).start();
     }
 
     @Override
@@ -68,6 +75,7 @@ public class DcoBaseActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        refreshStatusesAsync();
         if (!layoutSet) {
             layoutSet = true;
             DisplayMetrics dm = new DisplayMetrics();
@@ -161,100 +169,233 @@ public class DcoBaseActivity extends Activity {
         Object tag = v.getTag();
         String toolKey = tag instanceof String ? (String) tag : "";
         if (toolKey.isEmpty()) return;
-        String cmd = buildInstallCommandForKey(toolKey);
+        processInstallTool(toolKey);
+    }
+
+    public void processInstallTool(String toolKey) {
+        if (!processingTools.add(toolKey)) {
+            Log.d(TAG, "processInstallTool(" + toolKey + ") already processing — ignored");
+            return;
+        }
+        Log.d(TAG, "processInstallTool(" + toolKey + ") called");
+        String installCmd = ToolDatabase.getInstance().getInstallCommand(toolKey);
+        Log.d(TAG, "processInstallTool: installCmd=" + installCmd);
+        if (installCmd != null) {
+            try {
+                ToolDatabase.getInstance().markInstalling(toolKey, installCmd);
+            } catch (Exception e) {
+                Log.e(TAG, "markInstalling failed", e);
+                processingTools.remove(toolKey);
+                return;
+            }
+            createPendingMarker(toolKey);
+            boolean wrapperOk = createInstallWrapper(toolKey, installCmd);
+            Log.d(TAG, "processInstallTool: wrapperOk=" + wrapperOk);
+            if (wrapperOk) {
+                run_hack_cmd("sh /data/data/org.aarchdroid/files/install-wrappers/" + toolKey + ".sh", 0, toolKey);
+            } else {
+                run_hack_cmd(installCmd, 0, toolKey);
+            }
+        } else {
+            Log.d(TAG, "processInstallTool: no install command found for " + toolKey);
+            Toast.makeText(this, "No install command for " + toolKey, Toast.LENGTH_SHORT).show();
+            processingTools.remove(toolKey);
+        }
+    }
+
+    public void onUninstallClick(String toolKey) {
+        if (!processingTools.add(toolKey)) {
+            Log.d(TAG, "onUninstallClick(" + toolKey + ") already processing — ignored");
+            return;
+        }
+        String cmd = ToolDatabase.getInstance().getUninstallCommand(toolKey);
         if (cmd != null) {
-            ToolDatabase.getInstance().markInstalling(toolKey, cmd);
-            run_hack_cmd(cmd);
+            try {
+                ToolDatabase.getInstance().setStatus(toolKey, "installing");
+            } catch (Exception e) {
+                Log.e(TAG, "setStatus failed", e);
+                processingTools.remove(toolKey);
+                return;
+            }
+            createPendingMarker(toolKey);
+            boolean wrapperOk = createUninstallWrapper(toolKey, cmd);
+            if (wrapperOk) {
+                run_hack_cmd("sh /data/data/org.aarchdroid/files/install-wrappers/uninstall-" + toolKey + ".sh", 0, toolKey);
+            } else {
+                ToolDatabase.getInstance().markUninstalled(toolKey);
+                run_hack_cmd(cmd, 0, toolKey);
+            }
+        } else {
+            Log.d(TAG, "onUninstallClick: no uninstall command for " + toolKey);
+            Toast.makeText(this, "No uninstall command for " + toolKey, Toast.LENGTH_SHORT).show();
+            processingTools.remove(toolKey);
         }
     }
 
-    public String buildInstallCommandForKey(String key) {
-        try {
-            if (toolManifest != null && toolManifest.has(key)) {
-                JSONObject entry = toolManifest.getJSONObject(key);
-                String source = entry.optString("source", "blackarch");
-                String pkg = entry.optString("pkg", key);
-                String url = entry.optString("url", "");
-                String note = entry.optString("note", "");
-                switch (source) {
-                    case "blackarch":
-                    case "arch":
-                        return "pacman -Sy --noconfirm " + pkg;
-                    case "pip":
-                        return "pip install " + pkg;
-                    case "gem":
-                        return "gem install " + pkg;
-                    case "go":
-                        return "go install " + pkg;
-                    case "github":
-                    case "local":
-                        return "sh /data/data/org.aarchdroid/files/scripts/install-tool.sh " + key;
-                    case "url":
-                        if (!url.isEmpty()) {
-                            return "mkdir -p /opt/" + key + " && wget -q \"" + url + "\" -O /opt/" + key + "/" + key + " && chmod +x /opt/" + key + "/" + key;
-                        }
-                        return "pacman -Sy --noconfirm " + key;
-                    case "ubuntu_only":
-                        Toast.makeText(this, note.isEmpty() ? "Solo disponible en Ubuntu" : note, Toast.LENGTH_LONG).show();
-                        return null;
-                    default:
-                        return "pacman -Sy --noconfirm " + key;
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error building install command for key", e);
-        }
-        return "pacman -Sy --noconfirm " + key;
+    public void onLaunchTool(String toolKey) {
+        run_hack_cmd(toolKey + " -h");
     }
 
-    private String buildInstallCommand(String displayName) {
-        String normalized = displayName.toLowerCase()
-                .replaceAll("[^a-z0-9-]", "-")
-                .replaceAll("-+", "-")
-                .replaceAll("^-|-$", "");
-
+    private boolean createInstallWrapper(String toolKey, String installCmd) {
         try {
-            if (toolManifest.has(normalized)) {
-                JSONObject entry = toolManifest.getJSONObject(normalized);
-                String source = entry.optString("source", "blackarch");
-                String pkg = entry.optString("pkg", normalized);
-                String url = entry.optString("url", "");
-                String repo = entry.optString("repo", "");
-                String note = entry.optString("note", "");
+            File wrappersDir = new File(getFilesDir(), "install-wrappers");
+            wrappersDir.mkdirs();
+            File script = new File(wrappersDir, toolKey + ".sh");
+            Log.d(TAG, "createInstallWrapper: script=" + script.getAbsolutePath());
 
-                switch (source) {
-                    case "blackarch":
-                    case "arch":
-                        return "pacman -Sy --noconfirm " + pkg;
-                    case "pip":
-                        return "pip install " + pkg;
-                    case "gem":
-                        return "gem install " + pkg;
-                    case "go":
-                        return "go install " + pkg;
-                    case "github":
-                    case "local":
-                        return "sh /data/data/org.aarchdroid/files/scripts/install-tool.sh " + normalized;
-                    case "url":
-                        if (!url.isEmpty()) {
-                            return "mkdir -p /opt/" + normalized + " && wget -q \"" + url + "\" -O /opt/" + normalized + "/" + normalized + " && chmod +x /opt/" + normalized + "/" + normalized;
-                        }
-                        return "pacman -Sy --noconfirm " + normalized;
-                    case "ubuntu_only":
-                        Toast.makeText(this, note.isEmpty() ? "Solo disponible en Ubuntu" : note, Toast.LENGTH_LONG).show();
-                        return null;
-                    default:
-                        return "pacman -Sy --noconfirm " + normalized;
-                }
-            }
+            String dbPath = "/data/data/org.aarchdroid/databases/tools.db";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("#!/bin/sh\n");
+            sb.append("TOOLKEY='").append(toolKey).append("'\n");
+            sb.append("DB='").append(dbPath).append("'\n");
+            sb.append("STATE_DIR=/data/data/org.aarchdroid/files/install-state\n");
+            sb.append("PID_FILE=$STATE_DIR/$TOOLKEY.pid\n");
+            sb.append("INSTALL_LOG=$STATE_DIR/$TOOLKEY.log\n");
+            sb.append("\n");
+            sb.append("mkdir -p $STATE_DIR 2>/dev/null || true\n");
+            sb.append("echo \"$$\" > $PID_FILE\n");
+            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG; s=$(sqlite3 \"$DB\" \"SELECT status FROM tools WHERE toolKey=\\\"$TOOLKEY\\\"\" 2>/dev/null); if [ \"$s\" = \"installing\" ]; then sqlite3 \"$DB\" \"UPDATE tools SET status=\\\"failed\\\", errorLog=\\\"Interrumpido\\\" WHERE toolKey=\\\"$TOOLKEY\\\"\"; fi' EXIT\n");
+            sb.append("rm -f $STATE_DIR/$TOOLKEY.pending\n");
+            sb.append("\n");
+            sb.append("retry_sqlite() {\n");
+            sb.append("  local n=0\n");
+            sb.append("  while [ $n -lt 10 ]; do\n");
+            sb.append("    sqlite3 \"$DB\" \"$1\" 2>/dev/null && return 0\n");
+            sb.append("    n=$((n+1))\n");
+            sb.append("    sleep 0.2 2>/dev/null || usleep 200000 2>/dev/null || :\n");
+            sb.append("  done\n");
+            sb.append("  sqlite3 \"$DB\" \"$1\"\n");
+            sb.append("}\n");
+            sb.append("\n");
+            sb.append(installCmd).append(" > $INSTALL_LOG 2>&1\n");
+            sb.append("EXIT_CODE=$?\n");
+            sb.append("cat $INSTALL_LOG\n");
+            sb.append("\n");
+            sb.append("echo \"\"\n");
+            sb.append("echo \"==========================================\"\n");
+            sb.append("if [ $EXIT_CODE -eq 0 ]; then\n");
+            sb.append("  echo \"  Instalacion completada: Exitoso\"\n");
+            sb.append("else\n");
+            sb.append("  echo \"  Instalacion completada: Fallido\"\n");
+            sb.append("fi\n");
+            sb.append("echo \"==========================================\"\n");
+            sb.append("\n");
+            sb.append("if [ $EXIT_CODE -eq 0 ]; then\n");
+            sb.append("    BINARY=$(command -v $TOOLKEY 2>/dev/null || echo \"\")\n");
+            sb.append("    if [ -z \"$BINARY\" ]; then\n");
+            sb.append("        for d in /usr/bin /bin /data/data/com.termux/files/usr/bin /data/data/org.aarchdroid/files/usr/bin; do\n");
+            sb.append("            [ -f \"$d/$TOOLKEY\" ] && BINARY=\"$d/$TOOLKEY\" && break\n");
+            sb.append("        done\n");
+            sb.append("    fi\n");
+            sb.append("    SIZE=0\n");
+            sb.append("    [ -n \"$BINARY\" ] && SIZE=$(stat -c%s \"$BINARY\" 2>/dev/null || echo 0)\n");
+            sb.append("    NOW=$(date +%s)\n");
+            sb.append("    retry_sqlite \"UPDATE tools SET status='installed', installPath='$BINARY', actualSizeBytes=$SIZE, installedAt=$NOW, errorLog=NULL WHERE toolKey='$TOOLKEY'\"\n");
+            sb.append("    CATEGORY=$(sqlite3 \"$DB\" \"SELECT category FROM tools WHERE toolKey='$TOOLKEY'\")\n");
+            sb.append("    retry_sqlite \"UPDATE categories SET installedTools=(SELECT COUNT(*) FROM tools WHERE category='$CATEGORY' AND status='installed'), installedSizeMb=(SELECT COALESCE(SUM(actualSizeBytes)/(1024*1024),0) FROM tools WHERE category='$CATEGORY' AND status='installed') WHERE name='$CATEGORY'\"\n");
+            sb.append("else\n");
+            sb.append("    ERROR=$(tail -5 $INSTALL_LOG 2>/dev/null | tr '\\n' ' ' | sed \"s/'/''/g\")\n");
+            sb.append("    retry_sqlite \"UPDATE tools SET status='failed', errorLog='$ERROR' WHERE toolKey='$TOOLKEY'\"\n");
+            sb.append("fi\n");
+            sb.append("rm -f $INSTALL_LOG\n");
+
+            FileOutputStream fos = new FileOutputStream(script);
+            fos.write(sb.toString().getBytes(StandardCharsets.UTF_8));
+            fos.close();
+            script.setExecutable(true, false);
+            return true;
         } catch (Exception e) {
-            Log.e(TAG, "Error building install command", e);
+            Log.e(TAG, "Failed to create install wrapper", e);
+            return false;
         }
-        return "pacman -Sy --noconfirm " + normalized;
+    }
+
+    private boolean createUninstallWrapper(String toolKey, String uninstallCmd) {
+        try {
+            File wrappersDir = new File(getFilesDir(), "install-wrappers");
+            wrappersDir.mkdirs();
+            File script = new File(wrappersDir, "uninstall-" + toolKey + ".sh");
+
+            String dbPath = "/data/data/org.aarchdroid/databases/tools.db";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("#!/bin/sh\n");
+            sb.append("TOOLKEY='").append(toolKey).append("'\n");
+            sb.append("DB='").append(dbPath).append("'\n");
+            sb.append("STATE_DIR=/data/data/org.aarchdroid/files/install-state\n");
+            sb.append("PID_FILE=$STATE_DIR/$TOOLKEY.pid\n");
+            sb.append("INSTALL_LOG=$STATE_DIR/$TOOLKEY.log\n");
+            sb.append("\n");
+            sb.append("mkdir -p $STATE_DIR 2>/dev/null || true\n");
+            sb.append("echo \"$$\" > $PID_FILE\n");
+            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG; s=$(sqlite3 \"$DB\" \"SELECT status FROM tools WHERE toolKey=\\\"$TOOLKEY\\\"\" 2>/dev/null); if [ \"$s\" = \"installing\" ]; then sqlite3 \"$DB\" \"UPDATE tools SET status=\\\"failed\\\", errorLog=\\\"Interrumpido\\\" WHERE toolKey=\\\"$TOOLKEY\\\"\"; fi' EXIT\n");
+            sb.append("rm -f $STATE_DIR/$TOOLKEY.pending\n");
+            sb.append("\n");
+            sb.append("retry_sqlite() {\n");
+            sb.append("  local n=0\n");
+            sb.append("  while [ $n -lt 10 ]; do\n");
+            sb.append("    sqlite3 \"$DB\" \"$1\" 2>/dev/null && return 0\n");
+            sb.append("    n=$((n+1))\n");
+            sb.append("    sleep 0.2 2>/dev/null || usleep 200000 2>/dev/null || :\n");
+            sb.append("  done\n");
+            sb.append("  sqlite3 \"$DB\" \"$1\"\n");
+            sb.append("}\n");
+            sb.append("\n");
+            sb.append(uninstallCmd).append(" > $INSTALL_LOG 2>&1\n");
+            sb.append("EXIT_CODE=$?\n");
+            sb.append("cat $INSTALL_LOG\n");
+            sb.append("\n");
+            sb.append("echo \"\"\n");
+            sb.append("echo \"==========================================\"\n");
+            sb.append("if [ $EXIT_CODE -eq 0 ]; then\n");
+            sb.append("  echo \"  Desinstalacion completada: Exitoso\"\n");
+            sb.append("else\n");
+            sb.append("  echo \"  Desinstalacion completada: Fallido\"\n");
+            sb.append("fi\n");
+            sb.append("echo \"==========================================\"\n");
+            sb.append("\n");
+            sb.append("if [ $EXIT_CODE -eq 0 ]; then\n");
+            sb.append("    CATEGORY=$(sqlite3 \"$DB\" \"SELECT category FROM tools WHERE toolKey='$TOOLKEY'\")\n");
+            sb.append("    retry_sqlite \"UPDATE tools SET status='not_installed', installPath=NULL, actualSizeBytes=0, installedAt=0, errorLog=NULL WHERE toolKey='$TOOLKEY'\"\n");
+            sb.append("    retry_sqlite \"UPDATE categories SET installedTools=(SELECT COUNT(*) FROM tools WHERE category='$CATEGORY' AND status='installed'), installedSizeMb=(SELECT COALESCE(SUM(actualSizeBytes)/(1024*1024),0) FROM tools WHERE category='$CATEGORY' AND status='installed') WHERE name='$CATEGORY'\"\n");
+            sb.append("else\n");
+            sb.append("    ERROR=$(tail -5 $INSTALL_LOG 2>/dev/null | tr '\\n' ' ' | sed \"s/'/''/g\")\n");
+            sb.append("    retry_sqlite \"UPDATE tools SET status='installed', errorLog='$ERROR' WHERE toolKey='$TOOLKEY'\"\n");
+            sb.append("fi\n");
+            sb.append("rm -f $INSTALL_LOG\n");
+
+            FileOutputStream fos = new FileOutputStream(script);
+            fos.write(sb.toString().getBytes(StandardCharsets.UTF_8));
+            fos.close();
+            script.setExecutable(true, false);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to create uninstall wrapper", e);
+            return false;
+        }
+    }
+
+    private void createPendingMarker(String toolKey) {
+        try {
+            File dir = new File(getFilesDir(), "install-state");
+            dir.mkdirs();
+            new File(dir, toolKey + ".pending").createNewFile();
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to create pending marker for " + toolKey, e);
+        }
     }
 
     public void run_hack_cmd(String cmd) {
-        Log.d(TAG, "run_hack_cmd: " + cmd);
+        run_hack_cmd(cmd, 0, null);
+    }
+
+    public void run_hack_cmd(String cmd, int iconResId) {
+        run_hack_cmd(cmd, iconResId, null);
+    }
+
+    public void run_hack_cmd(String cmd, int iconResId, String toolKey) {
+        Log.d(TAG, "run_hack_cmd: " + cmd + " icon=" + iconResId + " toolKey=" + toolKey);
 
         if (hasRoot == null) {
             hasRoot = checkRoot();
@@ -265,11 +406,13 @@ public class DcoBaseActivity extends Activity {
             return;
         }
 
-        Intent intent = Bridge.createExecuteIntent(cmd);
+        Intent intent = Bridge.createExecuteIntent(cmd, iconResId);
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        if (toolKey != null && !toolKey.isEmpty()) {
+            intent.putExtra("tool_key", toolKey);
+        }
         try {
             startActivity(intent);
-            finish();
         } catch (Exception e) {
             Log.e(TAG, "run_hack_cmd failed: " + e.getMessage(), e);
         }

@@ -29,16 +29,23 @@ public abstract class DcoListActivity extends DcoBaseActivity {
             List<ToolItem> tools = buildToolList();
             ToolAdapter adapter = new ToolAdapter(tools, new ToolAdapter.OnToolClickListener() {
                 @Override
-                public void onToolClick(String cmd) {
-                    run_hack_cmd(cmd);
+                public void onToolClick(ToolItem item) {
+                    run_hack_cmd(item.cmd, item.iconResId);
                 }
 
                 @Override
                 public void onInstallClick(String toolKey) {
-                    String cmd = buildInstallCommandForKey(toolKey);
-                    if (cmd != null) {
-                        run_hack_cmd(cmd);
-                    }
+                    processInstallTool(toolKey);
+                }
+
+                @Override
+                public void onUninstallClick(String toolKey) {
+                    onUninstallClick(toolKey);
+                }
+
+                @Override
+                public void onLaunchTool(String toolKey) {
+                    onLaunchTool(toolKey);
                 }
             });
             list.setAdapter(adapter);

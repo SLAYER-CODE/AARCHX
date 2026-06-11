@@ -5,11 +5,15 @@ import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.preference.PreferenceManager
 import android.net.wifi.WifiManager
 import android.os.Binder
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -23,6 +27,7 @@ import org.aarchdroid.dragonterminal.frontend.session.xorg.XParameter
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XSession
 import org.aarchdroid.dragonterminal.ui.term.NeoTermActivity
 import org.aarchdroid.dragonterminal.utils.TerminalUtils
+import java.io.File
 import java.util.Collections
 
 
@@ -30,7 +35,7 @@ import java.util.Collections
  * @author kiva
  */
 
-class NeoTermService : Service() {
+class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeListener {
     inner class NeoTermBinder : Binder() {
         var service = this@NeoTermService
     }
@@ -41,11 +46,29 @@ class NeoTermService : Service() {
     private var mWakeLock: PowerManager.WakeLock? = null
     private var mWifiLock: WifiManager.WifiLock? = null
 
+    private val installStateHandler = Handler(Looper.getMainLooper())
+    private val installStateRunnable = object : Runnable {
+        override fun run() {
+            cleanupInstallState()
+            installStateHandler.postDelayed(this, 10000)
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         Log.d("AArchDroid", "NeoTermService: onCreate() — service starting")
         createNotificationChannel()
         tryStartForeground()
+        PreferenceManager.getDefaultSharedPreferences(this)
+            .registerOnSharedPreferenceChangeListener(this)
+        cleanupInstallState()
+        installStateHandler.post(installStateRunnable)
+    }
+
+    override fun onSharedPreferenceChanged(prefs: SharedPreferences?, key: String?) {
+        if (key == "notif_silent") {
+            updateNotification()
+        }
     }
 
     private fun tryStartForeground() {
@@ -89,6 +112,7 @@ class NeoTermService : Service() {
     }
 
     override fun onDestroy() {
+        installStateHandler.removeCallbacks(installStateRunnable)
         stopForeground(true)
 
         val sessionsToFinish = synchronized(mTerminalSessions) {
@@ -206,6 +230,12 @@ class NeoTermService : Service() {
         notifyIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val pendingIntent = PendingIntent.getActivity(this, 0, notifyIntent, PendingIntent.FLAG_IMMUTABLE)
 
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        val silent = prefs.getBoolean("notif_silent", false)
+
+        val channelId = if (silent) CHANNEL_ID_LOW else CHANNEL_ID_HIGH
+        val priority = if (silent) Notification.PRIORITY_LOW else Notification.PRIORITY_HIGH
+
         val sessionCount = synchronized(mTerminalSessions) {
             synchronized(mXSessions) {
                 mTerminalSessions.size + mXSessions.size
@@ -213,7 +243,7 @@ class NeoTermService : Service() {
         }
         val contentText = "Arch | $sessionCount sesión" + if (sessionCount != 1) "es" else ""
 
-        val builder = NotificationCompat.Builder(this, DEFAULT_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, channelId)
         builder.setContentTitle("Arch")
         builder.setContentText(contentText)
         builder.setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
@@ -222,7 +252,7 @@ class NeoTermService : Service() {
         builder.setOngoing(true)
         builder.setShowWhen(false)
         builder.color = 0xFF000000.toInt()
-        builder.priority = Notification.PRIORITY_HIGH
+        builder.priority = priority
 
         val exitIntent = Intent(this, NeoTermService::class.java).setAction(ACTION_SERVICE_STOP)
         builder.addAction(android.R.drawable.ic_delete, getString(R.string.exit),
@@ -236,10 +266,15 @@ class NeoTermService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val channel = NotificationChannel(DEFAULT_CHANNEL_ID, "Arch", NotificationManager.IMPORTANCE_HIGH)
-        channel.description = "Notificaciones de Arch"
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(channel)
+        val high = NotificationChannel(CHANNEL_ID_HIGH, "Arch", NotificationManager.IMPORTANCE_HIGH)
+        high.description = "Notificaciones de Arch con sonido"
+        manager.createNotificationChannel(high)
+        val low = NotificationChannel(CHANNEL_ID_LOW, "Arch (silenciosa)", NotificationManager.IMPORTANCE_LOW)
+        low.description = "Notificaciones de Arch silenciosas"
+        low.setSound(null, null)
+        low.enableVibration(false)
+        manager.createNotificationChannel(low)
     }
 
     @Synchronized
@@ -272,12 +307,72 @@ class NeoTermService : Service() {
         updateNotification()
     }
 
+    private val installStateDir: File
+        get() = File(filesDir, "install-state")
+
+    private fun cleanupInstallState() {
+        try {
+            val dir = installStateDir
+            if (!dir.exists()) return
+            val files = dir.listFiles() ?: return
+            for (file in files) {
+                try {
+                    val name = file.name
+                    when {
+                        name.endsWith(".pending") -> handlePendingMarker(file, name)
+                        name.endsWith(".pid") -> handlePidMarker(file, name)
+                    }
+                } catch (e: Exception) {
+                    Log.e("AArchDroid", "Error processing install marker: ${file.name}", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("AArchDroid", "cleanupInstallState error", e)
+        }
+    }
+
+    private fun handlePendingMarker(file: File, name: String) {
+        val toolKey = name.substringBeforeLast(".pending")
+        Log.d("AArchDroid", "Service: stale pending marker for $toolKey — resetting to not_installed")
+        try {
+            org.aarchdroid.ToolDatabase.getInstance().setStatus(toolKey, "not_installed")
+        } catch (e: Exception) {
+            Log.e("AArchDroid", "handlePendingMarker: DB error for $toolKey", e)
+        }
+        file.delete()
+    }
+
+    private fun handlePidMarker(file: File, name: String) {
+        val toolKey = name.substringBeforeLast(".pid")
+        val pidStr = try { file.readText().trim() } catch (e: Exception) { return }
+        val pid = pidStr.toIntOrNull() ?: run { file.delete(); return }
+
+        if (!File("/proc/$pid").exists()) {
+            // Wrapper process is dead
+            Log.d("AArchDroid", "Service: wrapper process dead for $toolKey (pid=$pid)")
+            try {
+                val db = org.aarchdroid.ToolDatabase.getInstance()
+                val status = db.getStatus(toolKey)
+                if (status == "installing") {
+                    Log.d("AArchDroid", "Service: marking $toolKey as failed (wrapper died without updating DB)")
+                    db.setStatus(toolKey, "failed")
+                }
+            } catch (e: Exception) {
+                Log.e("AArchDroid", "handlePidMarker: DB error for $toolKey", e)
+            }
+            file.delete()
+        }
+        // If /proc/$pid exists, wrapper is still running — leave it
+    }
+
     companion object {
         val ACTION_SERVICE_STOP = "neoterm.action.service.stop"
         val ACTION_ACQUIRE_LOCK = "neoterm.action.service.lock.acquire"
         val ACTION_RELEASE_LOCK = "neoterm.action.service.lock.release"
         private val NOTIFICATION_ID = 52019
 
-        val DEFAULT_CHANNEL_ID = "neoterm_notification_channel"
+        val CHANNEL_ID_HIGH = "neoterm_channel_high"
+        val CHANNEL_ID_LOW = "neoterm_channel_low"
+        val DEFAULT_CHANNEL_ID = CHANNEL_ID_HIGH
     }
 }

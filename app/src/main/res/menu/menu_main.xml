@@ -9,6 +9,14 @@
         app:showAsAction="always"
         android:icon="@drawable/andraxicon_svg" />
 
+    <!-- Clear logs / Trash -->
+    <item
+        android:id="@+id/menu_item_clear_logs"
+        android:title="Clear logs"
+        android:icon="@drawable/ic_trash"
+        app:showAsAction="always"
+        android:visible="false" />
+
     <!-- Tab switcher badge -->
     <item
         android:id="@+id/toggle_tab_switcher_menu_item"

@@ -7,22 +7,31 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
     private List<ToolItem> tools;
     private OnToolClickListener listener;
-    private ToolDatabase db;
+    private Map<String, String> statusCache = new HashMap<>();
+    private Map<String, ToolInfo> infoCache = new HashMap<>();
 
     public interface OnToolClickListener {
-        void onToolClick(String cmd);
+        void onToolClick(ToolItem item);
         void onInstallClick(String toolKey);
+        void onUninstallClick(String toolKey);
+        void onLaunchTool(String toolKey);
     }
 
     public ToolAdapter(List<ToolItem> tools, OnToolClickListener listener) {
         this.tools = tools;
         this.listener = listener;
-        this.db = ToolDatabase.getInstance();
+    }
+
+    public void updateCache(Map<String, String> statuses, Map<String, ToolInfo> infos) {
+        this.statusCache = statuses;
+        this.infoCache = infos;
     }
 
     @Override
@@ -41,43 +50,87 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         h.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener != null) listener.onToolClick(t.cmd);
+                if (listener != null) listener.onToolClick(t);
             }
         });
+        String status = statusCache.getOrDefault(t.key, "not_installed");
         h.installBtn.setTag(t.key);
         h.installBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener != null) listener.onInstallClick(t.key);
+                if ("installed".equals(status)) {
+                    if (listener != null) listener.onLaunchTool(t.key);
+                } else {
+                    if (listener != null) listener.onInstallClick(t.key);
+                }
             }
         });
-        String status = db.getStatus(t.key);
-        updateInstallButton(h.installBtn, status);
-        updateStatusBar(h.statusBar, status);
+        h.uninstallBadge.setTag(t.key);
+        h.uninstallBadge.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listener != null) listener.onUninstallClick(t.key);
+            }
+        });
+        updateCardForStatus(h, status);
+        updateBadge(h, t.key);
     }
 
-    private void updateInstallButton(ImageView btn, String status) {
-        if ("installed".equals(status)) {
-            btn.setColorFilter(0xFF00FF00);
-        } else if ("installing".equals(status)) {
-            btn.setColorFilter(0xFFFF8C00);
-        } else if ("failed".equals(status)) {
-            btn.setColorFilter(0xFFFF0000);
+    private void updateBadge(ViewHolder h, String toolKey) {
+        ToolInfo t = infoCache.get(toolKey);
+        if (t == null || !"installed".equals(t.status)) return;
+        long bytes = t.actualSizeBytes > 0 ? t.actualSizeBytes : t.estimatedSizeBytes;
+        if (bytes > 0) {
+            String txt;
+            if (bytes >= 1024 * 1024) {
+                txt = (bytes / (1024 * 1024)) + "MB";
+            } else if (bytes >= 1024) {
+                txt = (bytes / 1024) + "KB";
+            } else {
+                txt = bytes + "B";
+            }
+            h.badgeSize.setText(txt);
+            h.badgeSize.setVisibility(View.VISIBLE);
         } else {
-            btn.setColorFilter(0xFF006400);
+            h.badgeSize.setVisibility(View.GONE);
         }
     }
 
-    private void updateStatusBar(View bar, String status) {
+    private void updateCardForStatus(ViewHolder h, String status) {
+        int iconRes;
+        int tint;
+        int textColor;
+        int statusBg;
+
         if ("installed".equals(status)) {
-            bar.setBackgroundColor(0xFF00FF00);
+            iconRes = R.drawable.ic_check;
+            tint = 0xFF00FF00;
+            textColor = 0xFF00FF00;
+            statusBg = 0xFF00FF00;
         } else if ("installing".equals(status)) {
-            bar.setBackgroundColor(0xFFFF8C00);
+            iconRes = R.drawable.ic_install;
+            tint = 0xFFFF8C00;
+            textColor = 0xFFFF8C00;
+            statusBg = 0xFFFF8C00;
         } else if ("failed".equals(status)) {
-            bar.setBackgroundColor(0xFFFF0000);
+            iconRes = R.drawable.ic_install;
+            tint = 0xFFFF0000;
+            textColor = 0xFFFF0000;
+            statusBg = 0xFFFF0000;
         } else {
-            bar.setBackgroundColor(0xFF006400);
+            iconRes = R.drawable.ic_install;
+            tint = 0xFF006400;
+            textColor = 0xFF888888;
+            statusBg = 0xFF006400;
         }
+
+        h.installBtn.setImageResource(iconRes);
+        h.installBtn.setColorFilter(tint);
+        h.statusBar.setBackgroundColor(statusBg);
+        h.title.setTextColor(textColor);
+        h.description.setTextColor(textColor);
+        boolean installed = "installed".equals(status);
+        h.badgeRow.setVisibility(installed ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -91,7 +144,10 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         TextView title;
         TextView description;
         ImageView installBtn;
+        TextView uninstallBadge;
+        TextView badgeSize;
         View statusBar;
+        View badgeRow;
 
         ViewHolder(View v) {
             super(v);
@@ -100,7 +156,10 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
             title = v.findViewById(R.id.title);
             description = v.findViewById(R.id.description);
             installBtn = v.findViewById(R.id.install_btn);
+            uninstallBadge = v.findViewById(R.id.uninstall_badge);
+            badgeSize = v.findViewById(R.id.badge_size);
             statusBar = v.findViewById(R.id.status_bar);
+            badgeRow = v.findViewById(R.id.badge_row);
         }
     }
 }

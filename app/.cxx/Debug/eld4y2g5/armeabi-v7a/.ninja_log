@@ -1,3 +1,12 @@
 # ninja log v5
 0	79	1781040519058288064	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	e7caf909382b0cec
 79	98	1781040519078288518	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/armeabi-v7a/libneoterm.so	c238d54a23575cae
+0	32	0	clean	a40f73ebf6034374
+0	142	1781100430384002647	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	e7caf909382b0cec
+142	232	1781100430474004547	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/armeabi-v7a/libneoterm.so	c238d54a23575cae
+0	9	0	clean	a40f73ebf6034374
+0	1409	1781122249098096232	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	e7caf909382b0cec
+1409	1779	1781122249464771798	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/armeabi-v7a/libneoterm.so	c238d54a23575cae
+0	3	0	clean	a40f73ebf6034374
+1	108	1781122281345546224	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	e7caf909382b0cec
+108	165	1781122281398880854	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/armeabi-v7a/libneoterm.so	c238d54a23575cae

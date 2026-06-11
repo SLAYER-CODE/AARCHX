@@ -12,11 +12,12 @@ object CommandInterceptor {
     data class SessionContext(
         val sessionId: String,
         var terminalId: String = "",
-        var currentDir: String = "~"
+        var currentDir: String = "~",
+        var launchSource: String = ""
     )
 
-    fun registerSession(mHandle: String, sessionId: String) {
-        sessionContexts[mHandle] = SessionContext(sessionId = sessionId)
+    fun registerSession(mHandle: String, sessionId: String, launchSource: String = "") {
+        sessionContexts[mHandle] = SessionContext(sessionId = sessionId, launchSource = launchSource)
     }
 
     fun setTerminalId(mHandle: String, terminalId: String) {
@@ -52,8 +53,8 @@ object CommandInterceptor {
         }
         Log.d("AArchDroid", "CommandInterceptor: cmd='$cmd' dir='${ctx.currentDir}'")
 
-        // Save to session history (skip if suppressed, e.g. during restore)
-        if (!suppressLogging) {
+        // Save to session history (skip if suppressed, e.g. during restore, or if disabled in settings)
+        if (!suppressLogging && !org.aarchdroid.dragonterminal.frontend.config.NeoPreference.isLoggingDisabled()) {
             SessionHistory.logCommand(
                 org.aarchdroid.AArchDroidApp.get(),
                 ctx.sessionId,

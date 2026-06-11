@@ -232,6 +232,11 @@ object NeoPreference {
                 DefaultValues.enableWordBasedIme)
     }
 
+    fun isLoggingDisabled(): Boolean {
+        return !loadBoolean(R.string.key_general_disable_logs,
+                DefaultValues.disableLogs)
+    }
+
     /**
      * TODO
      * To print the job name about to be executed in bash:

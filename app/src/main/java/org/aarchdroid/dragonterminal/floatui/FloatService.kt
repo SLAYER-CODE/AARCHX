@@ -17,6 +17,8 @@ import org.aarchdroid.AArchDroidApp
 import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.ui.term.NeoTermActivity
 import org.aarchdroid.dragonterminal.backend.TerminalSession
+import org.aarchdroid.dragonterminal.data.CommandInterceptor
+import org.aarchdroid.dragonterminal.data.SessionHistory
 import org.aarchdroid.dragonterminal.backend.TerminalSession.SessionChangedCallback
 import org.aarchdroid.dragonterminal.frontend.config.DefaultValues
 import org.aarchdroid.dragonterminal.frontend.config.NeoTermPath
@@ -111,6 +113,10 @@ class FloatService : Service() {
             updateNotification()
         }
         if (session != null) {
+            // Mark exit destiny as back to gestor
+            CommandInterceptor.getContext(session.mHandle)?.let { ctx ->
+                SessionHistory.updateTerminalDestiny(this, ctx.terminalId, "gestor")
+            }
             AArchDroidApp.transferredSession = session
             startActivity(
                 Intent(this, NeoTermActivity::class.java)
@@ -132,6 +138,10 @@ class FloatService : Service() {
                 }
                 override fun onSessionFinished(session: TerminalSession) {
                     v.sessionClient?.onSessionFinished(session)
+                    CommandInterceptor.getContext(session.mHandle)?.let { ctx ->
+                        SessionHistory.updateTerminalDestiny(this@FloatService, ctx.terminalId, "cerrada")
+                        SessionHistory.closeSession(this@FloatService, ctx.sessionId)
+                    }
                     removeWindow(v)
                 }
                 override fun onTitleChanged(session: TerminalSession) {}
@@ -181,6 +191,11 @@ class FloatService : Service() {
             }
             override fun onSessionFinished(session: TerminalSession) {
                 view.sessionClient?.onSessionFinished(session)
+                // Mark exit destiny as closed
+                CommandInterceptor.getContext(session.mHandle)?.let { ctx ->
+                    SessionHistory.updateTerminalDestiny(this@FloatService, ctx.terminalId, "cerrada")
+                    SessionHistory.closeSession(this@FloatService, ctx.sessionId)
+                }
                 removeWindow(view)
             }
             override fun onTitleChanged(session: TerminalSession) {}
@@ -198,6 +213,11 @@ class FloatService : Service() {
         val s = createShellSession(callback)
         s?.let {
             it.initializeEmulator(80, 24)
+            // Register in session history with launchSource="flotante"
+            val sessId = SessionHistory.startSession(this).id
+            val term = SessionHistory.startTerminal(this, sessId, "flotante", "flotante")
+            CommandInterceptor.registerSession(it.mHandle, sessId, "flotante")
+            CommandInterceptor.setTerminalId(it.mHandle, term.id)
             view.session = it
             view.terminalView.attachSession(it)
             view.sessionClient.checkFontAndColors()
