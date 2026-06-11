@@ -47,13 +47,17 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         h.icon.setImageResource(t.iconResId);
         h.title.setText(t.displayName);
         h.description.setText(t.description);
+        String status = statusCache.getOrDefault(t.key, "not_installed");
         h.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener != null) listener.onToolClick(t);
+                if ("installed".equals(status)) {
+                    if (listener != null) listener.onToolClick(t);
+                } else {
+                    if (listener != null) listener.onInstallClick(t.key);
+                }
             }
         });
-        String status = statusCache.getOrDefault(t.key, "not_installed");
         h.installBtn.setTag(t.key);
         String source = t.source;
         if (source != null && !source.isEmpty()) {
