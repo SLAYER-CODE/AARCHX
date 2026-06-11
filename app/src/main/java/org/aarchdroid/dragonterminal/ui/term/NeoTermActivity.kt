@@ -64,7 +64,10 @@ import androidx.recyclerview.widget.RecyclerView
 import java.io.*
 import java.lang.Process
 import java.nio.charset.Charset
+import java.text.SimpleDateFormat
 import java.util.ArrayList
+import java.util.Date
+import java.util.Locale
 
 
 class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreferences.OnSharedPreferenceChangeListener {
@@ -141,16 +144,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         // Session history init + crash detection
         SessionHistory.verifyDateAndReset(this)
         val history = SessionHistory.getHistory(this)
-        Log.d("AArchDroid", "NeoTermActivity: flagActive=${history.flagActive}, sessions=${history.sessions.size}, crashGroup=${history.crashGroup != null}")
+        Log.d("AArchDroid", "NeoTermActivity: flagActive=${history.flagActive}, sessions=${history.sessions.size}")
         if (history.flagActive) {
-            // Previous session crashed — find sessions that never closed normally
             val crashedSessions = history.sessions.filter { it.closedNormally == null }
-            Log.d("AArchDroid", "NeoTermActivity: crashedSessions=${crashedSessions.size} (closedNormally==null)")
             if (crashedSessions.isNotEmpty()) {
-                Log.d("AArchDroid", "NeoTermActivity: crash detected — ${crashedSessions.size} sessions never closed")
-                // Remove crashed sessions from normal list (terminals already in crashGroup from getHistory())
+                val crashTime = SimpleDateFormat("h:mm a", Locale.US).format(Date())
                 for (s in crashedSessions) {
-                    history.sessions.remove(s)
+                    SessionHistory.closeSession(this, s.id, "Aplicacion terminada inesperadamente a las $crashTime")
                 }
                 history.flagActive = false
                 SessionHistory.saveNow(this)
@@ -1035,6 +1035,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
         val tab = createTab(session.title) as TermTab
         tab.termData.initializeSessionWith(session, sessionCallback, viewClient)
+
+        CommandInterceptor.getContext(session.mHandle)?.let { ctx ->
+            tabSessionMap[session.mHandle] = ctx.sessionId
+        }
 
         Log.d("AArchDroid", "NSFE: adding tab for handle=" + session.mHandle)
         addNewTab(tab, createRevealAnimation())

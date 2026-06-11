@@ -140,35 +140,43 @@ class SessionHistoryAdapter(
         val headerStr = "------ [${dateFmt.format(nowDate)}] [${timeFmt.format(nowDate)}] -------"
         flatItems.add(FlatItem(VIEW_TYPE_DATE_HEADER, line = headerStr, lineColor = 0xFFAAFF00.toInt()))
 
+        // Split normal vs crash sessions, group crash by reason
+        val normalSessions = mutableListOf<SessionRecord>()
+        val crashByReason = mutableMapOf<String, MutableList<SessionRecord>>()
+
         for (session in data.sessions) {
+            if (session.closedNormally == false || session.closedNormally == null) {
+                val key = session.crashReason ?: "unknown"
+                crashByReason.getOrPut(key) { mutableListOf() }.add(session)
+            } else {
+                normalSessions.add(session)
+            }
+        }
+
+        // Render normal sessions — each its own CardView with own Lanzar
+        for (session in normalSessions) {
             val visibleTerms = session.terminals.filter { it.commands.isNotEmpty() }
             if (visibleTerms.isEmpty()) continue
 
             val elapsed = now - session.created
-            val statusLabel: String
-            when {
-                elapsed < 3600000 -> { statusLabel = "Ahora" }
-                elapsed < 14400000 -> { statusLabel = "Reciente" }
-                else -> { statusLabel = "Antiguo" }
+            val statusLabel: String = when {
+                elapsed < 3600000 -> "Ahora"
+                elapsed < 14400000 -> "Reciente"
+                else -> "Antiguo"
             }
             val timeStr = timeFmt.format(Date(session.created))
-            val sessionColor = 0xFFFF8800.toInt()
-
             val sessionIconResId = resolveIconId(visibleTerms.first().iconResId, visibleTerms.first().launchSource)
 
             val lines = mutableListOf<LineInfo>()
-
-            // Session header line — status at start
             var hdr = " \u250C"
             if (statusLabel.isNotEmpty()) hdr += "[$statusLabel] "
             hdr += "$timeStr"
-            lines.add(LineInfo(hdr, sessionColor))
+            lines.add(LineInfo(hdr, 0xFFFF8800.toInt()))
 
             for (tIdx in visibleTerms.indices) {
                 buildTerminalLines(visibleTerms[tIdx], tIdx == visibleTerms.lastIndex, lines)
             }
 
-            // Footer "Lanzar"
             lines.add(LineInfo("   Lanzar", 0xFF00FF00.toInt()))
 
             if (flatItems.size > 1) {
@@ -180,43 +188,44 @@ class SessionHistoryAdapter(
             ))
         }
 
-        // Crash group — render as a single CardView with all crashed terminals
-        val cg = data.crashGroup
-        if (cg != null && cg.terminals.any { it.commands.isNotEmpty() }) {
-            if (flatItems.size > 1) {
-                flatItems.add(FlatItem(VIEW_TYPE_SPACER))
-            }
+        // Render each crash group — one CardView per reason, one Lanzar per group
+        for ((reason, sessions) in crashByReason) {
+            val allTerms = sessions.flatMap { it.terminals.filter { t -> t.commands.isNotEmpty() } }
+            if (allTerms.isEmpty()) continue
+
+            val sessionIconResId = resolveIconId(
+                allTerms.firstOrNull()?.iconResId ?: 0,
+                allTerms.firstOrNull()?.launchSource ?: ""
+            )
 
             val lines = mutableListOf<LineInfo>()
 
             // Crash header
-            val crashTime = timeFmt.format(Date())
-            lines.add(LineInfo(" \u250C[Crash] [$crashTime]", 0xFFFF0044.toInt()))
-            lines.add(LineInfo("\u2502  \u2514\u2500 Motivo: Aplicaci\u00F3n terminada inesperadamente", 0xFFFF0044.toInt()))
+            val firstTime = timeFmt.format(Date(sessions.minOf { it.created }))
+            lines.add(LineInfo(" \u250C[Crash] [$firstTime]", 0xFFFF0044.toInt()))
+            lines.add(LineInfo("\u2502  \u2514\u2500 $reason", 0xFFFF0044.toInt()))
 
-            // All terminals from all crashed sessions
-            val visibleTerms = cg.terminals.filter { it.commands.isNotEmpty() }
-            for (tIdx in visibleTerms.indices) {
-                buildTerminalLines(visibleTerms[tIdx], tIdx == visibleTerms.lastIndex, lines)
+            // All terminals from all sessions in this crash group
+            for (tIdx in allTerms.indices) {
+                buildTerminalLines(allTerms[tIdx], tIdx == allTerms.lastIndex, lines)
             }
 
-            // Footer "Lanzar" — restores all crashed terminals
+            // One Lanzar button for the whole group
             lines.add(LineInfo("   Lanzar", 0xFF00FF00.toInt()))
 
-            // Build synthetic SessionRecord with ALL crash terminals for restore
+            // Synthetic SessionRecord with all terminals for restore
             val synthSession = SessionRecord(
-                id = "crash_${System.currentTimeMillis()}",
-                created = System.currentTimeMillis(),
-                terminals = visibleTerms.toMutableList()
-            )
-            val crashIcon = resolveIconId(
-                visibleTerms.firstOrNull()?.iconResId ?: 0,
-                visibleTerms.firstOrNull()?.launchSource ?: ""
+                id = "crash_${reason.hashCode()}_${System.currentTimeMillis()}",
+                created = sessions.minOf { it.created },
+                terminals = allTerms.toMutableList()
             )
 
+            if (flatItems.size > 1) {
+                flatItems.add(FlatItem(VIEW_TYPE_SPACER))
+            }
             flatItems.add(FlatItem(
                 VIEW_TYPE_SESSION_CARD, session = synthSession,
-                lines = lines, iconResId = crashIcon
+                lines = lines, iconResId = sessionIconResId
             ))
         }
 

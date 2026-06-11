@@ -32,16 +32,10 @@ data class SessionRecord(
     val terminals: MutableList<TerminalRecord> = mutableListOf()
 )
 
-data class CrashGroup(
-    var sessionCount: Int,
-    val terminals: MutableList<TerminalRecord> = mutableListOf()
-)
-
 data class SessionHistoryData(
     val date: String,
     var flagActive: Boolean = false,
-    val sessions: MutableList<SessionRecord> = mutableListOf(),
-    var crashGroup: CrashGroup? = null
+    val sessions: MutableList<SessionRecord> = mutableListOf()
 )
 
 object SessionHistory {
@@ -217,8 +211,7 @@ object SessionHistory {
         val data = SessionHistoryData(
             date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()),
             flagActive = flagActive,
-            sessions = mutableListOf(),
-            crashGroup = null
+            sessions = mutableListOf()
         )
 
         runCatching {
@@ -260,27 +253,8 @@ object SessionHistory {
             }
         }
 
-        // Build crash group from sessions that weren't closed normally
-        runCatching {
-            val unclosedTerms = mutableListOf<TerminalRecord>()
-            var unclosedCount = 0
-            for (s in data.sessions) {
-                if (s.closedNormally == null) {
-                    Log.d("SessionHistory", "getHistory -> CRASH session id=${s.id} created=${s.created} terms=${s.terminals.size} launchSource=${s.terminals.firstOrNull()?.launchSource}")
-                    unclosedCount++
-                    s.terminals.filter { it.commands.isNotEmpty() }.forEach { unclosedTerms.add(it) }
-                }
-            }
-            if (unclosedTerms.isNotEmpty()) {
-                Log.d("SessionHistory", "getHistory -> crashGroup: $unclosedCount sessions, ${unclosedTerms.size} terminals")
-                data.crashGroup = CrashGroup(sessionCount = unclosedCount, terminals = unclosedTerms)
-            }
-            // Remove crashed sessions from main list (they appear only in crashGroup)
-            data.sessions.removeAll { it.closedNormally == null }
-        }
-
         current = data
-        Log.d("SessionHistory", "getHistory -> loaded ${data.sessions.size} sessions, flagActive=$flagActive, crashGroup=${data.crashGroup != null}")
+        Log.d("SessionHistory", "getHistory -> loaded ${data.sessions.size} sessions, flagActive=$flagActive")
         return data
     }
 
