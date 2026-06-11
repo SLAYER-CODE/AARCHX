@@ -52,7 +52,7 @@ import org.aarchdroid.dragonterminal.ui.term.tab.NeoTab
 import org.aarchdroid.dragonterminal.ui.term.tab.NeoTabDecorator
 import org.aarchdroid.dragonterminal.ui.term.tab.TermTab
 import org.aarchdroid.dragonterminal.ui.term.tab.XSessionTab
-import org.aarchdroid.dragonterminal.utils.AssetsUtils
+
 import org.aarchdroid.dragonterminal.utils.FullScreenHelper
 import org.aarchdroid.dragonterminal.utils.RangedInt
 import de.mrapp.android.tabswitcher.*
@@ -177,28 +177,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             if (extras != null) {
                 val method = extras.getString("recfromshort")
                 Log.d("AArchDroid", "NeoTermActivity: extras found, recfromshort=" + (method ?: "null"))
-
-                if (method == "recfromshortcut") {
-                    Log.d("AArchDroid", "NeoTermActivity: launched from shortcut — setting temp shell")
-                    NeoPreference.setLoginShellName("/system/bin/sh")
-
-                    Handler().postDelayed({
-                        if (tabSwitcher.count > 0) {
-                            Log.d("AArchDroid", "NeoTermActivity: switching to archdroid.sh shell")
-                            NeoPreference.setLoginShellName(AArchDroidApp.get().filesDir.absolutePath + "/bin/archdroid.sh")
-                        }
-                    }, 1000)
-
-                } else {
-                    val shellPath = AArchDroidApp.get().filesDir.absolutePath + "/bin/archdroid.sh"
-                    Log.d("AArchDroid", "NeoTermActivity: setting login shell to " + shellPath)
-                    NeoPreference.setLoginShellName(shellPath)
-                }
-            } else {
-                Log.d("AArchDroid", "NeoTermActivity: no extras — will use default login shell")
             }
-        } else {
-            Log.d("AArchDroid", "NeoTermActivity: restoring from saved state")
         }
     }
 
@@ -590,73 +569,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
 
         if (!isRecreating()) {
-            val sharedPref = this.getSharedPreferences(this.packageName, Context.MODE_PRIVATE)
-            val issafepts = sharedPref.getBoolean("issafepts", false)
-
-            if (issafepts) {
-                Log.d("AArchDroid", "NeoTermActivity: fast path — assets already extracted")
-                enterMain()
-                loadSessionHistoryAsync()
-                update_colors()
-                updatePlaceholderVisibility()
-                get_motherfucker_battery()
-                Thread { checkinstallterm() }.start()
-            } else {
-                Log.d("AArchDroid", "NeoTermActivity: first launch — extracting assets")
-                var reader: BufferedReader? = null
-                var stdin: OutputStream? = null
-                try {
-                    Log.d("AArchDroid", "NeoTermActivity: testing root via `su`")
-                    val pb = ProcessBuilder("su")
-                    pb.directory(File(AArchDroidApp.get().applicationInfo.dataDir))
-                    pb.redirectErrorStream(true)
-                    val process: Process = pb.start()
-                    stdin = process.outputStream
-                    val stdout = process.inputStream
-                    val params = ArrayList<String>()
-                    params.add(0, "PATH=" + AArchDroidApp.get().filesDir.absolutePath + "/bin:\$PATH")
-                    params.add("exit 0")
-                    DataOutputStream(stdin).use { os ->
-                        for (cmd in params) os.writeBytes(cmd + "\n")
-                    }
-                    reader = BufferedReader(InputStreamReader(stdout))
-                    val buffer = CharArray(1024)
-                    while (reader.read(buffer).also { var n = it } != -1) {}
-                    process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS)
-                } catch (e: Exception) {
-                    Log.e("AArchDroid", "NeoTermActivity: su test threw — " + e.message)
-                } finally {
-                    reader?.close()
-                    stdin?.close()
-                }
-
-                Log.d("AArchDroid", "NeoTermActivity: first run — extracting assets from APK")
-                suRun("rm -rf " + this.filesDir.absolutePath + "/bin")
-                suRun("rm -rf " + this.filesDir.absolutePath + "/scripts")
-
-                val AllDir = File(filesDir.absolutePath+"/scripts")
-                AllDir.mkdirs()
-                val BinDir = File(filesDir.absolutePath+"/bin")
-                BinDir.mkdirs()
-
-                AssetsUtils.extractAssetsDir(this, "all/scripts", this.filesDir.absolutePath+"/scripts")
-                setPermissions(AllDir)
-
-                AssetsUtils.extractAssetsDir(this, "arm/static/bin", this.filesDir.absolutePath+"/bin")
-                setPermissions(BinDir)
-
-                with (sharedPref.edit()) {
-                    putBoolean("issafepts", true)
-                    commit()
-                }
-
-                checkinstallterm()
-                enterMain()
-                loadSessionHistoryAsync()
-                update_colors()
-                updatePlaceholderVisibility()
-                get_motherfucker_battery()
-            }
+            Log.d("AArchDroid", "NeoTermActivity: service connected — entering main terminal")
+            enterMain()
+            loadSessionHistoryAsync()
+            update_colors()
+            updatePlaceholderVisibility()
+            get_motherfucker_battery()
+            Thread { checkinstallterm() }.start()
 
             if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
                 Log.d("AArchDroid", "NeoTermActivity: notifications disabled — continuing anyway")
@@ -915,13 +834,11 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 .systemShell(systemShell)
                 .profile(profile)
 
-        // SELinux Enforcing blocks execvp() of app_data_file by untrusted_app.
-        // Also, chroot operations (mount, chroot, write under /data/local/) need root.
-        // Run archdroid.sh via su so it runs as root (ksu domain).
         val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/archdroid.sh"
         if (!systemShell && profile.loginShell == defaultScript) {
             parameter.executablePath("su")
-            parameter.arguments(arrayOf("su", "-c", "/system/bin/sh " + defaultScript))
+            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
+            parameter.arguments(arrayOf("su", "-c", inlineCmd))
         }
 
         val session = try {
@@ -975,7 +892,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
             if (!systemShell && profile.loginShell == defaultScript) {
                 parameter.executablePath("su")
-                parameter.arguments(arrayOf("su", "-c", "/system/bin/sh " + defaultScript))
+                val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
+                parameter.arguments(arrayOf("su", "-c", inlineCmd))
             }
 
             val newSession = try {
@@ -1364,27 +1282,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
 
     fun checkinstallterm() {
-        val scriptPath = AArchDroidApp.get().filesDir.absolutePath + "/bin/checkmount.sh"
-        Log.d("AArchDroid", "NeoTermActivity: checkinstallterm — running " + scriptPath)
-        try {
-            val tempcmd = Runtime.getRuntime().exec(arrayOf("su", "-c", scriptPath + " " + AArchDroidApp.get().applicationInfo.dataDir))
-            val stderrReader = Thread { try { tempcmd.errorStream.use { it.readBytes() } } catch (_: Exception) {} }
-            stderrReader.start()
-            tempcmd.inputStream.use { it.readBytes() }
-            stderrReader.join(1000)
-            tempcmd.waitFor(30, java.util.concurrent.TimeUnit.SECONDS)
-            val exitVal = tempcmd.exitValue()
-            Log.d("AArchDroid", "NeoTermActivity: checkmount.sh exit code = " + exitVal)
-
-            if (exitVal != 0) {
-                Log.d("AArchDroid", "NeoTermActivity: chroot not found — extracting embedded rootfs")
-                extractEmbeddedRootfs()
-            } else {
-                Log.d("AArchDroid", "NeoTermActivity: chroot is mounted")
-                AArchDroidApp.get().checkcoreversion()
-            }
-        } catch (e: Exception) {
-            Log.e("AArchDroid", "NeoTermActivity: checkinstallterm failed — " + e.message)
+        val chrootMarker = File("/data/local/aarchdroid/.aarchdroid_chroot")
+        if (chrootMarker.exists()) {
+            Log.d("AArchDroid", "NeoTermActivity: chroot is mounted")
+            AArchDroidApp.get().checkcoreversion()
+        } else {
+            Log.d("AArchDroid", "NeoTermActivity: chroot not found — extracting embedded rootfs")
+            extractEmbeddedRootfs()
         }
     }
 
@@ -1393,6 +1297,23 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             try {
                 val CHROOT_DIR = "/data/local/aarchdroid"
                 val BUSYBOX_DST = "/data/data/org.aarchdroid/files/bin/busybox"
+
+                // Ensure busybox is available
+                val busyboxFile = File(BUSYBOX_DST)
+                if (!busyboxFile.exists()) {
+                    busyboxFile.parentFile?.mkdirs()
+                    try {
+                        val src = assets.open("arm/static/bin/busybox")
+                        src.use { input ->
+                            busyboxFile.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                        busyboxFile.setExecutable(true)
+                    } catch (e: Exception) {
+                        Log.e("AArchDroid", "extractEmbeddedRootfs: cannot extract busybox — " + e.message)
+                    }
+                }
 
                 val mkdir = Runtime.getRuntime().exec(arrayOf("su", "-c", "mkdir -p $CHROOT_DIR"))
                 mkdir.inputStream.use { it.readBytes() }
@@ -1562,76 +1483,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
         }
 
-    }
-
-
-    fun setPermissions(path: File?) {
-
-        if (path == null) return
-        if (path.exists()) {
-            path.setReadable(true, false)
-            path.setExecutable(true, false)
-            val list = path.listFiles() ?: return
-            for (f in list) {
-                if (f.isDirectory) setPermissions(f)
-                f.setReadable(true, false)
-                f.setExecutable(true, false)
-            }
-        }
-
-
-        var reader: BufferedReader? = null
-        var testmsg=""
-        var result = false
-        var stdin: OutputStream? = null
-        val stdout: InputStream
-        val params = ArrayList<String>()
-
-        try {
-            val pb = ProcessBuilder("su")
-            pb.directory(File(AArchDroidApp.get().applicationInfo.dataDir))
-            pb.redirectErrorStream(true)
-            val process: Process = pb.start()
-            stdin = process.outputStream
-            stdout = process.inputStream
-            params.add(0, "chmod -R 777 " + AArchDroidApp.get().filesDir.absolutePath)
-            params.add(1, "rm -rf" + AArchDroidApp.get().filesDir.absolutePath + "/bin/su")
-            params.add("exit 0")
-
-            var os: DataOutputStream? = null
-
-            try {
-                os = DataOutputStream(stdin)
-                for (cmd in params) {
-                    os.writeBytes(cmd + "\n")
-                }
-                os.flush()
-            } catch (e: IOException) {
-                //e.printStackTrace()
-            } finally {
-                os?.close()
-            }
-
-            reader = BufferedReader(InputStreamReader(stdout))
-            var n: Int
-            val buffer = CharArray(1024)
-            while (reader.read(buffer).also { n = it } != -1) {
-                val msg = String(buffer, 0, n)
-
-                testmsg += msg
-
-            }
-
-            if (process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS) && process.exitValue() == 0) result = true
-        } catch (e: Exception) {
-            result = false
-            //e.printStackTrace()
-        } finally {
-            reader?.close()
-            stdin?.close()
-
-
-        }
     }
 
 

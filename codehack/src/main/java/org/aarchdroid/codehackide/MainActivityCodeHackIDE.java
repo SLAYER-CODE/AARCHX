@@ -99,34 +99,31 @@ public class MainActivityCodeHackIDE extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         startservnot = new Intent(this, MyNot.class);
-        startService(startservnot);
-
-
-        int permissionCheck = ContextCompat.checkSelfPermission(MainActivityCodeHackIDE.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-
-        if (ContextCompat.checkSelfPermission(MainActivityCodeHackIDE.this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivityCodeHackIDE.this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-
-
-
-            } else {
-
-
-
-                ActivityCompat.requestPermissions(MainActivityCodeHackIDE.this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_REQUEST_WRITE);
-
-
-            }
+        if (Build.VERSION.SDK_INT >= 26) {
+            startForegroundService(startservnot);
+        } else {
+            startService(startservnot);
         }
 
+        if (Build.VERSION.SDK_INT < 30) {
+            if (ContextCompat.checkSelfPermission(MainActivityCodeHackIDE.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                if (!ActivityCompat.shouldShowRequestPermissionRationale(MainActivityCodeHackIDE.this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+                    ActivityCompat.requestPermissions(MainActivityCodeHackIDE.this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            MY_PERMISSIONS_REQUEST_WRITE);
+
+                }
+            }
+        } else {
+            Log.d("CodeHACK", "API 30+: skip WRITE_EXTERNAL_STORAGE request (deprecated)");
+        }
+
+        try {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navopen, R.string.navclose);
@@ -184,6 +181,9 @@ public class MainActivityCodeHackIDE extends AppCompatActivity
 
         }
 
+        } catch (Exception e) {
+            Log.e("CodeHACK", "onCreate setup error", e);
+        }
     }
 
 
@@ -773,9 +773,9 @@ public class MainActivityCodeHackIDE extends AppCompatActivity
 
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
+                    Log.d("CodeHACK", "WRITE_EXTERNAL_STORAGE granted — continuing");
                 } else {
-
+                    Log.w("CodeHACK", "WRITE_EXTERNAL_STORAGE denied — exiting");
                     stopService(startservnot);
                     finish();
                     finish();

@@ -8,18 +8,20 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
+import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 
 
 public class MyNot extends Service {
 
+    private static final String TAG = "MyNot";
+
     @Override
     public void onCreate() {
+        super.onCreate();
 
         Intent notificationIntent = new Intent(getApplicationContext(), org.aarchdroid.codehackide.MainActivityCodeHackIDE.class);
-
 
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
@@ -50,21 +52,35 @@ public class MyNot extends Service {
                 .setContentIntent(contentIntent)
                 .build();
 
-        notificationManager.notify(2, notification);
-
-        if (android.os.Build.VERSION.SDK_INT >= 34) {
-            startForeground(2, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
-        } else {
-            startForeground(2, notification);
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= 34) {
+                startForeground(2, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+            } else {
+                startForeground(2, notification);
+            }
+            Log.d(TAG, "startForeground succeeded");
+        } catch (Exception e) {
+            Log.e(TAG, "startForeground failed: " + e.getMessage(), e);
+            notificationManager.notify(2, notification);
         }
+    }
 
-
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "onStartCommand");
+        return START_STICKY;
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
     }
 
 }

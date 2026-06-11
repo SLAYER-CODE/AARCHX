@@ -23,7 +23,8 @@ import java.util.Locale
 
 class SessionHistoryAdapter(
     private var data: SessionHistoryData,
-    private val onRestoreSession: (SessionRecord) -> Unit
+    private val onRestoreSession: (SessionRecord) -> Unit,
+    private val onDeleteSession: (SessionRecord) -> Unit = {}
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -200,6 +201,7 @@ class SessionHistoryAdapter(
                 buildTerminalLines(visibleTerms[tIdx], tIdx == visibleTerms.lastIndex, lines)
             }
 
+            lines.add(LineInfo("   Borrar", 0xFFCC4444.toInt()))
             lines.add(LineInfo("   Lanzar", 0xFF00FF00.toInt()))
 
             if (flatItems.size > 1) {
@@ -251,6 +253,7 @@ class SessionHistoryAdapter(
             }
 
             // One Lanzar button for the whole group
+            lines.add(LineInfo("   Borrar", 0xFFCC4444.toInt()))
             lines.add(LineInfo("   Lanzar", 0xFF00FF00.toInt()))
 
             // Synthetic SessionRecord with all terminals for restore
@@ -343,6 +346,11 @@ class SessionHistoryAdapter(
 
     private fun bindSessionCard(holder: SessionCardHolder, item: FlatItem) {
         holder.content.removeAllViews()
+        val session = item.session
+        val isCrash = session?.closedNormally == false || session?.closedNormally == null
+        holder.leftStrip.setBackgroundColor(
+            if (isCrash) 0xFFFF0044.toInt() else 0xFF00FF00.toInt()
+        )
         val icon = ContextCompat.getDrawable(holder.itemView.context, item.iconResId)
         if (icon != null) {
             icon.mutate()
@@ -353,7 +361,6 @@ class SessionHistoryAdapter(
         } else {
             holder.itemView.background = null
         }
-        val session = item.session
         val lines = item.lines
         val isLastLineFooter = lines.isNotEmpty() && lines.last().text.contains("Lanzar")
 
@@ -386,9 +393,18 @@ class SessionHistoryAdapter(
                 tv.setOnClickListener { v ->
                     (v.tag as? SessionRecord)?.let { onRestoreSession(it) }
                 }
-            } else {
+            } else if (li.text.contains("Borrar")) {
                 tv.layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply { gravity = Gravity.START }
+                tv.tag = session
+                tv.setOnClickListener { v ->
+                    (v.tag as? SessionRecord)?.let { onDeleteSession(it) }
+                }
+            } else {
+                tv.layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
             }
@@ -402,6 +418,7 @@ class SessionHistoryAdapter(
 
     class SessionCardHolder(view: View) : RecyclerView.ViewHolder(view) {
         val content: LinearLayout = view.findViewById(R.id.content)
+        val leftStrip: View = view.findViewById(R.id.left_strip)
     }
 
     class SpacerHolder(view: View) : RecyclerView.ViewHolder(view)

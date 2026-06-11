@@ -22,6 +22,7 @@ object DefaultValues {
     val enableSpecialVolumeKeys = false
     val enableWordBasedIme = false
     val disableLogs = true
+    val commandLimit = 5
 
     val loginShell = "archdroid.sh"
     val initialCommand = ""

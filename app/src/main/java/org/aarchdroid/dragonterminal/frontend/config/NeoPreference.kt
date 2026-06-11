@@ -237,10 +237,8 @@ object NeoPreference {
                 DefaultValues.disableLogs)
     }
 
-    /**
-     * TODO
-     * To print the job name about to be executed in bash:
-     * $ trap 'echo -ne "\e]0;${BASH_COMMAND%% *}\x07"' DEBUG
-     * $ PS1='$(echo -ne "\e]0;$PWD\x07")\$ '
-     */
+    fun getCommandLimit(): Int {
+        return loadInt(AArchDroidApp.get().getString(R.string.key_general_command_limit),
+                DefaultValues.commandLimit)
+    }
 }

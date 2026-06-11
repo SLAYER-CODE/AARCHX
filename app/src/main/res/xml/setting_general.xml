@@ -55,6 +55,14 @@
         android:summary="@string/pref_general_disable_logs_desc"
         android:title="@string/pref_general_disable_logs" />
 
+    <ListPreference
+        android:defaultValue="5"
+        android:entries="@array/pref_general_command_limit_entries"
+        android:entryValues="@array/pref_general_command_limit_values"
+        android:key="@string/key_general_command_limit"
+        android:summary="@string/pref_general_command_limit_desc"
+        android:title="@string/pref_general_command_limit" />
+
     <!--CheckBoxPreference
         android:defaultValue="false"
         android:key="@string/key_general_auto_completion"

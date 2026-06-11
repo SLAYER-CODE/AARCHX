@@ -81,7 +81,12 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
             }
         }
         try {
-            startForeground(NOTIFICATION_ID, createNotification())
+            val notification = createNotification()
+            if (Build.VERSION.SDK_INT >= 34) {
+                startForeground(NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
             Log.d("AArchDroid", "NeoTermService: startForeground succeeded")
         } catch (e: SecurityException) {
             Log.w("AArchDroid", "NeoTermService: startForeground denied (no permission) — running without notification")

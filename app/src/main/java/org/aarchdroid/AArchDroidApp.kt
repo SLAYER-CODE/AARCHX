@@ -14,7 +14,6 @@ import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.component.NeoInitializer
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.ui.bonus.BonusActivity
-import org.aarchdroid.dragonterminal.utils.AssetsUtils
 import java.io.*
 
 class AArchDroidApp : Application() {
@@ -43,22 +42,6 @@ class AArchDroidApp : Application() {
         val firstRun = sharedPref.getBoolean("aarchdroid_setup_done", false)
 
         if (!firstRun) {
-            // Clean old bin/scripts
-            run("rm -rf ${filesDir.absolutePath}/bin")
-            run("rm -rf ${filesDir.absolutePath}/scripts")
-
-            // Extract our scripts
-            val scriptsDir = File("${filesDir.absolutePath}/scripts")
-            scriptsDir.mkdirs()
-            val binDir = File("${filesDir.absolutePath}/bin")
-            binDir.mkdirs()
-
-            AssetsUtils.extractAssetsDir(this, "all/scripts", "${filesDir.absolutePath}/scripts")
-            setPermissions(scriptsDir)
-
-            AssetsUtils.extractAssetsDir(this, "arm/static/bin", "${filesDir.absolutePath}/bin")
-            setPermissions(binDir)
-
             // Remount /data with exec
             run("mount -o remount,exec,suid,dev,rw /data")
             run("dumpsys deviceidle whitelist +${this.packageName}")
@@ -104,18 +87,6 @@ class AArchDroidApp : Application() {
             }
             process.waitFor()
         } catch (_: Exception) { }
-    }
-
-    fun setPermissions(path: File?) {
-        if (path == null || !path.exists()) return
-        path.setReadable(true, false)
-        path.setExecutable(true, false)
-        path.listFiles()?.forEach { f ->
-            if (f.isDirectory) setPermissions(f)
-            f.setReadable(true, false)
-            f.setExecutable(true, false)
-        }
-        run("chmod -R 755 ${path.absolutePath}")
     }
 
     fun checkcoreversion() {

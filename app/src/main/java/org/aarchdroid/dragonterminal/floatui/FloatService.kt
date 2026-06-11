@@ -236,7 +236,8 @@ class FloatService : Service() {
 
         if (!profile.enableExecveWrapper && profile.loginShell == defaultScript) {
             builder.executablePath("su")
-            builder.argArray(arrayOf("su", "-c", "/system/bin/sh " + profile.loginShell))
+            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
+            builder.argArray(arrayOf("su", "-c", inlineCmd))
         } else {
             builder.executablePath(profile.loginShell)
         }
@@ -275,7 +276,12 @@ class FloatService : Service() {
 
     private fun runForeground() {
         createChannel()
-        startForeground(NOTIFICATION_ID, buildNotification())
+        val notification = buildNotification()
+        if (Build.VERSION.SDK_INT >= 34) {
+            startForeground(NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
     }
 
     private fun createChannel() {

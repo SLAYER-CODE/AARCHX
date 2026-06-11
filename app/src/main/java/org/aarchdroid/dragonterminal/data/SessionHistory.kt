@@ -150,10 +150,13 @@ object SessionHistory {
         }
 
         init(context)
+        val limit = org.aarchdroid.dragonterminal.frontend.config.NeoPreference.getCommandLimit()
+        val unlimited = limit == 0
+        val actualLimit = if (unlimited) Int.MAX_VALUE else limit
         val record = CommandRecord(path = path, cmd = cmd)
         current?.sessions?.find { it.id == sessionId }?.terminals?.find { it.id == terminalId }?.commands?.let { cmds ->
             cmds.add(record)
-            if (cmds.size > 5) cmds.subList(0, cmds.size - 5).clear()
+            if (!unlimited && cmds.size > actualLimit) cmds.subList(0, cmds.size - actualLimit).clear()
         }
         runCatching {
             var order = 0
@@ -170,10 +173,12 @@ object SessionHistory {
                 put("ord", order)
             }
             db?.writableDatabase?.insert("command", null, cv)
-            db?.writableDatabase?.execSQL(
-                "DELETE FROM command WHERE terminalId = ? AND uid NOT IN (SELECT uid FROM command WHERE terminalId = ? ORDER BY uid DESC LIMIT 5)",
-                arrayOf(terminalId, terminalId)
-            )
+            if (!unlimited) {
+                db?.writableDatabase?.execSQL(
+                    "DELETE FROM command WHERE terminalId = ? AND uid NOT IN (SELECT uid FROM command WHERE terminalId = ? ORDER BY uid DESC LIMIT $actualLimit)",
+                    arrayOf(terminalId, terminalId)
+                )
+            }
         }
     }
 
@@ -256,6 +261,22 @@ object SessionHistory {
         current = data
         Log.d("SessionHistory", "getHistory -> loaded ${data.sessions.size} sessions, flagActive=$flagActive")
         return data
+    }
+
+    fun deleteSession(context: Context, sessionId: String) {
+        init(context)
+        current?.sessions?.removeAll { it.id == sessionId }
+        runCatching {
+            val readDb = db?.readableDatabase ?: return@runCatching
+            readDb.rawQuery("SELECT id FROM terminal WHERE sessionId = ?", arrayOf(sessionId)).use { c ->
+                while (c.moveToNext()) {
+                    val tid = c.getString(0)
+                    db?.writableDatabase?.delete("command", "terminalId = ?", arrayOf(tid))
+                }
+            }
+            db?.writableDatabase?.delete("terminal", "sessionId = ?", arrayOf(sessionId))
+            db?.writableDatabase?.delete("session", "id = ?", arrayOf(sessionId))
+        }
     }
 
     fun saveNow(context: Context) {
