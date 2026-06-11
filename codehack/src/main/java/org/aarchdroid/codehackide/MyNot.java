@@ -22,7 +22,7 @@ public class MyNot extends Service {
 
 
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
         int notificationId = 2;
         String channelId = "channel-02";
@@ -52,7 +52,11 @@ public class MyNot extends Service {
 
         notificationManager.notify(2, notification);
 
-        startForeground(2, notification);
+        if (android.os.Build.VERSION.SDK_INT >= 34) {
+            startForeground(2, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+        } else {
+            startForeground(2, notification);
+        }
 
 
     }

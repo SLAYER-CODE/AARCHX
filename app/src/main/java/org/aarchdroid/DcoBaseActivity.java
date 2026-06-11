@@ -51,6 +51,22 @@ public class DcoBaseActivity extends Activity {
         rv.setAdapter(adapter);
     }
 
+    protected String resolveSource(String toolKey) {
+        try {
+            ToolInfo info = ToolDatabase.getInstance().getTool(toolKey);
+            if (info != null && info.source != null) {
+                String src = info.source;
+                if ("arch".equals(src) || "blackarch".equals(src)) {
+                    return "pacman";
+                }
+                return src;
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "resolveSource: error for " + toolKey, e);
+        }
+        return "";
+    }
+
     private void refreshStatusesAsync() {
         new Thread(() -> {
             String category = getCurrentCategory();

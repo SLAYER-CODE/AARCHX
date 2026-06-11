@@ -6,4 +6,5 @@ public class ToolItem {
     public String description;
     public String cmd;
     public int iconResId;
+    public String source;
 }

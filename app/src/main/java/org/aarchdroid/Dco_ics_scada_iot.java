@@ -76,6 +76,7 @@ public class Dco_ics_scada_iot extends DcoBaseActivity {
     private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
         ToolItem item = new ToolItem();
         item.key = key;
+        item.source = resolveSource(key);
         item.displayName = displayName;
         item.description = description;
         item.cmd = cmd;

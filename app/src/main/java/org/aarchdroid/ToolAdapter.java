@@ -55,6 +55,29 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         });
         String status = statusCache.getOrDefault(t.key, "not_installed");
         h.installBtn.setTag(t.key);
+        String source = t.source;
+        if (source != null && !source.isEmpty()) {
+            h.sourceBadge.setText(source.toUpperCase());
+            int color;
+            switch (source.toLowerCase()) {
+                case "local":
+                    color = 0xFF00FFFF;
+                    break;
+                case "github":
+                    color = 0xFFFFFFFF;
+                    break;
+                case "url":
+                    color = 0xFF808080;
+                    break;
+                case "pacman":
+                default:
+                    color = 0xFFFFDD00;
+                    break;
+            }
+            h.sourceBadge.setTextColor(color);
+        } else {
+            h.sourceBadge.setText("");
+        }
         h.installBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -130,7 +153,9 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         h.title.setTextColor(textColor);
         h.description.setTextColor(textColor);
         boolean installed = "installed".equals(status);
-        h.badgeRow.setVisibility(installed ? View.VISIBLE : View.GONE);
+        h.uninstallBadge.setVisibility(installed ? View.VISIBLE : View.GONE);
+        h.badgeSize.setVisibility(installed ? View.VISIBLE : View.GONE);
+        h.badgeRow.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -146,6 +171,7 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         ImageView installBtn;
         TextView uninstallBadge;
         TextView badgeSize;
+        TextView sourceBadge;
         View statusBar;
         View badgeRow;
 
@@ -158,6 +184,7 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
             installBtn = v.findViewById(R.id.install_btn);
             uninstallBadge = v.findViewById(R.id.uninstall_badge);
             badgeSize = v.findViewById(R.id.badge_size);
+            sourceBadge = v.findViewById(R.id.source_badge);
             statusBar = v.findViewById(R.id.status_bar);
             badgeRow = v.findViewById(R.id.badge_row);
         }

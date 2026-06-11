@@ -110,6 +110,7 @@ public class Dco_website_hacking extends DcoBaseActivity {
     private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
         ToolItem item = new ToolItem();
         item.key = key;
+        item.source = resolveSource(key);
         item.displayName = displayName;
         item.description = description;
         item.cmd = cmd;

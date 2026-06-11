@@ -40,6 +40,8 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.6'
     implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.drawerlayout:drawerlayout:1.1.1'
+    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation project(':NeoTermBridge')
 }
