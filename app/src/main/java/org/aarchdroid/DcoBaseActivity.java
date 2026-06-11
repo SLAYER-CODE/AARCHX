@@ -271,7 +271,7 @@ public class DcoBaseActivity extends Activity {
             sb.append("\n");
             sb.append("mkdir -p $STATE_DIR 2>/dev/null || true\n");
             sb.append("echo \"$$\" > $PID_FILE\n");
-            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG; s=$(sqlite3 \"$DB\" \"SELECT status FROM tools WHERE toolKey=\\\"$TOOLKEY\\\"\" 2>/dev/null); if [ \"$s\" = \"installing\" ]; then sqlite3 \"$DB\" \"UPDATE tools SET status=\\\"failed\\\", errorLog=\\\"Interrumpido\\\" WHERE toolKey=\\\"$TOOLKEY\\\"\"; fi' EXIT\n");
+            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG $INSTALL_LOG.exit; s=$(sqlite3 \"$DB\" \"SELECT status FROM tools WHERE toolKey=\\\"$TOOLKEY\\\"\" 2>/dev/null); if [ \"$s\" = \"installing\" ]; then sqlite3 \"$DB\" \"UPDATE tools SET status=\\\"failed\\\", errorLog=\\\"Interrumpido\\\" WHERE toolKey=\\\"$TOOLKEY\\\"\"; fi' EXIT\n");
             sb.append("rm -f $STATE_DIR/$TOOLKEY.pending\n");
             sb.append("\n");
             sb.append("retry_sqlite() {\n");
@@ -284,9 +284,9 @@ public class DcoBaseActivity extends Activity {
             sb.append("  sqlite3 \"$DB\" \"$1\"\n");
             sb.append("}\n");
             sb.append("\n");
-            sb.append(installCmd).append(" > $INSTALL_LOG 2>&1\n");
-            sb.append("EXIT_CODE=$?\n");
-            sb.append("cat $INSTALL_LOG\n");
+            sb.append("(").append(installCmd).append("; echo $? > $INSTALL_LOG.exit) 2>&1 | tee $INSTALL_LOG\n");
+            sb.append("read EXIT_CODE < $INSTALL_LOG.exit 2>/dev/null || EXIT_CODE=1\n");
+            sb.append("rm -f $INSTALL_LOG.exit\n");
             sb.append("\n");
             sb.append("echo \"\"\n");
             sb.append("echo \"==========================================\"\n");
@@ -345,7 +345,7 @@ public class DcoBaseActivity extends Activity {
             sb.append("\n");
             sb.append("mkdir -p $STATE_DIR 2>/dev/null || true\n");
             sb.append("echo \"$$\" > $PID_FILE\n");
-            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG; s=$(sqlite3 \"$DB\" \"SELECT status FROM tools WHERE toolKey=\\\"$TOOLKEY\\\"\" 2>/dev/null); if [ \"$s\" = \"installing\" ]; then sqlite3 \"$DB\" \"UPDATE tools SET status=\\\"failed\\\", errorLog=\\\"Interrumpido\\\" WHERE toolKey=\\\"$TOOLKEY\\\"\"; fi' EXIT\n");
+            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG $INSTALL_LOG.exit; s=$(sqlite3 \"$DB\" \"SELECT status FROM tools WHERE toolKey=\\\"$TOOLKEY\\\"\" 2>/dev/null); if [ \"$s\" = \"installing\" ]; then sqlite3 \"$DB\" \"UPDATE tools SET status=\\\"failed\\\", errorLog=\\\"Interrumpido\\\" WHERE toolKey=\\\"$TOOLKEY\\\"\"; fi' EXIT\n");
             sb.append("rm -f $STATE_DIR/$TOOLKEY.pending\n");
             sb.append("\n");
             sb.append("retry_sqlite() {\n");
@@ -358,9 +358,9 @@ public class DcoBaseActivity extends Activity {
             sb.append("  sqlite3 \"$DB\" \"$1\"\n");
             sb.append("}\n");
             sb.append("\n");
-            sb.append(uninstallCmd).append(" > $INSTALL_LOG 2>&1\n");
-            sb.append("EXIT_CODE=$?\n");
-            sb.append("cat $INSTALL_LOG\n");
+            sb.append("(").append(uninstallCmd).append("; echo $? > $INSTALL_LOG.exit) 2>&1 | tee $INSTALL_LOG\n");
+            sb.append("read EXIT_CODE < $INSTALL_LOG.exit 2>/dev/null || EXIT_CODE=1\n");
+            sb.append("rm -f $INSTALL_LOG.exit\n");
             sb.append("\n");
             sb.append("echo \"\"\n");
             sb.append("echo \"==========================================\"\n");
