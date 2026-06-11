@@ -103,6 +103,7 @@ class NeovimLauncher(private val context: Context) {
     }
 
     private fun findNvim(): String? {
+        // 1. Try direct File.exists() (works for Termux, system paths, app-private)
         val paths = listOf(
             "$CHROOT_DIR/usr/bin/nvim",
             "$CHROOT_DIR/usr/bin/vim",
@@ -120,7 +121,24 @@ class NeovimLauncher(private val context: Context) {
                 return p
             }
         }
-        // Fallback: try which via system shell
+
+        // 2. Try via su (chroot paths may be invisible to app process)
+        try {
+            val proc = Runtime.getRuntime().exec(arrayOf("su", "-c",
+                "test -f $CHROOT_DIR/usr/bin/nvim && echo nvim || test -f $CHROOT_DIR/usr/bin/vim && echo vim"))
+            val out = proc.inputStream.bufferedReader().readText().trim()
+            proc.waitFor()
+            if (out == "nvim") {
+                Log.d(TAG, "Found nvim via su at $CHROOT_DIR/usr/bin/nvim")
+                return "$CHROOT_DIR/usr/bin/nvim"
+            }
+            if (out == "vim") {
+                Log.d(TAG, "Found vim via su at $CHROOT_DIR/usr/bin/vim")
+                return "$CHROOT_DIR/usr/bin/vim"
+            }
+        } catch (_: Exception) {}
+
+        // 3. Try which via system shell
         return try {
             val proc = Runtime.getRuntime().exec(arrayOf("sh", "-c", "command -v nvim 2>/dev/null || which nvim 2>/dev/null"))
             val path = proc.inputStream.bufferedReader().readText().trim()
