@@ -4,6 +4,8 @@ import android.graphics.Canvas
 import android.graphics.ColorFilter
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -30,7 +32,11 @@ class SessionHistoryAdapter(
         private const val VIEW_TYPE_SPACER = 2
     }
 
-    private data class LineInfo(val text: String, val color: Int)
+    private data class LineInfo(
+        val text: String,
+        val color: Int,
+        val segments: List<Pair<String, Int>>? = null
+    )
 
     private data class FlatItem(
         val type: Int,
@@ -76,8 +82,14 @@ class SessionHistoryAdapter(
             else -> "Terminal@Root"
         }
         val termPrefix = if (isLast) "\u2514\u2500 " else "\u251C\u2500 "
+        val termLabel = "$termPrefix$rootLabel  "
         val termCmdCount = "(${term.commands.size} Comandos)"
-        lines.add(LineInfo("$termPrefix$rootLabel  $termCmdCount", termColor))
+        val termSegments = listOf(
+            termLabel to termColor,
+            termCmdCount to 0xFF00CCCC.toInt()
+        )
+        val termText = termSegments.joinToString("") { it.first }
+        lines.add(LineInfo(termText, 0, segments = termSegments))
 
         val srcName = when (term.launchSource) {
             "flotante" -> "Flotante"
@@ -160,18 +172,29 @@ class SessionHistoryAdapter(
 
             val elapsed = now - session.created
             val statusLabel: String = when {
-                elapsed < 3600000 -> "Ahora"
-                elapsed < 14400000 -> "Reciente"
+                elapsed < 600000 -> "Ahora"
+                elapsed < 7200000 -> "Reciente"
                 else -> "Antiguo"
+            }
+            val sessionColor = when (statusLabel) {
+                "Ahora" -> 0xFF00FF00.toInt()
+                "Reciente" -> 0xFFFF8800.toInt()
+                else -> 0xFFFF4444.toInt()
             }
             val timeStr = timeFmt.format(Date(session.created))
             val sessionIconResId = resolveIconId(visibleTerms.first().iconResId, visibleTerms.first().launchSource)
 
             val lines = mutableListOf<LineInfo>()
-            var hdr = " \u250C"
-            if (statusLabel.isNotEmpty()) hdr += "[$statusLabel] "
-            hdr += "$timeStr"
-            lines.add(LineInfo(hdr, 0xFFFF8800.toInt()))
+            val defaultColor = 0xFF888888.toInt()
+            val hdrSegments = mutableListOf<Pair<String, Int>>()
+            hdrSegments.add(" \u250C[" to defaultColor)
+            if (statusLabel.isNotEmpty()) {
+                hdrSegments.add(statusLabel to sessionColor)
+                hdrSegments.add("] " to defaultColor)
+            }
+            hdrSegments.add(timeStr to defaultColor)
+            val hdrText = hdrSegments.joinToString("") { it.first }
+            lines.add(LineInfo(hdrText, 0, segments = hdrSegments))
 
             for (tIdx in visibleTerms.indices) {
                 buildTerminalLines(visibleTerms[tIdx], tIdx == visibleTerms.lastIndex, lines)
@@ -200,9 +223,26 @@ class SessionHistoryAdapter(
 
             val lines = mutableListOf<LineInfo>()
 
-            // Crash header
+            // Crash header with status
+            val crashElapsed = now - sessions.minOf { it.created }
+            val crashStatusLabel: String = when {
+                crashElapsed < 600000 -> "Ahora"
+                crashElapsed < 7200000 -> "Reciente"
+                else -> "Antiguo"
+            }
+            val crashStatusColor = when (crashStatusLabel) {
+                "Ahora" -> 0xFF00FF00.toInt()
+                "Reciente" -> 0xFFFF8800.toInt()
+                else -> 0xFFFF4444.toInt()
+            }
             val firstTime = timeFmt.format(Date(sessions.minOf { it.created }))
-            lines.add(LineInfo(" \u250C[Crash] [$firstTime]", 0xFFFF0044.toInt()))
+            val crashSegments = listOf(
+                " \u250C[Crash]" to 0xFFFF0044.toInt(),
+                " [$firstTime]" to 0xFFFF8800.toInt(),
+                " $crashStatusLabel" to crashStatusColor
+            )
+            val crashHdrText = crashSegments.joinToString("") { it.first }
+            lines.add(LineInfo(crashHdrText, 0, segments = crashSegments))
             lines.add(LineInfo("\u2502  \u2514\u2500 $reason", 0xFFFF0044.toInt()))
 
             // All terminals from all sessions in this crash group
@@ -320,8 +360,20 @@ class SessionHistoryAdapter(
         for (i in lines.indices) {
             val li = lines[i]
             val tv = TextView(holder.content.context)
-            tv.text = li.text
-            tv.setTextColor(li.color)
+            if (li.segments != null) {
+                val sb = StringBuilder()
+                for ((segText, _) in li.segments) sb.append(segText)
+                val ss = SpannableString(sb.toString())
+                var start = 0
+                for ((segText, segColor) in li.segments) {
+                    ss.setSpan(ForegroundColorSpan(segColor), start, start + segText.length, 0)
+                    start += segText.length
+                }
+                tv.text = ss
+            } else {
+                tv.text = li.text
+                tv.setTextColor(li.color)
+            }
             tv.textSize = 10f
             tv.typeface = Typeface.MONOSPACE
             tv.setPadding(2, 0, 8, 0)
