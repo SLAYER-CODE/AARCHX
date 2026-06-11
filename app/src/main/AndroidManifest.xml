@@ -168,6 +168,19 @@
             </intent-filter>
         </activity>
 
+        <!-- Neovim Editor -->
+        <activity
+            android:name="org.aarchdroid.neovim.NeovimEditorActivity"
+            android:exported="true"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout"
+            android:theme="@style/AppTheme.NoActionBar.Dark2"
+            android:windowSoftInputMode="adjustResize|stateHidden">
+            <intent-filter>
+                <action android:name="org.aarchdroid.neovim.OPEN_EDITOR" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <!-- Easter Egg -->
         <activity android:name="org.aarchdroid.dragonterminal.ui.bonus.BonusActivity"
             android:configChanges="orientation|keyboardHidden"

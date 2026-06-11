@@ -216,6 +216,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             run_hack_cmd("andrax");
         } else if (itemId == R.id.nav_codehackide) {
             startActivity(new Intent(this, (Class<?>) MainActivityCodeHackIDE.class));
+        } else if (itemId == R.id.nav_neovim) {
+            startActivity(new Intent(this, (Class<?>) org.aarchdroid.neovim.NeovimEditorActivity.class));
         } else if (itemId == R.id.nav_hidrastrike) {
             HIDraStrikeFragment hIDraStrikeFragment = new HIDraStrikeFragment();
             FragmentTransaction fragmentTransactionBeginTransaction = getSupportFragmentManager().beginTransaction();

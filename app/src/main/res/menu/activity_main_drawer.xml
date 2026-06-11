@@ -34,7 +34,11 @@
                 <item
                     android:id="@+id/nav_codehackide"
                     android:icon="@drawable/andraxicon_svg"
-                    android:title="Editor" />
+                    android:title="Editor (Legacy)" />
+                <item
+                    android:id="@+id/nav_neovim"
+                    android:icon="@drawable/console"
+                    android:title="Neovim Editor" />
                 <item
                     android:id="@+id/nav_hidrastrike"
                     android:icon="@drawable/hydra"
