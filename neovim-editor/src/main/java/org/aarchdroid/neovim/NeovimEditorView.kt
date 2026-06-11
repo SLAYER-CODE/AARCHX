@@ -5,6 +5,7 @@ import android.graphics.*
 import android.text.TextPaint
 import android.util.AttributeSet
 import android.view.*
+import android.view.inputmethod.InputMethodManager
 import java.util.concurrent.CopyOnWriteArrayList
 
 class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
@@ -73,6 +74,18 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
             true
         }
         isLongClickable = true
+    }
+
+    override fun onCheckIsTextEditor(): Boolean = true
+
+    override fun onFocusChanged(gainFocus: Boolean, direction: Int, previouslyFocusedRect: android.graphics.Rect?) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect)
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        if (gainFocus) {
+            imm?.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
+        } else {
+            imm?.hideSoftInputFromWindow(windowToken, 0)
+        }
     }
 
     fun updateBuffer(newBuffer: NeovimBuffer) {

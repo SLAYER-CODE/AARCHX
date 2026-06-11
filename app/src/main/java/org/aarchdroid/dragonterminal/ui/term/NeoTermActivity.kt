@@ -23,6 +23,7 @@ import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -98,6 +99,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     private var pendingAnchorSession: TerminalSession? = null
 
     private var sessionHistoryAdapter: SessionHistoryAdapter? = null
+    private var earlyTerminalPlaceholder: View? = null
     private val tabSessionMap = HashMap<String, String>() // TerminalSession.handle -> sessionId
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -148,6 +150,16 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
 
         setContentView(R.layout.ui_main)
+
+        val terminalContainer = findViewById<FrameLayout>(R.id.terminal_container)
+        earlyTerminalPlaceholder = View(this).apply {
+            setBackgroundColor(android.graphics.Color.BLACK)
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT)
+            id = View.generateViewId()
+        }
+        terminalContainer.addView(earlyTerminalPlaceholder)
 
         toolbar = findViewById(R.id.terminal_toolbar)
         setSupportActionBar(toolbar)
@@ -873,6 +885,16 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 }
             }
         }, 300)
+
+        // Remove early terminal placeholder after real terminal tab is visible
+        earlyTerminalPlaceholder?.let { placeholder ->
+            placeholder.post {
+                val parent = placeholder.parent as? ViewGroup
+                parent?.removeView(placeholder)
+                earlyTerminalPlaceholder = null
+            }
+        }
+
         Log.d("AArchDroid", "NeoTermActivity: tab added and switched")
     }
 
@@ -917,6 +939,15 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
             addNewTab(tab, createRevealAnimation())
             switchToSession(tab)
+
+            // Remove early terminal placeholder after real terminal tab is added
+            earlyTerminalPlaceholder?.let { placeholder ->
+                placeholder.post {
+                    val parent = placeholder.parent as? ViewGroup
+                    parent?.removeView(placeholder)
+                    earlyTerminalPlaceholder = null
+                }
+            }
 
             // Execute saved commands with staggered delays, suppress logging
             CommandInterceptor.suppressLogging = true
@@ -974,6 +1005,16 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         Log.d("AArchDroid", "NSFE: adding tab for handle=" + session.mHandle)
         addNewTab(tab, createRevealAnimation())
         switchToSession(tab)
+
+        // Remove early terminal placeholder after real terminal tab is added
+        earlyTerminalPlaceholder?.let { placeholder ->
+            placeholder.post {
+                val parent = placeholder.parent as? ViewGroup
+                parent?.removeView(placeholder)
+                earlyTerminalPlaceholder = null
+            }
+        }
+
         Log.d("AArchDroid", "NSFE: tab added and switched for handle=" + session.mHandle)
     }
 

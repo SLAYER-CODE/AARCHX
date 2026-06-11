@@ -9,6 +9,7 @@ import org.msgpack.value.ValueFactory
 import java.io.OutputStream
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.net.SocketTimeoutException
 import java.nio.ByteBuffer
 
 class NeovimClient(
@@ -45,7 +46,7 @@ class NeovimClient(
             try {
                 val sock = Socket()
                 sock.connect(InetSocketAddress(host, port), timeoutMs.toInt())
-                sock.soTimeout = 10000
+                sock.soTimeout = 45000
                 socket = sock
                 output = sock.getOutputStream()
                 isConnected = true
@@ -236,6 +237,9 @@ class NeovimClient(
                         }
                     }
                     tmp.compact()
+                } catch (e: SocketTimeoutException) {
+                    // Expected between messages — continue reading
+                    continue
                 } catch (e: Exception) {
                     if (isConnected) {
                         Log.e("NeovimClient", "Read error: ${e.message}")
@@ -250,7 +254,7 @@ class NeovimClient(
     private fun startKeepAlive() {
         keepAliveJob = scope.launch {
             while (isConnected) {
-                delay(30000)
+                delay(15000)
                 try {
                     request("nvim_get_mode")
                 } catch (_: Exception) {}

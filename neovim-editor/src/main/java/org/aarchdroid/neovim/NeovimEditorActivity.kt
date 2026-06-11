@@ -7,6 +7,7 @@ import android.provider.OpenableColumns
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -85,6 +86,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 statusLine.text = "Connected — press i to insert"
                 supportActionBar?.title = "Neovim"
                 editorView.requestFocus()
+                val imm = getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
+                imm?.showSoftInput(editorView, InputMethodManager.SHOW_IMPLICIT)
             }
         }
     }
