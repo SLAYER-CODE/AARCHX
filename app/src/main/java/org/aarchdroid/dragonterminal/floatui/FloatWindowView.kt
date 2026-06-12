@@ -73,7 +73,6 @@ class FloatWindowView @JvmOverloads constructor(
 
     private var keyboardVisible = false
     private var originalKeyboardY: Int? = null
-    private var originalKeyboardHeight: Int? = null
     private val handler = Handler(Looper.getMainLooper())
 
     var overlayFocused = true
@@ -145,7 +144,6 @@ class FloatWindowView @JvmOverloads constructor(
         val (w, h) = SIZES[nextIndex]
 
         originalKeyboardY = null
-        originalKeyboardHeight = null
 
         val cx = layoutParams.x + layoutParams.width / 2
         val cy = layoutParams.y + layoutParams.height / 2
@@ -323,7 +321,6 @@ class FloatWindowView @JvmOverloads constructor(
     fun enterDragMode() {
         isDragging = true
         originalKeyboardY = null
-        originalKeyboardHeight = null
         windowControls?.background = ColorDrawable(Color.parseColor("#FF661111"))
         alpha = 1.0f
     }
@@ -388,12 +385,7 @@ class FloatWindowView @JvmOverloads constructor(
         val keyboardTop = displayHeight - kh - navBarH - extraMargin
         val winBottom = layoutParams.y + layoutParams.height
         if (winBottom > keyboardTop) {
-            if (originalKeyboardY == null) {
-                originalKeyboardY = layoutParams.y
-                originalKeyboardHeight = layoutParams.height
-            }
-            val newHeight = keyboardTop - layoutParams.y
-            layoutParams.height = newHeight.coerceAtLeast(MIN_SIZE)
+            if (originalKeyboardY == null) originalKeyboardY = layoutParams.y
             layoutParams.y = (keyboardTop - layoutParams.height).coerceAtLeast(60)
             updateLayout()
             preferences.windowY = layoutParams.y
@@ -403,10 +395,6 @@ class FloatWindowView @JvmOverloads constructor(
     private fun restoreKeyboardPosition() {
         originalKeyboardY?.let { y ->
             layoutParams.y = y
-            originalKeyboardHeight?.let { h ->
-                layoutParams.height = h
-                originalKeyboardHeight = null
-            }
             updateLayout()
             preferences.windowY = y
             originalKeyboardY = null
