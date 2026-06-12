@@ -12,9 +12,7 @@
 
 #include <sys/types.h>
 
-#define __neoterm_no_return __attribute__((__noreturn__))
-
-#define TERMUX_UNUSED(x) x __attribute__((__unused__))
+#define NEOTERM_UNUSED(x) x __attribute__((__unused__))
 #ifdef __APPLE__
 # define LACKS_PTSNAME_R
 #endif
@@ -32,24 +30,27 @@ static int create_subprocess(JNIEnv *env,
                              char **envp,
                              int *pProcessId,
                              jint rows,
-                             jint columns) {
-
+                             jint columns,
+                             jint cellWidth,
+                             jint cellHeight) {
 
     int ptm = open("/dev/ptmx", O_RDWR | O_CLOEXEC);
     if (ptm < 0) return throw_runtime_exception(env, "Cannot open /dev/ptmx");
 
-
+#ifdef LACKS_PTSNAME_R
     char* devname;
-
-    fcntl(ptm, F_SETFD, FD_CLOEXEC);
-
-    grantpt(ptm);
-    unlockpt(ptm);
-
-    devname = ptsname(ptm);
-    if (devname == nullptr) {
+#else
+    char devname[64];
+#endif
+    if (grantpt(ptm) || unlockpt(ptm) ||
+#ifdef LACKS_PTSNAME_R
+            (devname = ptsname(ptm)) == NULL
+#else
+            ptsname_r(ptm, devname, sizeof(devname))
+#endif
+       ) {
         close(ptm);
-        return throw_runtime_exception(env, "ptsname() failed");
+        return throw_runtime_exception(env, "Cannot grantpt()/unlockpt()/ptsname_r() on /dev/ptmx");
     }
 
     // Enable UTF-8 mode and disable flow control to prevent Ctrl+S from locking up the display.
@@ -60,11 +61,15 @@ static int create_subprocess(JNIEnv *env,
     tcsetattr(ptm, TCSANOW, &tios);
 
     /** Set initial winsize. */
-    struct winsize sz = {.ws_row = static_cast<unsigned short>(rows), .ws_col = static_cast<unsigned short>(columns)};
+    struct winsize sz = {
+        .ws_row = static_cast<unsigned short>(rows),
+        .ws_col = static_cast<unsigned short>(columns),
+        .ws_xpixel = static_cast<unsigned short>(columns * cellWidth),
+        .ws_ypixel = static_cast<unsigned short>(rows * cellHeight)
+    };
     ioctl(ptm, TIOCSWINSZ, &sz);
 
     pid_t pid = fork();
-
 
     if (pid < 0) {
         return throw_runtime_exception(env, "Fork failed");
@@ -81,7 +86,7 @@ static int create_subprocess(JNIEnv *env,
         setsid();
 
         int pts = open(devname, O_RDWR);
-        if (pts < 0) exit(-1);
+        if (pts < 0) _exit(1);
 
         dup2(pts, 0);
         dup2(pts, 1);
@@ -116,20 +121,22 @@ static int create_subprocess(JNIEnv *env,
         if (asprintf(&error_message, "exec(\"%s\")", cmd) == -1)
             error_message = const_cast<char *>("exec()");
         perror(error_message);
-        exit(-1);
+        _exit(1);
     }
 }
 
 extern "C" JNIEXPORT jint JNICALL Java_org_aarchdroid_dragonterminal_backend_JNI_createSubprocess(
         JNIEnv *env,
-        jclass TERMUX_UNUSED(clazz),
+        jclass NEOTERM_UNUSED(clazz),
         jstring cmd,
         jstring cwd,
         jobjectArray args,
         jobjectArray envVars,
         jintArray processIdArray,
         jint rows,
-        jint columns) {
+        jint columns,
+        jint cellWidth,
+        jint cellHeight) {
     jsize size = args ? env->GetArrayLength(args) : 0;
     char **argv = NULL;
     if (size > 0) {
@@ -165,7 +172,7 @@ extern "C" JNIEXPORT jint JNICALL Java_org_aarchdroid_dragonterminal_backend_JNI
     int procId = 0;
     char const *cmd_cwd = env->GetStringUTFChars(cwd, NULL);
     char const *cmd_utf8 = env->GetStringUTFChars(cmd, NULL);
-    int ptm = create_subprocess(env, cmd_utf8, cmd_cwd, argv, envp, &procId, rows, columns);
+    int ptm = create_subprocess(env, cmd_utf8, cmd_cwd, argv, envp, &procId, rows, columns, cellWidth, cellHeight);
     env->ReleaseStringUTFChars(cmd, cmd_utf8);
     env->ReleaseStringUTFChars(cwd, cmd_cwd);
 
@@ -190,16 +197,22 @@ extern "C" JNIEXPORT jint JNICALL Java_org_aarchdroid_dragonterminal_backend_JNI
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_org_aarchdroid_dragonterminal_backend_JNI_setPtyWindowSize(JNIEnv *TERMUX_UNUSED(env),
-                                              jclass TERMUX_UNUSED(clazz),
+Java_org_aarchdroid_dragonterminal_backend_JNI_setPtyWindowSize(JNIEnv *NEOTERM_UNUSED(env),
+                                              jclass NEOTERM_UNUSED(clazz),
                                               jint fd, jint rows,
-                                              jint cols) {
-    struct winsize sz = {.ws_row = static_cast<unsigned short>(rows), .ws_col = static_cast<unsigned short>(cols)};
+                                              jint cols, jint cellWidth,
+                                              jint cellHeight) {
+    struct winsize sz = {
+        .ws_row = static_cast<unsigned short>(rows),
+        .ws_col = static_cast<unsigned short>(cols),
+        .ws_xpixel = static_cast<unsigned short>(cols * cellWidth),
+        .ws_ypixel = static_cast<unsigned short>(rows * cellHeight)
+    };
     ioctl(fd, TIOCSWINSZ, &sz);
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_org_aarchdroid_dragonterminal_backend_JNI_setPtyUTF8Mode(JNIEnv *TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz),
+Java_org_aarchdroid_dragonterminal_backend_JNI_setPtyUTF8Mode(JNIEnv *NEOTERM_UNUSED(env), jclass NEOTERM_UNUSED(clazz),
                                             jint fd) {
     struct termios tios;
     tcgetattr(fd, &tios);
@@ -210,21 +223,23 @@ Java_org_aarchdroid_dragonterminal_backend_JNI_setPtyUTF8Mode(JNIEnv *TERMUX_UNU
 }
 
 extern "C" JNIEXPORT int JNICALL
-Java_org_aarchdroid_dragonterminal_backend_JNI_waitFor(JNIEnv *TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz),
+Java_org_aarchdroid_dragonterminal_backend_JNI_waitFor(JNIEnv *NEOTERM_UNUSED(env), jclass NEOTERM_UNUSED(clazz),
                                      jint pid) {
     int status;
     waitpid(pid, &status, 0);
-    int result = 0;
 
     if (WIFEXITED(status)) {
         return WEXITSTATUS(status);
+    } else if (WIFSIGNALED(status)) {
+        return -WTERMSIG(status);
+    } else {
+        // Should never happen - waitpid(2) says "One of the first three macros will evaluate to a non-zero (true) value"
+        return 0;
     }
-
-    return result;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_org_aarchdroid_dragonterminal_backend_JNI_close(JNIEnv *TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz),
+Java_org_aarchdroid_dragonterminal_backend_JNI_close(JNIEnv *NEOTERM_UNUSED(env), jclass NEOTERM_UNUSED(clazz),
                                    jint fileDescriptor) {
     close(fileDescriptor);
 }

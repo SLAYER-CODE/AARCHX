@@ -22,8 +22,8 @@ open class ShellTermSession private constructor(shellPath: String, cwd: String,
 
     var exitPrompt = AArchDroidApp.get().getString(R.string.process_exit_prompt)
 
-    override fun initializeEmulator(columns: Int, rows: Int) {
-        super.initializeEmulator(columns, rows)
+    override fun initializeEmulator(columns: Int, rows: Int, cellWidth: Int, cellHeight: Int) {
+        super.initializeEmulator(columns, rows, cellWidth, cellHeight)
         val clearOnStart = NeoPreference.isClearOnStartupEnabled()
         sendInitialCommand(shellProfile.initialCommand, clearOnStart)
         sendInitialCommand(initialCommand, clearOnStart)

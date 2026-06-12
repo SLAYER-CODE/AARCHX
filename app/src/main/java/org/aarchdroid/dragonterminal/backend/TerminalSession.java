@@ -78,7 +78,7 @@ public class TerminalSession extends TerminalOutput {
      * A queue written to from a separate thread when the process outputs, and read by main thread to process by
      * terminal emulator.
      */
-    private final ByteQueue mProcessToTerminalIOQueue = new ByteQueue(4096);
+    private final ByteQueue mProcessToTerminalIOQueue = new ByteQueue(64 * 1024);
     /**
      * A queue written to from the main thread due to user interaction, and read by another thread which forwards by
      * writing to the {@link #mTerminalFileDescriptor}.
@@ -118,7 +118,7 @@ public class TerminalSession extends TerminalOutput {
 
     @SuppressLint("HandlerLeak")
     private final Handler mMainThreadHandler = new Handler() {
-        final byte[] mReceiveBuffer = new byte[4 * 1024];
+        final byte[] mReceiveBuffer = new byte[64 * 1024];
 
         @Override
         public void handleMessage(Message msg) {
@@ -156,11 +156,11 @@ public class TerminalSession extends TerminalOutput {
     }
 
     /** Inform the attached pty of the new size and reflow or initialize the emulator. */
-    public void updateSize(int columns, int rows) {
+    public void updateSize(int columns, int rows, int cellWidth, int cellHeight) {
         if (mEmulator == null) {
-            initializeEmulator(columns, rows);
+            initializeEmulator(columns, rows, cellWidth, cellHeight);
         } else {
-            JNI.setPtyWindowSize(mTerminalFileDescriptor, rows, columns);
+            JNI.setPtyWindowSize(mTerminalFileDescriptor, rows, columns, cellWidth, cellHeight);
             mEmulator.resize(columns, rows);
         }
     }
@@ -176,11 +176,11 @@ public class TerminalSession extends TerminalOutput {
      * @param columns The number of columns in the terminal window.
      * @param rows    The number of rows in the terminal window.
      */
-    public void initializeEmulator(int columns, int rows) {
+    public void initializeEmulator(int columns, int rows, int cellWidth, int cellHeight) {
         mEmulator = new TerminalEmulator(this, columns, rows, /* transcript= */2000);
 
         int[] processId = new int[1];
-        mTerminalFileDescriptor = JNI.createSubprocess(mShellPath, mCwd, mArgs, mEnv, processId, rows, columns);
+        mTerminalFileDescriptor = JNI.createSubprocess(mShellPath, mCwd, mArgs, mEnv, processId, rows, columns, cellWidth, cellHeight);
         mShellPid = processId[0];
 
         final FileDescriptor terminalFileDescriptorWrapped = wrapFileDescriptor(mTerminalFileDescriptor);
@@ -340,7 +340,7 @@ public class TerminalSession extends TerminalOutput {
             // Negated signal.
             exitDescription += " (signal " + (-exitCode) + ")";
         } else {
-            exitDescription += "[ SECCOMP BLOCKED US ]";
+            exitDescription += " (code " + exitCode + ")";
         }
         exitDescription += " - press Enter ]";
         return exitDescription;

@@ -212,7 +212,7 @@ class FloatService : Service() {
 
         val s = createShellSession(callback)
         s?.let {
-            it.initializeEmulator(80, 24)
+            it.initializeEmulator(80, 24, 0, 0)
             // Register in session history with launchSource="flotante"
             val sessId = SessionHistory.startSession(this).id
             val term = SessionHistory.startTerminal(this, sessId, "flotante", "flotante")
@@ -236,7 +236,7 @@ class FloatService : Service() {
 
         if (!profile.enableExecveWrapper && profile.loginShell == defaultScript) {
             builder.executablePath("su")
-            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mount -o bind /data /data/local/aarchdroid/data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
+            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mkdir -p /data/local/aarchdroid/data/data/org.aarchdroid /data/local/aarchdroid/dev /data/local/aarchdroid/dev/pts /data/local/aarchdroid/tmp; mknod -m 666 /data/local/aarchdroid/dev/null c 1 3 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/zero c 1 5 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/random c 1 8 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/urandom c 1 9 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/ptmx c 5 2 2>/dev/null; mount -t proc proc /data/local/aarchdroid/proc 2>/dev/null; mount -t sysfs sys /data/local/aarchdroid/sys 2>/dev/null; mount -o bind /dev/pts /data/local/aarchdroid/dev/pts 2>/dev/null; chmod 1777 /data/local/aarchdroid/tmp 2>/dev/null; mount -o bind /data/data/org.aarchdroid /data/local/aarchdroid/data/data/org.aarchdroid 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
             builder.argArray(arrayOf("su", "-c", inlineCmd))
         } else {
             builder.executablePath(profile.loginShell)

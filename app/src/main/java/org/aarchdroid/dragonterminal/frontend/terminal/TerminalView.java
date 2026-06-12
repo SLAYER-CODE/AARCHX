@@ -943,7 +943,9 @@ public final class TerminalView extends View {
         int newRows = Math.max(4, (viewHeight - mRenderer.mFontLineSpacingAndAscent) / mRenderer.mFontLineSpacing);
 
         if (mEmulator == null || (newColumns != mEmulator.mColumns || newRows != mEmulator.mRows)) {
-            mTermSession.updateSize(newColumns, newRows);
+            int cellWidth = (int) mRenderer.mFontWidth;
+            int cellHeight = mRenderer.mFontLineSpacing;
+            mTermSession.updateSize(newColumns, newRows, cellWidth, cellHeight);
             mEmulator = mTermSession.getEmulator();
 
             mTopRow = 0;
