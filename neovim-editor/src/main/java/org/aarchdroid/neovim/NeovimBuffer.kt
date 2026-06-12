@@ -3,7 +3,7 @@ package org.aarchdroid.neovim
 data class NeovimCell(
     val char: Char = ' ',
     val foreground: Int = NeovimColor.WHITE,
-    val background: Int = NeovimColor.BLACK,
+    val background: Int = 0xFF1E1E1E.toInt(),
     val bold: Boolean = false,
     val italic: Boolean = false,
     val underline: Boolean = false,
@@ -63,14 +63,15 @@ data class NeovimWindow(
 )
 
 class NeovimBuffer {
-    var gridWidth: Int = 80
-    var gridHeight: Int = 24
+    @Volatile var gridWidth: Int = 80
+    @Volatile var gridHeight: Int = 24
     val cells: MutableList<MutableList<NeovimCell>> = mutableListOf()
     var cursor = NeovimCursor()
     var mode = NeovimMode()
     var windows: MutableMap<Int, NeovimWindow> = mutableMapOf()
     var currentGrid: Int = 1
 
+    private val lock = Any()
     private val defaultColors = mutableMapOf<Int, NeovimCell>()
 
     init {
@@ -78,60 +79,100 @@ class NeovimBuffer {
     }
 
     fun resize(width: Int, height: Int) {
-        gridWidth = width
-        gridHeight = height
-        cells.clear()
-        for (r in 0 until height) {
-            val row = MutableList(width) { NeovimCell() }
-            cells.add(row)
+        synchronized(lock) {
+            gridWidth = width
+            gridHeight = height
+            cells.clear()
+            for (r in 0 until height) {
+                val row = MutableList(width) { NeovimCell() }
+                cells.add(row)
+            }
         }
     }
 
     fun setCell(row: Int, col: Int, cell: NeovimCell) {
         if (row in 0 until gridHeight && col in 0 until gridWidth) {
-            cells[row][col] = cell
+            synchronized(lock) {
+                if (row < cells.size && col < cells[row].size) {
+                    cells[row][col] = cell
+                }
+            }
         }
     }
 
     fun clear(foreground: Int = NeovimColor.WHITE, background: Int = NeovimColor.BLACK) {
-        for (r in 0 until gridHeight) {
-            for (c in 0 until gridWidth) {
-                cells[r][c] = NeovimCell(foreground = foreground, background = background)
+        synchronized(lock) {
+            for (r in 0 until cells.size.coerceAtMost(gridHeight)) {
+                val row = cells[r]
+                for (c in 0 until row.size.coerceAtMost(gridWidth)) {
+                    row[c] = NeovimCell(foreground = foreground, background = background)
+                }
             }
         }
     }
 
     fun scroll(top: Int, bottom: Int, left: Int, right: Int, rows: Int, cols: Int) {
-        val count = rows
-        if (count > 0) {
-            for (r in top until bottom - count) {
-                for (c in left..right) {
-                    cells[r][c] = cells[r + count][c]
+        synchronized(lock) {
+            val safeTop = top.coerceIn(0, gridHeight - 1)
+            val safeBottom = bottom.coerceIn(safeTop + 1, gridHeight)
+            val safeLeft = left.coerceIn(0, gridWidth - 1)
+            val safeRight = right.coerceIn(safeLeft, gridWidth - 1)
+            val count = rows
+            if (count > 0) {
+                for (r in safeTop until (safeBottom - count).coerceAtMost(safeBottom)) {
+                    for (c in safeLeft..safeRight) {
+                        cells[r][c] = cells[r + count][c]
+                    }
                 }
-            }
-            for (r in (bottom - count) until bottom) {
-                for (c in left..right) {
-                    cells[r][c] = NeovimCell()
+                for (r in (safeBottom - count).coerceAtLeast(safeTop) until safeBottom) {
+                    for (c in safeLeft..safeRight) {
+                        cells[r][c] = NeovimCell()
+                    }
                 }
-            }
-        } else if (count < 0) {
-            val absCount = -count
-            for (r in (bottom - 1) downTo (top + absCount)) {
-                for (c in left..right) {
-                    cells[r][c] = cells[r - absCount][c]
+            } else if (count < 0) {
+                val absCount = (-count).coerceAtMost(safeBottom - safeTop)
+                for (r in (safeBottom - 1) downTo (safeTop + absCount).coerceAtMost(safeBottom - 1)) {
+                    for (c in safeLeft..safeRight) {
+                        cells[r][c] = cells[r - absCount][c]
+                    }
                 }
-            }
-            for (r in top until (top + absCount)) {
-                for (c in left..right) {
-                    cells[r][c] = NeovimCell()
+                for (r in safeTop until (safeTop + absCount).coerceAtMost(safeBottom)) {
+                    for (c in safeLeft..safeRight) {
+                        cells[r][c] = NeovimCell()
+                    }
                 }
             }
         }
     }
 
+    fun copySnapshot(): NeovimBuffer {
+        synchronized(lock) {
+            val snap = NeovimBuffer()
+            snap.gridWidth = gridWidth
+            snap.gridHeight = gridHeight
+            snap.cursor = cursor.copy()
+            snap.mode = mode.copy()
+            snap.cells.clear()
+            for (r in 0 until gridHeight) {
+                val row = mutableListOf<NeovimCell>()
+                for (c in 0 until gridWidth) {
+                    if (r < cells.size && c < cells[r].size) {
+                        row.add(cells[r][c])
+                    } else {
+                        row.add(NeovimCell())
+                    }
+                }
+                snap.cells.add(row)
+            }
+            return snap
+        }
+    }
+
     fun getLineText(row: Int): String {
         if (row < 0 || row >= gridHeight) return ""
-        return cells[row].map { it.char }.joinToString("")
+        synchronized(lock) {
+            return if (row < cells.size) cells[row].map { it.char }.joinToString("") else ""
+        }
     }
 
     fun setCursor(row: Int, col: Int) {

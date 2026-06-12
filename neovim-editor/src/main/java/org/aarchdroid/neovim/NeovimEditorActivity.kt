@@ -7,7 +7,6 @@ import android.provider.OpenableColumns
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -81,20 +80,26 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             client.apiInfo()
             delay(50)
             client.uiAttach(80, 28)
+            // Defensive: ensure buffer matches requested size even if grid_resize is delayed
+            buffer.resize(80, 28)
+
+            // Sync terminal size with view (onSizeChanged may have fired before connect)
+            val (viewCols, viewRows) = withContext(Dispatchers.Main) { editorView.getGridSize() }
+            if (viewCols != 80 || viewRows != 28) {
+                client.request("nvim_ui_try_resize", viewCols, viewRows)
+            }
 
             withContext(Dispatchers.Main) {
-                statusLine.text = "Connected — press i to insert"
+                statusLine.text = "Connected — tap for keyboard"
                 supportActionBar?.title = "Neovim"
-                editorView.requestFocus()
-                val imm = getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
-                imm?.showSoftInput(editorView, InputMethodManager.SHOW_IMPLICIT)
             }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        scope.launch {
+        // Run cleanup before cancelling scope
+        runBlocking {
             client.uiDetach()
             client.disconnect()
             launcher.shutdown()
@@ -164,20 +169,30 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         }
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        Log.d(TAG, "onWindowFocusChanged hasFocus=$hasFocus connected=${connected.get()}")
+    }
+
     override fun onRedraw(updates: List<NeovimClient.RedrawEvent>) {
-        scope.launch(Dispatchers.Default) {
-            try {
-                for (update in updates) {
-                    processRedrawEvent(update)
-                }
-                withContext(Dispatchers.Main) {
-                    editorView.updateBuffer(buffer)
-                    updateStatusLine()
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Redraw error: ${e.message}")
+        val names = updates.map { "${it.name}(${it.args.size})" }
+        Log.d(TAG, "onRedraw events=${updates.size}: $names")
+        try {
+            for (update in updates) {
+                processRedrawEvent(update)
             }
+            val snapshot = takeBufferSnapshot()
+            scope.launch(Dispatchers.Main) {
+                editorView.updateBuffer(snapshot)
+                updateStatusLine()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Redraw error", e)
         }
+    }
+
+    private fun takeBufferSnapshot(): NeovimBuffer {
+        return buffer.copySnapshot()
     }
 
     override fun onError(error: String) {
@@ -190,16 +205,27 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     private fun processRedrawEvent(event: NeovimClient.RedrawEvent) {
         when (event.name) {
             "grid_resize" -> {
-                if (event.args.isNotEmpty() && event.args[0].size >= 2) {
-                    val w = event.args[0][1].asIntegerValue().toInt()
-                    val h = event.args[0][0].asIntegerValue().toInt()
+                var w = -1; var h = -1
+                if (event.args.size >= 3 && event.args[0].size == 1) {
+                    // Positional: ["grid_resize", grid, width, height] → per-arg [[grid], [width], [height]]
+                    w = event.args[1][0].asIntegerValue().toInt()
+                    h = event.args[2][0].asIntegerValue().toInt()
+                } else if (event.args.size >= 1 && event.args[0].size >= 3) {
+                    // Array: ["grid_resize", [grid, width, height]] → per-arg [[grid, width, height]]
+                    w = event.args[0][1].asIntegerValue().toInt()
+                    h = event.args[0][2].asIntegerValue().toInt()
+                }
+                if (w >= 0 && h >= 0) {
+                    Log.d(TAG, "grid_resize $w x $h")
                     buffer.resize(w, h)
+                } else {
+                    Log.w(TAG, "grid_resize unexpected args: ${event.args}")
                 }
             }
             "grid_line" -> {
+                var totalCells = 0
                 for (arg in event.args) {
                     if (arg.size >= 4) {
-                        val grid = arg[0].asIntegerValue().toInt()
                         val row = arg[1].asIntegerValue().toInt()
                         val colStart = arg[2].asIntegerValue().toInt()
                         val cellsData = arg[3].asArrayValue().list()
@@ -213,46 +239,54 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 for (ch in text) {
                                     if (col < buffer.gridWidth) {
                                         buffer.setCell(row, col, NeovimCell(char = ch))
+                                        totalCells++
                                     }
                                     col++
                                 }
                                 i++
                             } else if (cellVal.isArrayValue) {
                                 val cellArr = cellVal.asArrayValue().list()
-                                val hlId = cellArr[1].asIntegerValue().toInt()
-                                val ch = cellArr[2].asStringValue().asString()
-                                val cell = if (hlId >= 0) {
-                                    NeovimCell(char = ch[0], foregroundId = hlId)
-                                } else {
-                                    NeovimCell(char = ch[0])
+                                val text = cellArr[0].asStringValue().asString()
+                                val hlId = if (cellArr.size > 1 && cellArr[1].isIntegerValue) cellArr[1].asIntegerValue().toInt() else -1
+                                val repeat = if (cellArr.size > 2 && cellArr[2].isIntegerValue) cellArr[2].asIntegerValue().toInt() else 1
+                                val cell = NeovimCell(char = text[0], foregroundId = hlId.takeIf { it >= 0 } ?: -1)
+                                for (k in 0 until repeat) {
+                                    if (col < buffer.gridWidth) {
+                                        buffer.setCell(row, col, cell)
+                                        totalCells++
+                                    }
+                                    col++
                                 }
-                                if (col < buffer.gridWidth) {
-                                    buffer.setCell(row, col, cell)
-                                }
-                                col++
                                 i++
                             } else {
                                 i++
                             }
                         }
                     } else if (arg.size >= 3) {
-                        val grid = arg[0].asIntegerValue().toInt()
                         val row = arg[1].asIntegerValue().toInt()
                         val text = arg[2].asStringValue().asString()
                         for ((col, ch) in text.withIndex()) {
                             if (col < buffer.gridWidth) {
                                 buffer.setCell(row, col, NeovimCell(char = ch))
+                                totalCells++
                             }
                         }
                     }
                 }
+                Log.d(TAG, "grid_line: $totalCells cells set")
             }
             "grid_cursor_goto" -> {
-                if (event.args.isNotEmpty()) {
-                    val args = event.args[0]
-                    val grid = args[0].asIntegerValue().toInt()
-                    val row = args[1].asIntegerValue().toInt()
-                    val col = args[2].asIntegerValue().toInt()
+                var row = -1; var col = -1
+                if (event.args.size >= 3 && event.args[0].size == 1) {
+                    // Positional: [[grid], [row], [col]]
+                    row = event.args[1][0].asIntegerValue().toInt()
+                    col = event.args[2][0].asIntegerValue().toInt()
+                } else if (event.args.size >= 1 && event.args[0].size >= 3) {
+                    // Array: [[grid, row, col]]
+                    row = event.args[0][1].asIntegerValue().toInt()
+                    col = event.args[0][2].asIntegerValue().toInt()
+                }
+                if (row >= 0 && col >= 0) {
                     buffer.setCursor(row, col)
                 }
             }
@@ -287,6 +321,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 if (event.args.isNotEmpty() && event.args[0].size >= 2) {
                     val cursorStylesValue = event.args[0][1]
                     if (cursorStylesValue.isArrayValue) {
+                        @Suppress("UNUSED_VARIABLE")
                         val cursorStyles = cursorStylesValue.asArrayValue().list()
                     }
                 }
@@ -319,7 +354,9 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         val line = buffer.cursor.row + 1
         val col = buffer.cursor.col + 1
         val file = currentFileName
-        statusLine.text = " $mode  $file  Ln $line, Col $col "
+        val text = " $mode  $file  Ln $line, Col $col "
+        statusLine.text = text
+        Log.v(TAG, "status: $text")
     }
 
     private fun openFilePicker() {
@@ -428,6 +465,11 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             if (ok) {
                 delay(100)
                 client.uiAttach(80, 28)
+                buffer.resize(80, 28)
+                val (viewCols, viewRows) = withContext(Dispatchers.Main) { editorView.getGridSize() }
+                if (viewCols != 80 || viewRows != 28) {
+                    client.request("nvim_ui_try_resize", viewCols, viewRows)
+                }
                 withContext(Dispatchers.Main) {
                     statusLine.text = "Reconnected"
                 }

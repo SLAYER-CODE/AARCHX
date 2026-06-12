@@ -123,8 +123,6 @@ class NeovimClient(
             "ext_multigrid" to false
         )
         request("nvim_ui_attach", width, height, options)
-        // Also send as an extra notification for compatibility
-        notify("nvim_ui_attach", width, height, options)
     }
 
     suspend fun uiDetach() {
@@ -286,6 +284,9 @@ class NeovimClient(
         }
     }
 
+    private var redrawCounter = 0
+    private var logRawEvents = true
+
     private fun handleNotification(elements: List<Value>) {
         if (elements.size >= 3) {
             val method = elements[1].asStringValue().asString()
@@ -294,19 +295,64 @@ class NeovimClient(
             when (method) {
                 "redraw" -> {
                     if (params.isArrayValue) {
-                        val updates = params.asArrayValue().list().map { event ->
+                        val rawList = params.asArrayValue().list()
+                        val updates = rawList.map { event ->
                             val eventArr = event.asArrayValue()
                             val name = eventArr.list()[0].asStringValue().asString()
-                            val args = mutableListOf<List<Value>>()
+                            // Cada arg msgpack es su propio event.args[i]
+                            val evtArgs = mutableListOf<List<Value>>()
                             for (i in 1 until eventArr.list().size) {
-                                val arg = eventArr.list()[i]
-                                if (arg.isArrayValue) {
-                                    args.add(arg.asArrayValue().list())
+                                val v = eventArr.list()[i]
+                                if (v.isArrayValue) {
+                                    evtArgs.add(v.asArrayValue().list())
                                 } else {
-                                    args.add(listOf(arg))
+                                    evtArgs.add(listOf(v))
                                 }
                             }
-                            RedrawEvent(name, args)
+                            RedrawEvent(name, evtArgs)
+                        }
+                        // Log raw structure for first 5 redraw batches
+                        if (logRawEvents && redrawCounter < 5) {
+                            redrawCounter++
+                            val eventNames = updates.map { it.name }
+                            Log.d("NeovimClient", "redraw #$redrawCounter events=$eventNames")
+                            for (ev in updates.take(3)) {
+                                val argTypes = ev.args.flatten().map { v ->
+                                    when {
+                                        v.isArrayValue -> "Array(${v.asArrayValue().list().size})"
+                                        v.isStringValue -> "Str"
+                                        v.isIntegerValue -> "Int"
+                                        v.isBooleanValue -> "Bool"
+                                        v.isNilValue -> "Nil"
+                                        v.isFloatValue -> "Float"
+                                        else -> "Other"
+                                    }
+                                }
+                                Log.d("NeovimClient", "  ${ev.name} args=${ev.args.size} types=$argTypes")
+                                if (ev.name == "grid_line" && ev.args.isNotEmpty()) {
+                                    val firstLine = ev.args[0]
+                                    if (firstLine.size >= 4) {
+                                        try {
+                                            val cellsVal = firstLine[3]
+                                            Log.d("NeovimClient", "    grid_line grid=${firstLine[0]} row=${firstLine[1]} colStart=${firstLine[2]} cellsType=${
+                                                if (cellsVal.isArrayValue) "Array(${cellsVal.asArrayValue().list().size})" else cellsVal
+                                            }")
+                                            if (cellsVal.isArrayValue) {
+                                                val celist = cellsVal.asArrayValue().list()
+                                                celist.take(5).forEachIndexed { idx, c ->
+                                                    Log.d("NeovimClient", "      cell[$idx]=${
+                                                        if (c.isStringValue) "Str(${c.asStringValue().asString()})"
+                                                        else if (c.isArrayValue) "Arr(${c.asArrayValue().list()})"
+                                                        else c
+                                                    }")
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.d("NeovimClient", "    grid_line parse error: ${e.message}")
+                                        }
+                                    }
+                                }
+                            }
                         }
                         callback?.onRedraw(updates)
                     }
