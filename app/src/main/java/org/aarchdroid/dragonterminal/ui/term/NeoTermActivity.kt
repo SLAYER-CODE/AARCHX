@@ -170,6 +170,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 if (tabSwitcher.selectedTab is TermTab) {
                     val tab = tabSwitcher.selectedTab as TermTab
                     toggleToolbar(tab.toolbar, !isShow)
+                    tab.termData.termView?.updateSize()
                 }
             }
         })
@@ -849,7 +850,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/archdroid.sh"
         if (!systemShell && profile.loginShell == defaultScript) {
             parameter.executablePath("su")
-            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mount -o bind /data /data/local/aarchdroid/data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
+            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mkdir -p /data/local/aarchdroid/data/data/org.aarchdroid /data/local/aarchdroid/dev /data/local/aarchdroid/dev/pts /data/local/aarchdroid/tmp; mknod -m 666 /data/local/aarchdroid/dev/null c 1 3 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/zero c 1 5 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/random c 1 8 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/urandom c 1 9 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/ptmx c 5 2 2>/dev/null; mount -t proc proc /data/local/aarchdroid/proc 2>/dev/null; mount -t sysfs sys /data/local/aarchdroid/sys 2>/dev/null; mount -o bind /dev/pts /data/local/aarchdroid/dev/pts 2>/dev/null; chmod 1777 /data/local/aarchdroid/tmp 2>/dev/null; mount -o bind /data/data/org.aarchdroid /data/local/aarchdroid/data/data/org.aarchdroid 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
             parameter.arguments(arrayOf("su", "-c", inlineCmd))
         }
 
@@ -914,7 +915,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
             if (!systemShell && profile.loginShell == defaultScript) {
                 parameter.executablePath("su")
-                val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mount -o bind /data /data/local/aarchdroid/data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
+                val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mkdir -p /data/local/aarchdroid/data/data/org.aarchdroid /data/local/aarchdroid/dev /data/local/aarchdroid/dev/pts /data/local/aarchdroid/tmp; mknod -m 666 /data/local/aarchdroid/dev/null c 1 3 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/zero c 1 5 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/random c 1 8 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/urandom c 1 9 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/ptmx c 5 2 2>/dev/null; mount -t proc proc /data/local/aarchdroid/proc 2>/dev/null; mount -t sysfs sys /data/local/aarchdroid/sys 2>/dev/null; mount -o bind /dev/pts /data/local/aarchdroid/dev/pts 2>/dev/null; chmod 1777 /data/local/aarchdroid/tmp 2>/dev/null; mount -o bind /data/data/org.aarchdroid /data/local/aarchdroid/data/data/org.aarchdroid 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
                 parameter.arguments(arrayOf("su", "-c", inlineCmd))
             }
 
@@ -1290,6 +1291,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         if (::tabSwitcher.isInitialized) {
             placeholder.visibility = if (tabSwitcher.count == 0) View.VISIBLE else View.GONE
         }
+        findViewById<TextView>(R.id.empty_terminals_text).visibility =
+            if (tabSwitcher.count == 0) View.VISIBLE else View.GONE
         toolbar.menu?.findItem(R.id.toggle_tab_switcher_menu_item)?.isVisible = tabSwitcher.count > 0
         if (tabSwitcher.count == 0) {
             val logsDisabled = org.aarchdroid.dragonterminal.frontend.config.NeoPreference.isLoggingDisabled()
