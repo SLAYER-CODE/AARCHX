@@ -343,9 +343,9 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                     val modeName = event.args[0][0].asStringValue().asString()
                     Log.d(TAG, "mode_change: $modeName")
                     buffer.mode.name = modeName
-                    buffer.cursor.shape = when (buffer.mode.name) {
-                        "i", "ic", "ix" -> "vertical"
-                        "R", "Rx", "Rvc" -> "horizontal"
+                    buffer.cursor.shape = when {
+                        buffer.mode.name in listOf("insert", "i", "ic", "ix") -> "vertical"
+                        buffer.mode.name in listOf("replace", "R", "Rx", "Rvc") -> "horizontal"
                         else -> "block"
                     }
                 } else {
