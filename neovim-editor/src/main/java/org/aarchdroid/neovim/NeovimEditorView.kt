@@ -44,6 +44,15 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     var onModeChange: ((String) -> Unit)? = null
     var onPathChange: ((String) -> Unit)? = null
     var isCursorBlinkingEnabled = true
+    var isReady: Boolean = false
+        set(value) {
+            field = value
+            if (!value) {
+                cursorVisible = false
+                blinkHandler.removeCallbacks(blinkRunnable)
+                postInvalidate()
+            }
+        }
 
     fun getGridSize(): Pair<Int, Int> {
         val cw = maxOf(cellWidth, 1f)
@@ -77,6 +86,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
                 Log.v("NeovimEditorView", "ACTION_DOWN x=${event.x} y=${event.y}")
                 requestFocus()
                 showKeyboard("touch")
+                if (!isReady) return@setOnTouchListener true
                 val col = ((event.x - gridOffsetX) / cellWidth).toInt()
                 val row = ((event.y - gridOffsetY) / cellHeight).toInt()
                 if (col in 0 until buffer.gridWidth && row in 0 until buffer.gridHeight) {
@@ -194,6 +204,10 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     }
 
     private fun showKeyboard(source: String, attempt: Int = 0) {
+        if (!isReady) {
+            Log.d("NeovimEditorView", "showKeyboard blocked: not ready yet")
+            return
+        }
         Log.d("NeovimEditorView", "showKeyboard src=$source attempt=$attempt isFocused=$isFocused windowToken=$windowToken")
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -230,7 +244,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         Log.d("NeovimEditorView", "onFocusChanged gainFocus=$gainFocus direction=$direction")
         if (gainFocus) {
             cursorVisible = true
-            blinkHandler.postDelayed(blinkRunnable, cursorBlinkInterval)
+            if (isReady) blinkHandler.postDelayed(blinkRunnable, cursorBlinkInterval)
             showKeyboard("focus")
         } else {
             blinkHandler.removeCallbacks(blinkRunnable)
@@ -330,7 +344,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         }
 
         // Cursor
-        if (cursorVisible && isFocused) {
+        if (cursorVisible && isFocused && isReady) {
             val cx = gridOffsetX + buffer.cursor.col * cellWidth
             val cy = gridOffsetY + buffer.cursor.row * cellHeight
             val mode = buffer.mode.name
@@ -389,10 +403,11 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
 
             in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> {
                 val c = '0' + (keyCode - KeyEvent.KEYCODE_0)
+                val shiftSymbols = ")!@#$%^&*("
                 when {
                     event.isAltPressed -> "<M-$c>"
                     event.isCtrlPressed -> "<C-$c>"
-                    else -> if (event.isShiftPressed) "!$c" else c.toString()
+                    else -> if (event.isShiftPressed) shiftSymbols[keyCode - KeyEvent.KEYCODE_0].toString() else c.toString()
                 }
             }
 

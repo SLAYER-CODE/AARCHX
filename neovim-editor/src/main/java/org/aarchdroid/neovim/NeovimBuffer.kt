@@ -117,9 +117,9 @@ class NeovimBuffer {
             val safeBottom = bottom.coerceIn(safeTop + 1, gridHeight)
             val safeLeft = left.coerceIn(0, gridWidth - 1)
             val safeRight = right.coerceIn(safeLeft, gridWidth - 1)
-            val count = rows
-            if (count > 0) {
-                for (r in safeTop until (safeBottom - count).coerceAtMost(safeBottom)) {
+            if (rows > 0) {
+                val count = rows.coerceAtMost(safeBottom - safeTop)
+                for (r in safeTop until safeBottom - count) {
                     for (c in safeLeft..safeRight) {
                         cells[r][c] = cells[r + count][c]
                     }
@@ -129,15 +129,36 @@ class NeovimBuffer {
                         cells[r][c] = NeovimCell()
                     }
                 }
-            } else if (count < 0) {
-                val absCount = (-count).coerceAtMost(safeBottom - safeTop)
-                for (r in (safeBottom - 1) downTo (safeTop + absCount).coerceAtMost(safeBottom - 1)) {
+            } else if (rows < 0) {
+                val absCount = (-rows).coerceAtMost(safeBottom - safeTop)
+                for (r in safeBottom - 1 downTo safeTop + absCount) {
                     for (c in safeLeft..safeRight) {
                         cells[r][c] = cells[r - absCount][c]
                     }
                 }
                 for (r in safeTop until (safeTop + absCount).coerceAtMost(safeBottom)) {
                     for (c in safeLeft..safeRight) {
+                        cells[r][c] = NeovimCell()
+                    }
+                }
+            }
+            if (cols > 0) {
+                val count = cols.coerceAtMost(safeRight - safeLeft)
+                for (r in safeTop until safeBottom) {
+                    for (c in safeLeft until safeRight - count) {
+                        cells[r][c] = cells[r][c + count]
+                    }
+                    for (c in (safeRight - count).coerceAtLeast(safeLeft)..safeRight) {
+                        cells[r][c] = NeovimCell()
+                    }
+                }
+            } else if (cols < 0) {
+                val absCount = (-cols).coerceAtMost(safeRight - safeLeft)
+                for (r in safeTop until safeBottom) {
+                    for (c in safeRight downTo safeLeft + absCount) {
+                        cells[r][c] = cells[r][c - absCount]
+                    }
+                    for (c in safeLeft until (safeLeft + absCount).coerceAtMost(safeRight)) {
                         cells[r][c] = NeovimCell()
                     }
                 }
@@ -176,7 +197,20 @@ class NeovimBuffer {
     }
 
     fun setCursor(row: Int, col: Int) {
-        cursor.row = row
-        cursor.col = col
+        synchronized(lock) {
+            cursor.row = row
+            cursor.col = col
+        }
+    }
+
+    fun applyModeChange(name: String) {
+        synchronized(lock) {
+            mode.name = name
+            cursor.shape = when {
+                name in listOf("insert", "i", "ic", "ix") -> "vertical"
+                name in listOf("replace", "R", "Rx", "Rvc") -> "horizontal"
+                else -> "block"
+            }
+        }
     }
 }

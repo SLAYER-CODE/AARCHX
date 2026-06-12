@@ -7,7 +7,6 @@ import android.provider.OpenableColumns
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -31,7 +30,6 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     }
 
     private lateinit var editorView: NeovimEditorView
-    private lateinit var statusLine: TextView
     private lateinit var toolbar: Toolbar
 
     private val launcher = NeovimLauncher(this)
@@ -55,13 +53,13 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         supportActionBar?.title = "Neovim"
 
         editorView = findViewById(R.id.editor_view)
-        statusLine = findViewById(R.id.status_line)
 
         client.setCallback(this)
-        // Single consumer: processes keystrokes FIFO to prevent write-ordering races
+        // Single consumer: processes keystrokes FIFO, waiting for connection+uiAttach
         scope.launch {
             for (keys in inputQueue) {
                 try {
+                    while (!connected.get()) delay(50)
                     client.input(keys)
                 } catch (e: Exception) {
                     Log.e(TAG, "input consumer failed for \"$keys\"", e)
@@ -73,31 +71,36 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             inputQueue.trySend(keys)
         }
         editorView.onResize = { rows, cols -> scope.launch { client.request("nvim_ui_try_resize", cols, rows) } }
-        editorView.onModeChange = { mode -> updateStatusLine() }
+        editorView.onModeChange = { mode -> updateToolbarTitle() }
         editorView.fontChanged()
 
-        statusLine.text = "Starting Neovim..."
+        supportActionBar?.title = "Starting Neovim..."
 
         scope.launch {
             val launched = launcher.launch()
             if (!launched) {
-                statusLine.text = "Neovim not found! Install nvim first."
+                supportActionBar?.title = "Neovim not found!"
+                Toast.makeText(this@NeovimEditorActivity, "Install nvim first", Toast.LENGTH_LONG).show()
                 return@launch
             }
 
             val connectedOk = client.connect()
             if (!connectedOk) {
-                statusLine.text = "Connection failed"
+                supportActionBar?.title = "Connection failed"
                 return@launch
             }
 
-            connected.set(true)
             delay(100)
             client.apiInfo()
             delay(50)
             client.uiAttach(80, 28)
             // Defensive: ensure buffer matches requested size even if grid_resize is delayed
             buffer.resize(80, 28)
+            // Discard keystrokes typed before connection was ready (would be sent in normal mode)
+            while (inputQueue.tryReceive().isSuccess) { }
+            // Signal consumer: socket + uiAttach are ready
+            connected.set(true)
+            withContext(Dispatchers.Main) { editorView.isReady = true }
 
             // Sync terminal size with view (onSizeChanged may have fired before connect)
             val (viewCols, viewRows) = withContext(Dispatchers.Main) { editorView.getGridSize() }
@@ -106,8 +109,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             }
 
             withContext(Dispatchers.Main) {
-                statusLine.text = "Connected — tap for keyboard"
-                supportActionBar?.title = "Neovim"
+                supportActionBar?.title = currentFileName
             }
         }
     }
@@ -138,7 +140,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 currentFilePath = null
                 currentFileName = "untitled"
                 fileUri = null
-                updateStatusLine()
+                updateToolbarTitle()
                 true
             }
             R.id.action_save -> {
@@ -175,13 +177,14 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     }
 
     override fun onConnected() {
-        Log.d(TAG, "Connected")
+        Log.d(TAG, "onConnected called")
     }
 
     override fun onDisconnected() {
         connected.set(false)
         scope.launch(Dispatchers.Main) {
-            statusLine.text = "Disconnected — tap Reconnect"
+            supportActionBar?.title = "Disconnected"
+            editorView.isReady = false
         }
     }
 
@@ -204,13 +207,12 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         val snapshot = buffer.copySnapshot()
         scope.launch(Dispatchers.Main) {
             editorView.updateBuffer(snapshot)
-            updateStatusLine()
         }
     }
 
     override fun onError(error: String) {
         scope.launch(Dispatchers.Main) {
-            statusLine.text = "Error: $error"
+            supportActionBar?.title = "Error: $error"
             Toast.makeText(this@NeovimEditorActivity, error, Toast.LENGTH_SHORT).show()
         }
     }
@@ -353,12 +355,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 if (event.args.isNotEmpty() && event.args[0].size >= 2) {
                     val modeName = event.args[0][0].asStringValue().asString()
                     Log.d(TAG, "mode_change: $modeName")
-                    buffer.mode.name = modeName
-                    buffer.cursor.shape = when {
-                        buffer.mode.name in listOf("insert", "i", "ic", "ix") -> "vertical"
-                        buffer.mode.name in listOf("replace", "R", "Rx", "Rvc") -> "horizontal"
-                        else -> "block"
-                    }
+                    buffer.applyModeChange(modeName)
                 } else {
                     Log.w(TAG, "mode_change: unexpected args=${event.args}")
                 }
@@ -380,14 +377,13 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         }
     }
 
-    private fun updateStatusLine() {
+    private fun updateToolbarTitle() {
         val mode = buffer.mode.name.uppercase().take(4)
         val line = buffer.cursor.row + 1
         val col = buffer.cursor.col + 1
-        val file = currentFileName
-        val text = " $mode  $file  Ln $line, Col $col "
-        statusLine.text = text
-        Log.v(TAG, "status: $text")
+        val text = "$mode  $currentFileName  Ln $line, Col $col"
+        supportActionBar?.title = text
+        Log.v(TAG, "title: $text")
     }
 
     private fun openFilePicker() {
@@ -411,9 +407,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
 
                     scope.launch {
                         client.command("enew!")
-                        val escaped = content
-                            .replace("\\", "\\\\")
-                            .replace("'", "'\\''")
+                        val escaped = content.replace("'", "''")
                         client.command("0put = '$escaped'")
                         client.command("1delete_")
                         client.command("file " + escapeVimPath(currentFileName))
@@ -478,10 +472,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 scope.launch {
                     client.command("qa!")
                     delay(200)
-                    client.disconnect()
-                    launcher.shutdown()
+                    finish()
                 }
-                finish()
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -497,12 +489,15 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 delay(100)
                 client.uiAttach(80, 28)
                 buffer.resize(80, 28)
+                while (inputQueue.tryReceive().isSuccess) { }
+                connected.set(true)
+                withContext(Dispatchers.Main) { editorView.isReady = true }
                 val (viewCols, viewRows) = withContext(Dispatchers.Main) { editorView.getGridSize() }
                 if (viewCols != 80 || viewRows != 28) {
                     client.request("nvim_ui_try_resize", viewCols, viewRows)
                 }
                 withContext(Dispatchers.Main) {
-                    statusLine.text = "Reconnected"
+                    supportActionBar?.title = currentFileName
                 }
             }
         }

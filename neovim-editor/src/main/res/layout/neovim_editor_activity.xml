@@ -27,20 +27,6 @@
     <org.aarchdroid.neovim.NeovimEditorView
         android:id="@+id/editor_view"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <TextView
-        android:id="@+id/status_line"
-        android:layout_width="match_parent"
-        android:layout_height="28dp"
-        android:background="#FF252525"
-        android:fontFamily="monospace"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:textColor="#FFAAAAAA"
-        android:textSize="13sp"
-        android:gravity="center_vertical"
-        android:text="Neovim" />
+        android:layout_height="match_parent" />
 
 </LinearLayout>
