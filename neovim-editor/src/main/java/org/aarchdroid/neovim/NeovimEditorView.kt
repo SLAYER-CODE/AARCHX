@@ -124,6 +124,17 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
                 return result
             }
 
+            override fun setComposingText(text: CharSequence, newCursorPosition: Int): Boolean {
+                val result = super.setComposingText(text, newCursorPosition)
+                if (text.isNotEmpty()) sendText(text.toString())
+                return result
+            }
+
+            override fun finishComposingText(): Boolean {
+                val result = super.finishComposingText()
+                return result
+            }
+
             override fun deleteSurroundingText(beforeLength: Int, afterLength: Int): Boolean {
                 repeat(beforeLength) { onInput?.invoke("<BS>") }
                 repeat(afterLength) { onInput?.invoke("<Del>") }

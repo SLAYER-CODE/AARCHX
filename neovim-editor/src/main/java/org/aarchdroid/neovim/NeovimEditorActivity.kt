@@ -338,16 +338,12 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
             }
             "mode_change" -> {
-                if (event.args.isNotEmpty() && event.args[0].size >= 1) {
-                    val modeEntry = event.args[0][0].asArrayValue()
-                    val modeList = modeEntry.list()
-                    if (modeList.size >= 1 && modeList[0].isStringValue) {
-                        buffer.mode.name = modeList[0].asStringValue().asString()
-                        buffer.cursor.shape = when (buffer.mode.name) {
-                            "i", "ic", "ix" -> "vertical"
-                            "R", "Rx", "Rvc" -> "horizontal"
-                            else -> "block"
-                        }
+                if (event.args.isNotEmpty() && event.args[0].size >= 2) {
+                    buffer.mode.name = event.args[0][0].asStringValue().asString()
+                    buffer.cursor.shape = when (buffer.mode.name) {
+                        "i", "ic", "ix" -> "vertical"
+                        "R", "Rx", "Rvc" -> "horizontal"
+                        else -> "block"
                     }
                 }
             }
