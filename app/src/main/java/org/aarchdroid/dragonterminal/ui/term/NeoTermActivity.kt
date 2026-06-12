@@ -849,7 +849,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/archdroid.sh"
         if (!systemShell && profile.loginShell == defaultScript) {
             parameter.executablePath("su")
-            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
+            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mount -o bind /data /data/local/aarchdroid/data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
             parameter.arguments(arrayOf("su", "-c", inlineCmd))
         }
 
@@ -914,7 +914,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
             if (!systemShell && profile.loginShell == defaultScript) {
                 parameter.executablePath("su")
-                val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
+                val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mount -o bind /data /data/local/aarchdroid/data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
                 parameter.arguments(arrayOf("su", "-c", inlineCmd))
             }
 
@@ -1294,7 +1294,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         if (tabSwitcher.count == 0) {
             val logsDisabled = org.aarchdroid.dragonterminal.frontend.config.NeoPreference.isLoggingDisabled()
             if (logsDisabled) {
-                toolbar.title = "Logs deshabilitados"
+                toolbar.title = "Terminal"
                 toolbar.menu?.findItem(R.id.menu_item_clear_logs)?.isVisible = false
                 findViewById<TextView>(R.id.empty_logs_text).apply {
                     text = "Historial deshabilitado en Ajustes"

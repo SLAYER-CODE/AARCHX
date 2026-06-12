@@ -53,7 +53,7 @@ public class DcoBaseActivity extends Activity {
 
     protected String resolveSource(String toolKey) {
         try {
-            ToolInfo info = ToolDatabase.getInstance().getTool(toolKey);
+            ToolInfo info = ToolDatabase.getInstance().getTool(ToolDatabase.normalizeKey(toolKey));
             if (info != null && info.source != null) {
                 String src = info.source;
                 if ("arch".equals(src) || "blackarch".equals(src)) {
@@ -189,6 +189,7 @@ public class DcoBaseActivity extends Activity {
     }
 
     public void processInstallTool(String toolKey) {
+        toolKey = ToolDatabase.normalizeKey(toolKey);
         if (!processingTools.add(toolKey)) {
             Log.d(TAG, "processInstallTool(" + toolKey + ") already processing — ignored");
             return;
@@ -220,6 +221,7 @@ public class DcoBaseActivity extends Activity {
     }
 
     public void onUninstallClick(String toolKey) {
+        toolKey = ToolDatabase.normalizeKey(toolKey);
         if (!processingTools.add(toolKey)) {
             Log.d(TAG, "onUninstallClick(" + toolKey + ") already processing — ignored");
             return;
@@ -292,27 +294,36 @@ public class DcoBaseActivity extends Activity {
             sb.append("  read EC < \"$INSTALL_LOG.exit\" 2>/dev/null || EC=1\n");
             sb.append("  rm -f \"$INSTALL_LOG.exit\"\n");
             sb.append("}\n");
-            sb.append("INSTALL_CMD='").append(installCmd.replace("'", "'\\''")).append("'\n");
+            String cmd = installCmd;
+            if (cmd.startsWith("pacman ")) {
+                cmd = cmd.replaceFirst("^pacman ", "pacman --color always --disable-download-timeout ");
+            }
+            sb.append("echo \"\"\n");
+            sb.append("echo -e \"\\033[1;34m[AArchDroid]\\033[0m \\033[1;33mInstalando\\033[0m: $TOOLKEY\"\n");
+            sb.append("echo \"\"\n");
+            sb.append("INSTALL_CMD='").append(cmd.replace("'", "'\\''")).append("'\n");
             sb.append("_run \"$INSTALL_CMD\"\n");
             sb.append("EXIT_CODE=$EC\n");
-            sb.append("if [ $EXIT_CODE -ne 0 ] && echo \"$INSTALL_CMD\" | grep -qE '^pacman '; then\n");
+            sb.append("if [ $EXIT_CODE -ne 0 ] && echo \"$INSTALL_CMD\" | grep -qE '^pacman --color always '; then\n");
             sb.append("  echo \"\"\n");
-            sb.append("  echo \"=== Sincronizando bases de datos... ===\"\n");
-            sb.append("  _run \"pacman -Sy\"\n");
+            sb.append("  echo -e \"\\033[1;33m  -\\033[0m Sincronizando bases de datos...\"\n");
+            sb.append("  _run \"pacman --color always --disable-download-timeout -Sy\"\n");
             sb.append("  if [ $EC -eq 0 ]; then\n");
             sb.append("    echo \"\"\n");
-            sb.append("    echo \"=== Reintentando instalacion... ===\"\n");
+            sb.append("    echo -e \"\\033[1;33m  -\\033[0m Reintentando instalacion...\"\n");
             sb.append("    _run \"$INSTALL_CMD\"\n");
             sb.append("    EXIT_CODE=$EC\n");
+            sb.append("  else\n");
+            sb.append("    echo -e \"\\033[1;31m  -\\033[0m Error al sincronizar repositorios (verifica tu conexion)\"\n");
             sb.append("  fi\n");
             sb.append("fi\n");
             sb.append("\n");
             sb.append("echo \"\"\n");
             sb.append("echo \"==========================================\"\n");
             sb.append("if [ $EXIT_CODE -eq 0 ]; then\n");
-            sb.append("  echo \"  Instalacion completada: Exitoso\"\n");
+            sb.append("  echo -e \"\\033[1;32m  [AArchDroid] Instalacion completada: Exitoso\\033[0m\"\n");
             sb.append("else\n");
-            sb.append("  echo \"  Instalacion completada: Fallido\"\n");
+            sb.append("  echo -e \"\\033[1;31m  [AArchDroid] Instalacion completada: Fallido\\033[0m\"\n");
             sb.append("fi\n");
             sb.append("echo \"==========================================\"\n");
             sb.append("\n");
@@ -377,16 +388,19 @@ public class DcoBaseActivity extends Activity {
             sb.append("  sqlite3 \"$DB\" \"$1\"\n");
             sb.append("}\n");
             sb.append("\n");
-            sb.append("(").append(uninstallCmd).append("; echo $? > $INSTALL_LOG.exit) 2>&1 | tee $INSTALL_LOG\n");
+            String coloredUninstallCmd = uninstallCmd.replaceFirst("^pacman ", "pacman --color always --disable-download-timeout ");
+            sb.append("echo -e \"\\033[1;34m[AArchDroid]\\033[0m \\033[1;33mDesinstalando\\033[0m: $TOOLKEY\"\n");
+            sb.append("echo \"\"\n");
+            sb.append("(").append(coloredUninstallCmd).append("; echo $? > $INSTALL_LOG.exit) 2>&1 | tee $INSTALL_LOG\n");
             sb.append("read EXIT_CODE < $INSTALL_LOG.exit 2>/dev/null || EXIT_CODE=1\n");
             sb.append("rm -f $INSTALL_LOG.exit\n");
             sb.append("\n");
             sb.append("echo \"\"\n");
             sb.append("echo \"==========================================\"\n");
             sb.append("if [ $EXIT_CODE -eq 0 ]; then\n");
-            sb.append("  echo \"  Desinstalacion completada: Exitoso\"\n");
+            sb.append("  echo -e \"\\033[1;32m  [AArchDroid] Desinstalacion completada: Exitoso\\033[0m\"\n");
             sb.append("else\n");
-            sb.append("  echo \"  Desinstalacion completada: Fallido\"\n");
+            sb.append("  echo -e \"\\033[1;31m  [AArchDroid] Desinstalacion completada: Fallido\\033[0m\"\n");
             sb.append("fi\n");
             sb.append("echo \"==========================================\"\n");
             sb.append("\n");
@@ -396,7 +410,7 @@ public class DcoBaseActivity extends Activity {
             sb.append("    retry_sqlite \"UPDATE categories SET installedTools=(SELECT COUNT(*) FROM tools WHERE category='$CATEGORY' AND status='installed'), installedSizeMb=(SELECT COALESCE(SUM(actualSizeBytes)/(1024*1024),0) FROM tools WHERE category='$CATEGORY' AND status='installed') WHERE name='$CATEGORY'\"\n");
             sb.append("else\n");
             sb.append("    ERROR=$(tail -5 $INSTALL_LOG 2>/dev/null | tr '\\n' ' ' | sed \"s/'/''/g\")\n");
-            sb.append("    retry_sqlite \"UPDATE tools SET status='installed', errorLog='$ERROR' WHERE toolKey='$TOOLKEY'\"\n");
+            sb.append("    retry_sqlite \"UPDATE tools SET status='failed', errorLog='$ERROR' WHERE toolKey='$TOOLKEY'\"\n");
             sb.append("fi\n");
             sb.append("rm -f $INSTALL_LOG\n");
 

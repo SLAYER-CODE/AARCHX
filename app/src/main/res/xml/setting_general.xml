@@ -55,6 +55,12 @@
         android:summary="@string/pref_general_disable_logs_desc"
         android:title="@string/pref_general_disable_logs" />
 
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="@string/key_general_clear_on_start"
+        android:summary="@string/pref_general_clear_on_start_desc"
+        android:title="@string/pref_general_clear_on_start" />
+
     <ListPreference
         android:defaultValue="5"
         android:entries="@array/pref_general_command_limit_entries"

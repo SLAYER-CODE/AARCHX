@@ -135,7 +135,7 @@ class NeovimClient(
     }
 
     suspend fun input(keys: String) {
-        request("nvim_input", keys)
+        notify("nvim_input", keys)
     }
 
     suspend fun command(cmd: String) {

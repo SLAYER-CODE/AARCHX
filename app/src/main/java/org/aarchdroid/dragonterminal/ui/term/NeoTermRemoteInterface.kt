@@ -260,7 +260,7 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
         val loginShell = NeoPreference.getLoginShellPath()
         if (!detectSystemShell() && loginShell == defaultScript) {
             parameter.executablePath("su")
-            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
+            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mount -o bind /data /data/local/aarchdroid/data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
             parameter.arguments(arrayOf("su", "-c", inlineCmd))
         }
 

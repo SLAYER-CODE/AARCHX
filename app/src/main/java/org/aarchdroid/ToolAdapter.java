@@ -47,11 +47,14 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         h.icon.setImageResource(t.iconResId);
         h.title.setText(t.displayName);
         h.description.setText(t.description);
-        String status = statusCache.getOrDefault(t.key, "not_installed");
+        String nkey = ToolDatabase.normalizeKey(t.key);
+        String status = statusCache.getOrDefault(nkey, "not_installed");
+        boolean installed = "installed".equals(status);
+        boolean isSystem = installed && "local".equals(t.source);
         h.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if ("installed".equals(status)) {
+                if (installed || "local".equals(t.source)) {
                     if (listener != null) listener.onToolClick(t);
                 } else {
                     if (listener != null) listener.onInstallClick(t.key);
@@ -85,7 +88,7 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         h.installBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if ("installed".equals(status)) {
+                if (installed || "local".equals(t.source)) {
                     if (listener != null) listener.onLaunchTool(t.key);
                 } else {
                     if (listener != null) listener.onInstallClick(t.key);
@@ -93,14 +96,18 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
             }
         });
         h.uninstallBadge.setTag(t.key);
-        h.uninstallBadge.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (listener != null) listener.onUninstallClick(t.key);
-            }
-        });
-        updateCardForStatus(h, status);
-        updateBadge(h, t.key);
+        if (isSystem) {
+            h.uninstallBadge.setVisibility(View.GONE);
+        } else {
+            h.uninstallBadge.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) listener.onUninstallClick(t.key);
+                }
+            });
+        }
+        updateCardForStatus(h, status, isSystem);
+        updateBadge(h, nkey);
     }
 
     private void updateBadge(ViewHolder h, String toolKey) {
@@ -123,18 +130,18 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         }
     }
 
-    private void updateCardForStatus(ViewHolder h, String status) {
+    private void updateCardForStatus(ViewHolder h, String status, boolean isSystem) {
         int iconRes;
         int tint;
         int textColor;
         int statusBg;
 
-        if ("installed".equals(status)) {
+        if (isSystem) {
             iconRes = R.drawable.ic_check;
-            tint = 0xFF00FF00;
+            tint = 0xFF00FFFF;
             textColor = 0xFF00FF00;
-            statusBg = 0xFF00FF00;
-        } else if ("installing".equals(status)) {
+            statusBg = 0xFF00FFFF;
+        } else if ("installed".equals(status)) {
             iconRes = R.drawable.ic_install;
             tint = 0xFFFF8C00;
             textColor = 0xFFFF8C00;
@@ -157,7 +164,7 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         h.title.setTextColor(textColor);
         h.description.setTextColor(textColor);
         boolean installed = "installed".equals(status);
-        h.uninstallBadge.setVisibility(installed ? View.VISIBLE : View.GONE);
+        h.uninstallBadge.setVisibility(!isSystem && installed ? View.VISIBLE : View.GONE);
         h.badgeSize.setVisibility(installed ? View.VISIBLE : View.GONE);
         h.badgeRow.setVisibility(View.VISIBLE);
     }

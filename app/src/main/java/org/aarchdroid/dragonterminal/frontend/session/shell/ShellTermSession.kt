@@ -5,6 +5,7 @@ import android.os.Handler
 import org.aarchdroid.AArchDroidApp
 import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.backend.TerminalSession
+import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.config.NeoTermPath
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.TermSessionCallback
 import java.io.File
@@ -23,8 +24,9 @@ open class ShellTermSession private constructor(shellPath: String, cwd: String,
 
     override fun initializeEmulator(columns: Int, rows: Int) {
         super.initializeEmulator(columns, rows)
-        sendInitialCommand(shellProfile.initialCommand)
-        sendInitialCommand(initialCommand)
+        val clearOnStart = NeoPreference.isClearOnStartupEnabled()
+        sendInitialCommand(shellProfile.initialCommand, clearOnStart)
+        sendInitialCommand(initialCommand, clearOnStart)
     }
 
     override fun getExitDescription(exitCode: Int): String {
@@ -46,10 +48,11 @@ open class ShellTermSession private constructor(shellPath: String, cwd: String,
         return builder.toString()
     }
 
-    private fun sendInitialCommand(command: String?) {
+    private fun sendInitialCommand(command: String?, prependClear: Boolean) {
         if (command?.isNotEmpty() == true) {
             Handler().postDelayed({
-                write("clear\r$command\r")
+                val prefix = if (prependClear) "clear\r" else ""
+                write("$prefix$command\r")
             }, 500)
         }
     }

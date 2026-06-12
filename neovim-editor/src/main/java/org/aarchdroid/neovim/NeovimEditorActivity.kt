@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 
 import org.aarchdroid.dragonterminal.bridge.Bridge
 import java.io.BufferedReader
@@ -37,6 +38,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     private val client = NeovimClient(HOST, PORT)
     private val buffer = NeovimBuffer()
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val inputQueue = Channel<String>(Channel.UNLIMITED)
 
     private var connected = AtomicBoolean(false)
     private var currentFilePath: String? = null
@@ -56,9 +58,19 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         statusLine = findViewById(R.id.status_line)
 
         client.setCallback(this)
+        // Single consumer: processes keystrokes FIFO to prevent write-ordering races
+        scope.launch {
+            for (keys in inputQueue) {
+                try {
+                    client.input(keys)
+                } catch (e: Exception) {
+                    Log.e(TAG, "input consumer failed for \"$keys\"", e)
+                }
+            }
+        }
         editorView.onInput = { keys ->
             Log.d(TAG, "onInput: \"${keys}\"")
-            scope.launch { client.input(keys) }
+            inputQueue.trySend(keys)
         }
         editorView.onResize = { rows, cols -> scope.launch { client.request("nvim_ui_try_resize", cols, rows) } }
         editorView.onModeChange = { mode -> updateStatusLine() }
@@ -225,11 +237,13 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             }
             "grid_line" -> {
                 var totalCells = 0
+                var segmentInfo = mutableListOf<String>()
                 for (arg in event.args) {
                     if (arg.size >= 4) {
                         val row = arg[1].asIntegerValue().toInt()
                         val colStart = arg[2].asIntegerValue().toInt()
                         val cellsData = arg[3].asArrayValue().list()
+                        var segCells = 0
 
                         var col = colStart
                         var i = 0
@@ -241,6 +255,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                     if (col < buffer.gridWidth) {
                                         buffer.setCell(row, col, NeovimCell(char = ch))
                                         totalCells++
+                                        segCells++
                                     }
                                     col++
                                 }
@@ -251,10 +266,14 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 val hlId = if (cellArr.size > 1 && cellArr[1].isIntegerValue) cellArr[1].asIntegerValue().toInt() else -1
                                 val repeat = if (cellArr.size > 2 && cellArr[2].isIntegerValue) cellArr[2].asIntegerValue().toInt() else 1
                                 val cell = NeovimCell(char = text[0], foregroundId = hlId.takeIf { it >= 0 } ?: -1)
+                                if (repeat == 0) {
+                                    Log.w(TAG, "grid_line: repeat=0 at row=$row col=$col, char='${text[0]}'(${text[0].code}) hlId=$hlId")
+                                }
                                 for (k in 0 until repeat) {
                                     if (col < buffer.gridWidth) {
                                         buffer.setCell(row, col, cell)
                                         totalCells++
+                                        segCells++
                                     }
                                     col++
                                 }
@@ -263,6 +282,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 i++
                             }
                         }
+                        segmentInfo.add("r${row}c${colStart}[$segCells]")
                     } else if (arg.size >= 3) {
                         val row = arg[1].asIntegerValue().toInt()
                         val text = arg[2].asStringValue().asString()
@@ -274,7 +294,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                         }
                     }
                 }
-                Log.d(TAG, "grid_line: $totalCells cells set")
+                Log.d(TAG, "grid_line: $totalCells cells set: ${segmentInfo.joinToString(" ")}")
             }
             "grid_cursor_goto" -> {
                 var row = -1; var col = -1
@@ -289,6 +309,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
                 if (row >= 0 && col >= 0) {
                     buffer.setCursor(row, col)
+                    Log.d(TAG, "grid_cursor_goto: row=$row col=$col")
                 }
             }
             "grid_scroll" -> {
@@ -301,6 +322,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                     val rows = a[5].asIntegerValue().toInt()
                     val cols = if (a.size > 6) a[6].asIntegerValue().toInt() else 0
                     buffer.scroll(top, bot, left, right, rows, cols)
+                    Log.d(TAG, "grid_scroll: region(top=$top bot=$bot left=$left right=$right) count=$rows cols=$cols")
                 }
             }
             "grid_clear" -> {

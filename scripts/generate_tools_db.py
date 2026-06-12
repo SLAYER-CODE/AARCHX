@@ -55,20 +55,20 @@ def build_commands(key, entry):
     url = entry.get("url", "")
     
     if source in ("blackarch", "arch"):
-        install = f"pacman -Sy --noconfirm {pkg}"
-        uninstall = f"pacman -Rns --noconfirm {pkg}"
+        install = f"pacman --color always --disable-download-timeout -S --noconfirm {pkg}"
+        uninstall = f"pacman --color always --disable-download-timeout -Rns --noconfirm {pkg}"
     elif source == "github":
         install = f"sh /data/data/org.aarchdroid/files/scripts/install-tool.sh {key}"
         uninstall = f"rm -rf /opt/{key}"
     elif source == "local":
-        install = f"sh /data/data/org.aarchdroid/files/scripts/install-tool.sh {key}"
-        uninstall = f"rm -rf /opt/{key}"
+        install = "exit 0"
+        uninstall = "echo Pre-installed system tool"
     elif source == "url":
         install = f"mkdir -p /opt/{key} && wget -q \"{url}\" -O /opt/{key}/{key} && chmod +x /opt/{key}/{key}"
         uninstall = f"rm -rf /opt/{key}"
     else:
-        install = f"pacman -Sy --noconfirm {pkg}"
-        uninstall = f"pacman -Rns --noconfirm {pkg}"
+        install = f"pacman --color always --disable-download-timeout -S --noconfirm {pkg}"
+        uninstall = f"pacman --color always --disable-download-timeout -Rns --noconfirm {pkg}"
     
     return install, uninstall
 
@@ -85,10 +85,11 @@ for key, entry in manifest.items():
     install_cmd, uninstall_cmd = build_commands(key, entry)
     cat_tools[category].append(key)
 
+    initial_status = "installed" if source == "local" else "not_installed"
     c.execute(
         "INSERT INTO 'tools' (toolKey, displayName, description, source, category, installCommand, uninstallCommand, estimatedSizeBytes, status) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'not_installed')",
-        (key, key, description, source, category, install_cmd, uninstall_cmd, size_bytes)
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (key, key, description, source, category, install_cmd, uninstall_cmd, size_bytes, initial_status)
     )
     count += 1
 

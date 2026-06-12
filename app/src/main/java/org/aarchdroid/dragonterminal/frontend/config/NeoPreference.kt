@@ -238,7 +238,16 @@ object NeoPreference {
     }
 
     fun getCommandLimit(): Int {
-        return loadInt(AArchDroidApp.get().getString(R.string.key_general_command_limit),
-                DefaultValues.commandLimit)
+        return try {
+            val key = AArchDroidApp.get().getString(R.string.key_general_command_limit) ?: return DefaultValues.commandLimit
+            preference!!.getString(key, DefaultValues.commandLimit.toString())!!.toInt()
+        } catch (e: Exception) {
+            DefaultValues.commandLimit
+        }
+    }
+
+    fun isClearOnStartupEnabled(): Boolean {
+        return loadBoolean(R.string.key_general_clear_on_start,
+                DefaultValues.clearOnStart)
     }
 }

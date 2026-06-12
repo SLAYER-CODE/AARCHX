@@ -238,7 +238,7 @@ public class TerminalSession extends TerminalOutput {
             if (b == 0x0A || b == 0x0D) {
                 byte[] buf = mCommandBuffer.toByteArray();
                 String cmd = new String(buf, StandardCharsets.UTF_8).trim();
-                if (!cmd.isEmpty()) {
+                if (!cmd.isEmpty() && (mEmulator == null || !mEmulator.isAlternateBufferActive())) {
                     org.aarchdroid.dragonterminal.data.CommandInterceptor.onCommand(this, cmd);
                 }
                 mCommandBuffer.reset();

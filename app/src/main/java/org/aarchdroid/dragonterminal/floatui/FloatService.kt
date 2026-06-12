@@ -236,7 +236,7 @@ class FloatService : Service() {
 
         if (!profile.enableExecveWrapper && profile.loginShell == defaultScript) {
             builder.executablePath("su")
-            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
+            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mount -o bind /data /data/local/aarchdroid/data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
             builder.argArray(arrayOf("su", "-c", inlineCmd))
         } else {
             builder.executablePath(profile.loginShell)

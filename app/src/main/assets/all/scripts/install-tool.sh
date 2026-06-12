@@ -32,7 +32,7 @@ fi
 case "$SOURCE" in
     blackarch|arch)
         echo "[AArchDroid] Instalando desde repositorio: $PKG"
-        pacman -Sy --noconfirm "$PKG" 2>&1 | tail -10
+        pacman --color always --disable-download-timeout -S --noconfirm "$PKG" 2>&1 | tail -10
         if command -v "$TOOL_NAME" >/dev/null 2>&1; then
             echo "[AArchDroid] ✓ $TOOL_NAME instalado correctamente"
             exit 0
@@ -71,17 +71,8 @@ case "$SOURCE" in
         echo "[AArchDroid] ✓ $TOOL_NAME descargado en /opt/$TOOL_NAME"
         ;;
     local)
-        BIN_SRC="/data/data/org.aarchdroid/files/bins/$TOOL_NAME"
-        BIN_DST="/opt/ANDRAX/bin/$TOOL_NAME"
-        echo "[AArchDroid] Instalando binario local: $TOOL_NAME"
-        if [ -f "$BIN_SRC" ]; then
-            cp "$BIN_SRC" "$BIN_DST" 2>&1
-            chmod +x "$BIN_DST"
-            echo "[AArchDroid] ✓ $TOOL_NAME instalado en $BIN_DST"
-        else
-            echo "[AArchDroid] ERROR: Binario no encontrado en $BIN_SRC"
-            exit 1
-        fi
+        echo "[AArchDroid] ✓ $TOOL_NAME es una herramienta de sistema pre-instalada"
+        exit 0
         ;;
     ubuntu_only)
         echo "[AArchDroid] ⚠ $NOTE"

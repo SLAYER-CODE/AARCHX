@@ -23,6 +23,7 @@ object DefaultValues {
     val enableWordBasedIme = false
     val disableLogs = true
     val commandLimit = 5
+    val clearOnStart = false
 
     val loginShell = "archdroid.sh"
     val initialCommand = ""

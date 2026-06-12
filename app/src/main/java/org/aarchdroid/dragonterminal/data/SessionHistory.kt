@@ -145,7 +145,8 @@ object SessionHistory {
     fun logCommand(context: Context, sessionId: String, terminalId: String, path: String, cmd: String) {
         Log.d("SessionHistory", "logCommand -> sessionId=$sessionId, terminalId=$terminalId, cmd=$cmd")
         val trimmed = cmd.trim()
-        if (trimmed == "ls" || trimmed == "cd" || trimmed.startsWith("ls ") || trimmed.startsWith("cd ")) {
+        if (trimmed == "ls" || trimmed == "cd" || trimmed == "clear" ||
+            trimmed.startsWith("ls ") || trimmed.startsWith("cd ")) {
             return
         }
 
