@@ -161,6 +161,13 @@ public class TerminalSession extends TerminalOutput {
             initializeEmulator(columns, rows, cellWidth, cellHeight);
         } else {
             JNI.setPtyWindowSize(mTerminalFileDescriptor, rows, columns, cellWidth, cellHeight);
+            // Fallback: algunos procesos (nvim con libvterm) no siempre responden
+            // al SIGWINCH generado por TIOCSWINSZ. Enviar manualmente al grupo.
+            try {
+                Os.kill(-mShellPid, OsConstants.SIGWINCH);
+            } catch (ErrnoException e) {
+                // Señal redundante, ignorar
+            }
             mEmulator.resize(columns, rows);
         }
     }
