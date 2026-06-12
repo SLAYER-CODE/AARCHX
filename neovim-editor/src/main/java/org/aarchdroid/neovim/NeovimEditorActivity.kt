@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.aarchdroid.dragonterminal.bridge.Bridge
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -36,6 +38,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     private val client = NeovimClient(HOST, PORT)
     private val buffer = NeovimBuffer()
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val redrawMutex = Mutex()
 
     private var connected = AtomicBoolean(false)
     private var currentFilePath: String? = null
@@ -177,17 +180,23 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     override fun onRedraw(updates: List<NeovimClient.RedrawEvent>) {
         val names = updates.map { "${it.name}(${it.args.size})" }
         Log.d(TAG, "onRedraw events=${updates.size}: $names")
-        try {
-            for (update in updates) {
-                processRedrawEvent(update)
+        scope.launch(Dispatchers.Default) {
+            val snapshot: NeovimBuffer
+            redrawMutex.withLock {
+                try {
+                    for (update in updates) {
+                        processRedrawEvent(update)
+                    }
+                    snapshot = takeBufferSnapshot()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Redraw error", e)
+                    return@launch
+                }
             }
-            val snapshot = takeBufferSnapshot()
-            scope.launch(Dispatchers.Main) {
+            withContext(Dispatchers.Main) {
                 editorView.updateBuffer(snapshot)
                 updateStatusLine()
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Redraw error", e)
         }
     }
 
@@ -262,11 +271,6 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 i++
                             }
                         }
-                        // Clear remaining cells in this row beyond what grid_line set
-                        while (col < buffer.gridWidth) {
-                            buffer.setCell(row, col, NeovimCell())
-                            col++
-                        }
                     } else if (arg.size >= 3) {
                         val row = arg[1].asIntegerValue().toInt()
                         val text = arg[2].asStringValue().asString()
@@ -275,12 +279,6 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 buffer.setCell(row, col, NeovimCell(char = ch))
                                 totalCells++
                             }
-                        }
-                        // Clear remaining cells in this row
-                        var col = text.length
-                        while (col < buffer.gridWidth) {
-                            buffer.setCell(row, col, NeovimCell())
-                            col++
                         }
                     }
                 }
