@@ -443,6 +443,7 @@ public final class TerminalEmulator {
     private void resizeScreen() {
         final int[] cursor = {mCursorCol, mCursorRow};
         int newTotalRows = (mScreen == mAltBuffer) ? mRows : mMainBuffer.mTotalRows;
+        mEffect &= ~TextStyle.CHARACTER_ATTRIBUTE_INVERSE;
         mScreen.resize(mColumns, mRows, newTotalRows, cursor, getStyle(), isAlternateBufferActive());
         mCursorCol = cursor[0];
         mCursorRow = cursor[1];
