@@ -338,7 +338,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
             }
             "mode_change" -> {
-                if (event.args.isNotEmpty() && event.args[0].size >= 2) {
+                if (event.args.size >= 2) {
                     buffer.mode.name = event.args[0][0].asStringValue().asString()
                     buffer.cursor.shape = when (buffer.mode.name) {
                         "i", "ic", "ix" -> "vertical"

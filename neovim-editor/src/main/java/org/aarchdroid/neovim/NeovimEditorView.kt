@@ -247,8 +247,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         buffer.gridHeight = newBuffer.gridHeight
         buffer.cells.clear()
         buffer.cells.addAll(newBuffer.cells.map { row -> row.toMutableList() })
-        buffer.cursor.row = newBuffer.cursor.row
-        buffer.cursor.col = newBuffer.cursor.col
+        buffer.cursor = newBuffer.cursor.copy()
         buffer.mode = newBuffer.mode.copy()
         postInvalidate()
     }

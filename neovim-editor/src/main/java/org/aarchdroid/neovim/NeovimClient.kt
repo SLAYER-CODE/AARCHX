@@ -32,6 +32,7 @@ class NeovimClient(
     private var output: OutputStream? = null
     private var requestId = 1
     private var isConnected = false
+    private val writeLock = Any()
     private var callback: Callback? = null
     private var readJob: Job? = null
     private var keepAliveJob: Job? = null
@@ -78,16 +79,18 @@ class NeovimClient(
     suspend fun request(method: String, vararg args: Any?) {
         withContext(Dispatchers.IO) {
             try {
-                val packer = MessagePack.newDefaultBufferPacker()
-                val id = requestId++
-                packer.packArrayHeader(4)
-                packer.packInt(0)
-                packer.packInt(id)
-                packer.packString(method)
-                packArgs(packer, args.toList())
-                packer.close()
-                output?.write(packer.toByteArray())
-                output?.flush()
+                synchronized(writeLock) {
+                    val packer = MessagePack.newDefaultBufferPacker()
+                    val id = requestId++
+                    packer.packArrayHeader(4)
+                    packer.packInt(0)
+                    packer.packInt(id)
+                    packer.packString(method)
+                    packArgs(packer, args.toList())
+                    packer.close()
+                    output?.write(packer.toByteArray())
+                    output?.flush()
+                }
             } catch (e: Exception) {
                 Log.e("NeovimClient", "Request failed: ${e.message}")
                 callback?.onError("Request failed: ${e.message}")
@@ -98,14 +101,16 @@ class NeovimClient(
     suspend fun notify(method: String, vararg args: Any?) {
         withContext(Dispatchers.IO) {
             try {
-                val packer = MessagePack.newDefaultBufferPacker()
-                packer.packArrayHeader(3)
-                packer.packInt(2)
-                packer.packString(method)
-                packArgs(packer, args.toList())
-                packer.close()
-                output?.write(packer.toByteArray())
-                output?.flush()
+                synchronized(writeLock) {
+                    val packer = MessagePack.newDefaultBufferPacker()
+                    packer.packArrayHeader(3)
+                    packer.packInt(2)
+                    packer.packString(method)
+                    packArgs(packer, args.toList())
+                    packer.close()
+                    output?.write(packer.toByteArray())
+                    output?.flush()
+                }
             } catch (e: Exception) {
                 Log.e("NeovimClient", "Notify failed: ${e.message}")
             }
