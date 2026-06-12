@@ -262,6 +262,11 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 i++
                             }
                         }
+                        // Clear remaining cells in this row beyond what grid_line set
+                        while (col < buffer.gridWidth) {
+                            buffer.setCell(row, col, NeovimCell())
+                            col++
+                        }
                     } else if (arg.size >= 3) {
                         val row = arg[1].asIntegerValue().toInt()
                         val text = arg[2].asStringValue().asString()
@@ -270,6 +275,12 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 buffer.setCell(row, col, NeovimCell(char = ch))
                                 totalCells++
                             }
+                        }
+                        // Clear remaining cells in this row
+                        var col = text.length
+                        while (col < buffer.gridWidth) {
+                            buffer.setCell(row, col, NeovimCell())
+                            col++
                         }
                     }
                 }
@@ -327,9 +338,17 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
             }
             "mode_change" -> {
-                if (event.args.isNotEmpty()) {
-                    val mode = event.args[0][0].asStringValue().asString()
-                    buffer.mode.name = mode
+                if (event.args.isNotEmpty() && event.args[0].size >= 1) {
+                    val modeEntry = event.args[0][0].asArrayValue()
+                    val modeList = modeEntry.list()
+                    if (modeList.size >= 1 && modeList[0].isStringValue) {
+                        buffer.mode.name = modeList[0].asStringValue().asString()
+                        buffer.cursor.shape = when (buffer.mode.name) {
+                            "i", "ic", "ix" -> "vertical"
+                            "R", "Rx", "Rvc" -> "horizontal"
+                            else -> "block"
+                        }
+                    }
                 }
             }
             "option_set" -> {
