@@ -58,7 +58,10 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         statusLine = findViewById(R.id.status_line)
 
         client.setCallback(this)
-        editorView.onInput = { keys -> scope.launch { client.input(keys) } }
+        editorView.onInput = { keys ->
+            Log.d(TAG, "onInput: \"${keys}\"")
+            scope.launch { client.input(keys) }
+        }
         editorView.onResize = { rows, cols -> scope.launch { client.request("nvim_ui_try_resize", cols, rows) } }
         editorView.onModeChange = { mode -> updateStatusLine() }
         editorView.fontChanged()
@@ -336,13 +339,17 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
             }
             "mode_change" -> {
-                if (event.args.size >= 2) {
-                    buffer.mode.name = event.args[0][0].asStringValue().asString()
+                if (event.args.isNotEmpty() && event.args[0].size >= 2) {
+                    val modeName = event.args[0][0].asStringValue().asString()
+                    Log.d(TAG, "mode_change: $modeName")
+                    buffer.mode.name = modeName
                     buffer.cursor.shape = when (buffer.mode.name) {
                         "i", "ic", "ix" -> "vertical"
                         "R", "Rx", "Rvc" -> "horizontal"
                         else -> "block"
                     }
+                } else {
+                    Log.w(TAG, "mode_change: unexpected args=${event.args}")
                 }
             }
             "option_set" -> {

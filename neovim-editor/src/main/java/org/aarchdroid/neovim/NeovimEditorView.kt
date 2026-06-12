@@ -119,23 +119,25 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
             override fun commitText(text: CharSequence, newCursorPosition: Int): Boolean {
                 val result = super.commitText(text, newCursorPosition)
                 if (text.isNotEmpty()) {
+                    Log.d("NeovimEditorView", "InputConnection.commitText: \"${text}\"")
                     sendText(text.toString())
                 }
                 return result
             }
 
             override fun setComposingText(text: CharSequence, newCursorPosition: Int): Boolean {
-                val result = super.setComposingText(text, newCursorPosition)
-                if (text.isNotEmpty()) sendText(text.toString())
-                return result
+                Log.d("NeovimEditorView", "InputConnection.setComposingText: \"${text}\"")
+                // setComposingText is intermediate composition — do NOT forward to Neovim.
+                return super.setComposingText(text, newCursorPosition)
             }
 
             override fun finishComposingText(): Boolean {
-                val result = super.finishComposingText()
-                return result
+                Log.d("NeovimEditorView", "InputConnection.finishComposingText")
+                return super.finishComposingText()
             }
 
             override fun deleteSurroundingText(beforeLength: Int, afterLength: Int): Boolean {
+                Log.d("NeovimEditorView", "InputConnection.deleteSurroundingText bf=$beforeLength af=$afterLength")
                 repeat(beforeLength) { onInput?.invoke("<BS>") }
                 repeat(afterLength) { onInput?.invoke("<Del>") }
                 return super.deleteSurroundingText(beforeLength, afterLength)
@@ -154,6 +156,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     }
 
     private fun sendText(text: String) {
+        Log.d("NeovimEditorView", "sendText: \"${text}\"")
         for (ch in text) {
             when {
                 ch == '\n' -> onInput?.invoke("<CR>")
