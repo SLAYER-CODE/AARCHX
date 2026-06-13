@@ -183,6 +183,7 @@ open class ShellTermSession private constructor(shellPath: String, cwd: String,
             File(NeoTermPath.HOME_PATH).mkdirs()
 
             val termEnv = "TERM=xterm-256color"
+            val colorTermEnv = "COLORTERM=truecolor"
             val homeEnv = "HOME=" + AArchDroidApp.get().applicationInfo.dataDir
             //val prefixEnv = "PREFIX=" + NeoTermPath.USR_PATH
             val androidRootEnv = "ANDROID_ROOT=" + System.getenv("ANDROID_ROOT")
@@ -196,7 +197,7 @@ open class ShellTermSession private constructor(shellPath: String, cwd: String,
 
             return if (systemShell) {
                 val pathEnv = "PATH=" + System.getenv("PATH")
-                arrayOf(termEnv, homeEnv, pathEnv, androidRootEnv, androidDataEnv,
+                arrayOf(termEnv, colorTermEnv, homeEnv, pathEnv, androidRootEnv, androidDataEnv,
                         externalStorageEnv)
 
             } else {
@@ -215,7 +216,7 @@ open class ShellTermSession private constructor(shellPath: String, cwd: String,
                     ""
                 }
 
-                arrayOf(termEnv, homeEnv, pathEnv, ps1Env, ldEnv, pwdEnv,
+                arrayOf(termEnv, colorTermEnv, homeEnv, pathEnv, ps1Env, ldEnv, pwdEnv,
                         androidRootEnv, androidDataEnv, externalStorageEnv,
                         tmpdirEnv, ldPreloadEnv)
             }
