@@ -330,7 +330,7 @@ class SessionHistoryAdapter(
         override fun draw(canvas: Canvas) {
             val b = bounds
             val cx = b.right
-            val cy = b.bottom
+            val cy = b.centerY()
             val half = drawSizePx / 2
             icon.setBounds(cx - half, cy - half, cx + half, cy + half)
             icon.draw(canvas)

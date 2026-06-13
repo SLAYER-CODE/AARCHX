@@ -7,6 +7,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import android.app.*
 import android.os.Build
+import android.preference.PreferenceManager
 import android.widget.Toast
 import android.view.Gravity
 import android.annotation.SuppressLint
@@ -36,6 +37,7 @@ class AArchDroidApp : Application() {
 
         app = this
         NeoPreference.init(this)
+        PreferenceManager.setDefaultValues(this, R.xml.settings_main, false)
         NeoInitializer.init(this)
 
         val sharedPref = this.getSharedPreferences(this.packageName, Context.MODE_PRIVATE)

@@ -851,7 +851,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         if (!systemShell && profile.loginShell == defaultScript) {
             ChrootManager.ensureMounted()
             parameter.executablePath("su")
-            parameter.arguments(arrayOf("su", "-c", ChrootManager.getEntryCommand()))
+            parameter.arguments(ChrootManager.getSuEntryArgs())
         }
 
         val session = try {
@@ -916,7 +916,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             if (!systemShell && profile.loginShell == defaultScript) {
                 ChrootManager.ensureMounted()
                 parameter.executablePath("su")
-                parameter.arguments(arrayOf("su", "-c", ChrootManager.getEntryCommand()))
+                parameter.arguments(ChrootManager.getSuEntryArgs())
             }
 
             val newSession = try {

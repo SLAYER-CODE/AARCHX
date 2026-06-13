@@ -6,8 +6,17 @@ export PACMAN_DISABLE_SANDBOX=1
 
 # Fix pacman config (run once)
 if [ ! -f /etc/pacman.d/.aarchdroid_fixed ]; then
+  # Enable colors
   sed -i 's/^#Color/Color/' /etc/pacman.conf 2>/dev/null
+  # Disable download timeout
   grep -q "^DisableDownloadTimeout" /etc/pacman.conf 2>/dev/null || sed -i '/^ParallelDownloads/a DisableDownloadTimeout' /etc/pacman.conf 2>/dev/null
+  # Disable PGP signature verification (no keyring in chroot)
+  sed -i 's/^#SigLevel[[:space:]]*=.*$/SigLevel = Never/' /etc/pacman.conf 2>/dev/null
+  sed -i 's/^SigLevel[[:space:]]*=.*Required.*$/SigLevel = Never/' /etc/pacman.conf 2>/dev/null
+  sed -i 's/^SigLevel[[:space:]]*=.*Optional.*$/SigLevel = Never/' /etc/pacman.conf 2>/dev/null
+  grep -q "^SigLevel[[:space:]]*=[[:space:]]*Never" /etc/pacman.conf 2>/dev/null || echo "SigLevel = Never" >> /etc/pacman.conf
+  # Fix blackarch repo sig
+  grep -q "^SigLevel" /etc/pacman.conf 2>/dev/null || sed -i '/^\[blackarch\]$/{n;s/.*/SigLevel = Never/}' /etc/pacman.conf 2>/dev/null
   touch /etc/pacman.d/.aarchdroid_fixed 2>/dev/null
 fi
 

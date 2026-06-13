@@ -47,7 +47,13 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     var isReady: Boolean = false
         set(value) {
             field = value
-            if (!value) {
+            if (value) {
+                if (isFocused) {
+                    cursorVisible = true
+                    blinkHandler.postDelayed(blinkRunnable, cursorBlinkInterval)
+                    postInvalidate()
+                }
+            } else {
                 cursorVisible = false
                 blinkHandler.removeCallbacks(blinkRunnable)
                 postInvalidate()

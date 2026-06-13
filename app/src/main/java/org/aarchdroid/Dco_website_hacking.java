@@ -32,7 +32,7 @@ public class Dco_website_hacking extends DcoBaseActivity {
             createAdapter(list, buildToolList(), new ToolAdapter.OnToolClickListener() {
                 @Override
                 public void onToolClick(ToolItem item) {
-                    run_hack_cmd(item.cmd, item.iconResId);
+                    handleCardClick(item);
                 }
 
                 @Override
@@ -69,7 +69,7 @@ public class Dco_website_hacking extends DcoBaseActivity {
         list.add(makeItem("monsoon", "Monsoon", "Fast HTTP enumerator", "monsoon --help", "monsoon"));
         list.add(makeItem("wfuzz", "Wfuzz", "Web Application Fuzzer", "wfuzz --help", "wfuzz"));
         list.add(makeItem("gobuster", "Gobuster", "Directory/File, DNS and VHost buster", "gobuster", "andraxtool"));
-        list.add(makeItem("httpx", "HttpX", "Multi-purpose HTTP toolkit", "httpx", "httpx"));
+        list.add(makeItem("httpx", "HttpX", "Multi-purpose HTTP toolkit", "httpx-pd", "httpx"));
         list.add(makeItem("cmseek", "CMSeeK", "CMS Detection and Exploitation suite", "sudo cmseek", "cmseek"));
         list.add(makeItem("wpscan", "WPScan", "WordPress Security Scanner", "wpscan -h", "wpscan"));
         list.add(makeItem("findalllinks", "Find-All-Links", "Find links using Wayback Machine", "find-all-links", "findalllinks"));
@@ -92,14 +92,14 @@ public class Dco_website_hacking extends DcoBaseActivity {
         list.add(makeItem("nodexp", "NodeXP", "Server Side JavaScript Injection", "nodexp --help", "nodexp"));
         list.add(makeItem("jsalert", "JS-Alert", "Find keywords in javascript files and extract the context", "jsalert", "andraxtool"));
         list.add(makeItem("xsstrike", "XSSTrike", "Advanced XSS Detection Suite", "xsstrike", "xsstrike"));
-        list.add(makeItem("xspear", "XSpear", "Powerfull XSS Scanning and Parameter analysis", "XSpear -h", "xspear"));
+        list.add(makeItem("xspear", "XSpear", "Powerfull XSS Scanning and Parameter analysis", "xspear -h", "xspear"));
         list.add(makeItem("imagejs", "ImageJS", "Package javascript into a valid image", "imagejs", "andraxtool"));
         list.add(makeItem("xxeinjector", "XXEInjector", "XML External Entity Injector", "xxeinjector", "xxe"));
         list.add(makeItem("xxexploiter", "XXExploiter", "XXE Exploiter", "xxexploiter", "xxe"));
         list.add(makeItem("xxetimes", "XXETimes", "Local File Explorer XXE DTD Entity Expansion", "xxetimes -h", "xxe"));
         list.add(makeItem("phpsploit", "PHPSploit", "Remote control framework for web", "phpsploit", "andraxtool"));
-        list.add(makeItem("htshells", "HTShells", "Self contained htaccess shells", "htshells", "andraxtool"));
-        list.add(makeItem("jwt_tool", "JWT_Tool", "The JSON Web Token Toolkit", "jwt_tool -h", "jwt"));
+        list.add(makeItem("htshells", "HTShells", "Self contained htaccess shells", "echo 'Coleccion de templates .htaccess en /usr/share/htshells/'", "andraxtool"));
+        list.add(makeItem("jwt_tool", "JWT_Tool", "The JSON Web Token Toolkit", "jwt-tool -h", "jwt"));
         list.add(makeItem("jwtcrack", "JWT-Crack", "JWT Brute Force Cracker", "jwtcrack", "jwt"));
         list.add(makeItem("nomore403", "nomore403", "Bypass 40X response codes", "nomore403", "andraxtool"));
         list.add(makeItem("forbidden", "Forbidden", "Bypass 4xx HTTP response", "forbidden", "forbidden"));

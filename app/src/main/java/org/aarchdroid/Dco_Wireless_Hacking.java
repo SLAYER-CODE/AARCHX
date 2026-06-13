@@ -32,7 +32,7 @@ public class Dco_Wireless_Hacking extends DcoBaseActivity {
             createAdapter(list, buildToolList(), new ToolAdapter.OnToolClickListener() {
                 @Override
                 public void onToolClick(ToolItem item) {
-                    run_hack_cmd(item.cmd, item.iconResId);
+                    handleCardClick(item);
                 }
 
                 @Override

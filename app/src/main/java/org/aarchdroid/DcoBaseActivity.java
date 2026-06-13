@@ -101,15 +101,15 @@ public class DcoBaseActivity extends Activity {
             getWindow().setLayout(maxW, ViewGroup.LayoutParams.WRAP_CONTENT);
 
             final View decorView = getWindow().getDecorView();
-            decorView.getViewTreeObserver().addOnGlobalLayoutListener(
-                new ViewTreeObserver.OnGlobalLayoutListener() {
+            decorView.getViewTreeObserver().addOnPreDrawListener(
+                new ViewTreeObserver.OnPreDrawListener() {
                     private boolean done = false;
                     @Override
-                    public void onGlobalLayout() {
-                        if (done) return;
+                    public boolean onPreDraw() {
+                        if (done) return true;
                         RecyclerView rv = findViewById(R.id.tool_list);
-                        if (rv == null || rv.getAdapter() == null) return;
-                        if (rv.getHeight() == 0) return;
+                        if (rv == null || rv.getAdapter() == null) return true;
+                        if (rv.getHeight() == 0) return true;
                         done = true;
 
                         float density = getResources().getDisplayMetrics().density;
@@ -121,12 +121,15 @@ public class DcoBaseActivity extends Activity {
                             ViewGroup.LayoutParams lp = rv.getLayoutParams();
                             lp.height = rvMax;
                             rv.setLayoutParams(lp);
+                            decorView.getViewTreeObserver().removeOnPreDrawListener(this);
+                            return false;
                         }
 
                         setupScrollIndicator(rv);
                         updateStatsSize();
 
-                        decorView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        decorView.getViewTreeObserver().removeOnPreDrawListener(this);
+                        return true;
                     }
                 });
         }
@@ -250,8 +253,21 @@ public class DcoBaseActivity extends Activity {
         }
     }
 
+    public void handleCardClick(ToolItem item) {
+        if ("github".equals(item.source)) {
+            run_hack_cmd("cd /Herramientas/" + item.key + " && ls -la", item.iconResId);
+        } else {
+            run_hack_cmd(item.cmd, item.iconResId);
+        }
+    }
+
     public void onLaunchTool(String toolKey) {
-        run_hack_cmd(toolKey + " -h");
+        String source = ToolDatabase.getInstance().getSource(toolKey);
+        if ("github".equals(source)) {
+            run_hack_cmd("cd /Herramientas/" + toolKey + " && ls -la");
+        } else {
+            run_hack_cmd(toolKey + " -h");
+        }
     }
 
     private boolean createInstallWrapper(String toolKey, String installCmd) {
@@ -273,7 +289,7 @@ public class DcoBaseActivity extends Activity {
             sb.append("\n");
             sb.append("mkdir -p $STATE_DIR 2>/dev/null || true\n");
             sb.append("echo \"$$\" > $PID_FILE\n");
-            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG $INSTALL_LOG.exit; s=$(sqlite3 \"$DB\" \"SELECT status FROM tools WHERE toolKey=\\\"$TOOLKEY\\\"\" 2>/dev/null); if [ \"$s\" = \"installing\" ]; then sqlite3 \"$DB\" \"UPDATE tools SET status=\\\"failed\\\", errorLog=\\\"Interrumpido\\\" WHERE toolKey=\\\"$TOOLKEY\\\"\"; fi' EXIT\n");
+            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG $INSTALL_LOG.exit' EXIT\n");
             sb.append("rm -f $STATE_DIR/$TOOLKEY.pending\n");
             sb.append("\n");
             sb.append("retry_sqlite() {\n");
@@ -375,7 +391,7 @@ public class DcoBaseActivity extends Activity {
             sb.append("\n");
             sb.append("mkdir -p $STATE_DIR 2>/dev/null || true\n");
             sb.append("echo \"$$\" > $PID_FILE\n");
-            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG $INSTALL_LOG.exit; s=$(sqlite3 \"$DB\" \"SELECT status FROM tools WHERE toolKey=\\\"$TOOLKEY\\\"\" 2>/dev/null); if [ \"$s\" = \"installing\" ]; then sqlite3 \"$DB\" \"UPDATE tools SET status=\\\"failed\\\", errorLog=\\\"Interrumpido\\\" WHERE toolKey=\\\"$TOOLKEY\\\"\"; fi' EXIT\n");
+            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG $INSTALL_LOG.exit' EXIT\n");
             sb.append("rm -f $STATE_DIR/$TOOLKEY.pending\n");
             sb.append("\n");
             sb.append("retry_sqlite() {\n");

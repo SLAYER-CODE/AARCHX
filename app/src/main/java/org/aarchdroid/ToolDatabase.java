@@ -220,6 +220,11 @@ public class ToolDatabase {
         db.updateByWhere(CategoryInfo.class, "name = '" + category + "'", c);
     }
 
+    public String getSource(String toolKey) {
+        ToolInfo t = getTool(normalizeKey(toolKey));
+        return t != null ? t.source : null;
+    }
+
     public String getInstallCommand(String toolKey) {
         ToolInfo t = getTool(normalizeKey(toolKey));
         return t != null ? t.installCommand : null;

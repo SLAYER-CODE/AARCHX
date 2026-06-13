@@ -262,7 +262,7 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
         if (!detectSystemShell() && loginShell == defaultScript) {
             ChrootManager.ensureMounted()
             parameter.executablePath("su")
-            parameter.arguments(arrayOf("su", "-c", ChrootManager.getEntryCommand()))
+            parameter.arguments(ChrootManager.getSuEntryArgs())
         }
 
         val toolName = toolKey.ifEmpty {

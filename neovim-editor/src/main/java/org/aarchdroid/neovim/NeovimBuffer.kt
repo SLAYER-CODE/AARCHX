@@ -90,6 +90,17 @@ class NeovimBuffer {
         }
     }
 
+    fun getCell(row: Int, col: Int): NeovimCell? {
+        if (row in 0 until gridHeight && col in 0 until gridWidth) {
+            synchronized(lock) {
+                if (row < cells.size && col < cells[row].size) {
+                    return cells[row][col]
+                }
+            }
+        }
+        return null
+    }
+
     fun setCell(row: Int, col: Int, cell: NeovimCell) {
         if (row in 0 until gridHeight && col in 0 until gridWidth) {
             synchronized(lock) {
@@ -100,7 +111,7 @@ class NeovimBuffer {
         }
     }
 
-    fun clear(foreground: Int = NeovimColor.WHITE, background: Int = NeovimColor.BLACK) {
+    fun clear(foreground: Int = NeovimColor.WHITE, background: Int = 0xFF1E1E1E.toInt()) {
         synchronized(lock) {
             for (r in 0 until cells.size.coerceAtMost(gridHeight)) {
                 val row = cells[r]

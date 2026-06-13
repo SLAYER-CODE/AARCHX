@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/layout_for_dco" android:padding="6dp">
+
+    <LinearLayout android:id="@+id/header" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:gravity="center_vertical"
+        android:orientation="horizontal" android:padding="6dp">
+        <ImageView android:layout_width="32dp" android:layout_height="32dp"
+            android:scaleType="fitXY" android:src="@drawable/ic_gps_spoof" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:orientation="vertical" android:paddingStart="8dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="GPS SPOOFING" android:textColor="#2fff00"
+                android:textSize="14sp" android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Fake GPS location injection" android:textColor="#8FBC8F"
+                android:textSize="10sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View android:id="@+id/divider" android:layout_below="@id/header"
+        android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="#2fff00" android:layout_marginBottom="6dp" />
+
+    <ScrollView android:layout_below="@id/divider" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:layout_marginTop="6dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:padding="2dp">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="COORDINATES" android:textColor="#2fff00" android:textSize="11sp"
+                android:textStyle="bold" android:paddingBottom="4dp" />
+
+            <androidx.cardview.widget.CardView android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
+                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="8dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="SET STATIC LOCATION" android:textColor="#2fff00"
+                        android:textSize="12sp" android:textStyle="bold" />
+                    <LinearLayout android:layout_width="match_parent"
+                        android:layout_height="wrap_content" android:orientation="horizontal"
+                        android:layout_marginTop="4dp">
+                        <TextView android:id="@+id/gps_lat_label" android:layout_width="0dp"
+                            android:layout_height="wrap_content" android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="LAT: -12.0464°" android:textColor="#8FBC8F"
+                            android:textSize="10sp" />
+                        <TextView android:id="@+id/gps_lon_label" android:layout_width="0dp"
+                            android:layout_height="wrap_content" android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="LON: -77.0428°" android:textColor="#8FBC8F"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+                    <TextView android:id="@+id/gps_set_btn" android:layout_width="match_parent"
+                        android:layout_height="36dp" android:gravity="center" android:text="SET"
+                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
+                        android:background="#2fff00" android:layout_marginTop="6dp"
+                        android:clickable="true" android:focusable="true" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
+                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="8dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="PRESETS" android:textColor="#2fff00" android:textSize="12sp"
+                        android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Area 51 / Pentagon / Kremlin / North Korea" android:textColor="#8FBC8F"
+                        android:textSize="10sp" />
+                    <TextView android:id="@+id/gps_presets_btn" android:layout_width="match_parent"
+                        android:layout_height="36dp" android:gravity="center" android:text="SELECT"
+                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
+                        android:background="#2fff00" android:layout_marginTop="6dp"
+                        android:clickable="true" android:focusable="true" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
+                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="8dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="MOCK GPS PROVIDER" android:textColor="#2fff00"
+                        android:textSize="12sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Toggle mock location provider" android:textColor="#8FBC8F"
+                        android:textSize="10sp" />
+                    <TextView android:id="@+id/gps_mock_btn" android:layout_width="match_parent"
+                        android:layout_height="36dp" android:gravity="center" android:text="ENABLE"
+                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
+                        android:background="#2fff00" android:layout_marginTop="6dp"
+                        android:clickable="true" android:focusable="true" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
+                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="8dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="STOP SPOOFING" android:textColor="#2fff00"
+                        android:textSize="12sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Restore real GPS location" android:textColor="#8FBC8F"
+                        android:textSize="10sp" />
+                    <TextView android:id="@+id/gps_stop_btn" android:layout_width="match_parent"
+                        android:layout_height="36dp" android:gravity="center" android:text="STOP"
+                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
+                        android:background="#2fff00" android:layout_marginTop="6dp"
+                        android:clickable="true" android:focusable="true" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </ScrollView>
+</RelativeLayout>

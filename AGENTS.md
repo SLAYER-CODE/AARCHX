@@ -16,6 +16,7 @@ APK: AArchDroid/app/build/outputs/apk/debug/
 - chrome-tabs/ — librería tab switcher (módulo fuente)
 
 ## Modificaciones recientes
+- Red chroot: /etc/resolv.conf con fallback (8.8.8.8 + 1.1.1.1), proc/sys/devpts montados, /tmp creado en inline command (5 sitios)
 - Multi-ventana float (FloatService soporta N ventanas + takeover)
 - Botón ancla "↓" en float windows → transfiere sesión de vuelta al gestor
 - Botón float "↗" en tab switcher (TextView ANSI verde)

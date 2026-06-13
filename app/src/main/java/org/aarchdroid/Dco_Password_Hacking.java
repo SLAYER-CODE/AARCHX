@@ -32,7 +32,7 @@ public class Dco_Password_Hacking extends DcoBaseActivity {
             createAdapter(list, buildToolList(), new ToolAdapter.OnToolClickListener() {
                 @Override
                 public void onToolClick(ToolItem item) {
-                    run_hack_cmd(item.cmd, item.iconResId);
+                    handleCardClick(item);
                 }
 
                 @Override
@@ -59,7 +59,7 @@ public class Dco_Password_Hacking extends DcoBaseActivity {
 
     private List<ToolItem> buildToolList() {
         List<ToolItem> list = new ArrayList<>();
-        list.add(makeItem("maskprocessor", "MaskProcessor", "High-Performance Word Generator", "maskprocessor --help", "maskprocessor"));
+        list.add(makeItem("maskprocessor", "MaskProcessor", "High-Performance Word Generator", "echo '=== MaskProcessor === Genera wordlists por mascara. Ej: mp64 ?l?l?l?l?l?l?l?l (8 letras). Alternativa en BlackArch: hashcat-utils (mp64/mp32) o crunch.'", "maskprocessor"));
         list.add(makeItem("cewl", "CeWL", "Custom Word List generator", "cewl -h", "cewl"));
         list.add(makeItem("bopscrk", "Bopscrk", "Generates smart and powerful wordlists", "bopscrk", "bopscrk"));
         list.add(makeItem("narthex", "narthex", "Modular Personalized Dictionary Generator", "nwiz", "narthex"));

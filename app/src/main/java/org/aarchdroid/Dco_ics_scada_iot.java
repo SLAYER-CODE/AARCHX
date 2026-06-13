@@ -32,7 +32,7 @@ public class Dco_ics_scada_iot extends DcoBaseActivity {
             createAdapter(list, buildToolList(), new ToolAdapter.OnToolClickListener() {
                 @Override
                 public void onToolClick(ToolItem item) {
-                    run_hack_cmd(item.cmd, item.iconResId);
+                    handleCardClick(item);
                 }
 
                 @Override
@@ -63,11 +63,11 @@ public class Dco_ics_scada_iot extends DcoBaseActivity {
         list.add(makeItem("s7scan", "S7Scan", "S7 Scanner using LLC and TCT/IP", "s7scan", "plc"));
         list.add(makeItem("modscan", "MODScan", "MODBus Scanner", "modscan", "modbus"));
         list.add(makeItem("mbtget", "MBTGET", "Modbus/TCP client", "mbtget -h", "modbus"));
-        list.add(makeItem("sixnettools", "SIXNET-Tools", "Exploit sixnet RTUs", "SIXNET-tools", "andraxtool"));
+        list.add(makeItem("sixnettools", "SIXNET-Tools", "Exploit sixnet RTUs", "sixnet-tools", "andraxtool"));
         list.add(makeItem("scadatools", "SCADA-Tools", "SCADA Scan and Hack tools", "scada-tools", "scadatools"));
         list.add(makeItem("smod", "SMOD", "MODBUS Penetration Test Framework", "sudo smod", "modbus"));
         list.add(makeItem("expliot", "eXplIOT", "IOT Security Testing and Exploitation", "expliot", "iot"));
-        list.add(makeItem("homepwn", "HomePWN", "Swiss Army Knife for Pentesting of IoT Devices", "homePwn", "homepwn"));
+        list.add(makeItem("homepwn", "HomePWN", "Swiss Army Knife for Pentesting of IoT Devices", "homepwn", "homepwn"));
         list.add(makeItem("onthefly", "On-The-Fly", "Network Pentesting on IT, ICS &amp; IoT Environments", "on-the-fly", "onthefly"));
         list.add(makeItem("termineter", "termineter", "Smart Meter Security Testing Framework", "termineter", "termineter"));
         return list;

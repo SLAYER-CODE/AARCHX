@@ -9,12 +9,12 @@ object DefaultValues {
 
     val fontSize = 16
 
-    val enableBell = true
-    val enableVibrate = true
+    val enableBell = false
+    val enableVibrate = false
     val enableExecveWrapper = false
     val enableAutoCompletion = false
-    val enableFullScreen = true
-    val enableAutoHideToolbar = true
+    val enableFullScreen = false
+    val enableAutoHideToolbar = false
     val enableSwitchNextTab = false
     val enableExtraKeys = true
     val enableExplicitExtraKeysWeight = false

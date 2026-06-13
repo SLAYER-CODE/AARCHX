@@ -236,6 +236,8 @@ public class TerminalSession extends TerminalOutput {
     @Override
     public void write(byte[] data, int offset, int count) {
         if (mShellPid > 0) mTerminalToProcessIOQueue.write(data, offset, count);
+        // Skip interception entirely while in alternate buffer (nvim, less, htop, etc.)
+        if (mEmulator != null && mEmulator.isAlternateBufferActive()) return;
         // Command interception — accumulate until newline
         for (int i = offset; i < offset + count; i++) {
             byte b = data[i];

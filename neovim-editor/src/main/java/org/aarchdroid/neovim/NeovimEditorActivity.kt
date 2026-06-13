@@ -71,7 +71,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             inputQueue.trySend(keys)
         }
         editorView.onResize = { rows, cols -> scope.launch { client.request("nvim_ui_try_resize", cols, rows) } }
-        editorView.onModeChange = { mode -> updateToolbarTitle() }
+        editorView.onModeChange = { mode -> updateToolbarTitle(mode, buffer.cursor.row, buffer.cursor.col) }
         editorView.fontChanged()
 
         supportActionBar?.title = "Starting Neovim..."
@@ -140,7 +140,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 currentFilePath = null
                 currentFileName = "untitled"
                 fileUri = null
-                updateToolbarTitle()
+                updateToolbarTitle(buffer.mode.name, buffer.cursor.row, buffer.cursor.col)
                 true
             }
             R.id.action_save -> {
@@ -205,8 +205,12 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             return
         }
         val snapshot = buffer.copySnapshot()
+        val modeName = snapshot.mode.name
+        val cursorRow = snapshot.cursor.row
+        val cursorCol = snapshot.cursor.col
         scope.launch(Dispatchers.Main) {
             editorView.updateBuffer(snapshot)
+            updateToolbarTitle(modeName, cursorRow, cursorCol)
         }
     }
 
@@ -284,6 +288,14 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 i++
                             }
                         }
+                        while (col < buffer.gridWidth) {
+                            buffer.getCell(row, col)?.let { prev ->
+                                if (prev.char != ' ') {
+                                    buffer.setCell(row, col, prev.copy(char = ' '))
+                                }
+                            }
+                            col++
+                        }
                         segmentInfo.add("r${row}c${colStart}[$segCells]")
                     } else if (arg.size >= 3) {
                         val row = arg[1].asIntegerValue().toInt()
@@ -293,6 +305,15 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 buffer.setCell(row, col, NeovimCell(char = ch))
                                 totalCells++
                             }
+                        }
+                        var c = text.length
+                        while (c < buffer.gridWidth) {
+                            buffer.getCell(row, c)?.let { prev ->
+                                if (prev.char != ' ') {
+                                    buffer.setCell(row, c, prev.copy(char = ' '))
+                                }
+                            }
+                            c++
                         }
                     }
                 }
@@ -377,10 +398,10 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         }
     }
 
-    private fun updateToolbarTitle() {
-        val mode = buffer.mode.name.uppercase().take(4)
-        val line = buffer.cursor.row + 1
-        val col = buffer.cursor.col + 1
+    private fun updateToolbarTitle(modeName: String, cursorRow: Int, cursorCol: Int) {
+        val mode = modeName.uppercase().take(4)
+        val line = cursorRow + 1
+        val col = cursorCol + 1
         val text = "$mode  $currentFileName  Ln $line, Col $col"
         supportActionBar?.title = text
         Log.v(TAG, "title: $text")

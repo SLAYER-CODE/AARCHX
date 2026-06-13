@@ -32,7 +32,7 @@ public class Dco_Mainframe extends DcoBaseActivity {
             createAdapter(list, buildToolList(), new ToolAdapter.OnToolClickListener() {
                 @Override
                 public void onToolClick(ToolItem item) {
-                    run_hack_cmd(item.cmd, item.iconResId);
+                    handleCardClick(item);
                 }
 
                 @Override
@@ -60,17 +60,17 @@ public class Dco_Mainframe extends DcoBaseActivity {
     private List<ToolItem> buildToolList() {
         List<ToolItem> list = new ArrayList<>();
         list.add(makeItem("psikotik", "PSIKOTIK", "TSO User Enumerator", "psikotik -h", "ziron"));
-        list.add(makeItem("mfsniffer", "MFSniffer", "Capture TSO user ID and password", "MFSniffer -h", "ziron"));
+        list.add(makeItem("mfsniffer", "MFSniffer", "Capture TSO user ID and password", "mfsniffer -h", "ziron"));
         list.add(makeItem("birp", "BIRP", "Big Iron Recon &amp; Pwnage", "birp -h", "ziron"));
-        list.add(makeItem("mfdos", "MFDoS", "Mainframe TN3270 DoS", "MFDoS -h", "ziron"));
+        list.add(makeItem("mfdos", "MFDoS", "Mainframe TN3270 DoS", "mfdos -h", "ziron"));
         list.add(makeItem("phatso", "PhaTSO", "TSO User Brute Forcer", "phatso -h", "ziron"));
-        list.add(makeItem("tpxbrute", "TPX_Brute", "The z/OS TPX logon brute forcer", "TPX_Brute -h", "ziron"));
-        list.add(makeItem("mainframe_bruter", "Mainframe_Bruter", "z/OS Mainframe Bruteforcer", "mainframe_bruter -h", "ziron"));
+        list.add(makeItem("tpxbrute", "TPX_Brute", "The z/OS TPX logon brute forcer", "tpx-brute -h", "ziron"));
+        list.add(makeItem("mainframe_bruter", "Mainframe_Bruter", "z/OS Mainframe Bruteforcer", "mainframe-bruter -h", "ziron"));
         list.add(makeItem("cicsshot", "CICSSHOT", "Screenshotting CICS transactions", "cicsshot -h", "ziron"));
         list.add(makeItem("cicspwn", "CICSPWN", "Pentest CICS Transaction servers on z/OS", "cicspwn -h", "ziron"));
-        list.add(makeItem("TShOcker", "TShOcker", "Meterpreter like TSO reverse shell", "TShOcker -h", "ziron"));
-        list.add(makeItem("netEBCDICat", "netEBCDICat", "Accept z/OS EBCDIC Socket Reverse Shells", "netEBCDICat -h", "ziron"));
-        list.add(makeItem("maintp", "MainTP", "Mainframe Reverse/Bind Root Shell", "MainTP -h", "ziron"));
+        list.add(makeItem("TShOcker", "TShOcker", "Meterpreter like TSO reverse shell", "tshocker -h", "ziron"));
+        list.add(makeItem("netEBCDICat", "netEBCDICat", "Accept z/OS EBCDIC Socket Reverse Shells", "netebcdicat -h", "ziron"));
+        list.add(makeItem("maintp", "MainTP", "Mainframe Reverse/Bind Root Shell", "maintp -h", "ziron"));
         list.add(makeItem("zosprivesc", "zOS-PRIVESC", "Privilege escalation on z/OS", "zos-privesc", "ziron"));
         return list;
     }

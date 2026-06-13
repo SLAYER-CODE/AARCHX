@@ -32,7 +32,7 @@ public class Dco_Information_Gathering extends DcoBaseActivity {
             createAdapter(list, buildToolList(), new ToolAdapter.OnToolClickListener() {
                 @Override
                 public void onToolClick(ToolItem item) {
-                    run_hack_cmd(item.cmd, item.iconResId);
+                    handleCardClick(item);
                 }
 
                 @Override
@@ -71,12 +71,12 @@ public class Dco_Information_Gathering extends DcoBaseActivity {
         list.add(makeItem("trace6", "Trace6", "Traceroute for IPv6", "trace6", "andraxtool"));
         list.add(makeItem("intrace", "InTrace", "Enumerate IP hops using TCP", "intrace", "andraxtool"));
         list.add(makeItem("amass", "Amass", "In-depth Attack Surface Mapping and Asset Discovery", "amass", "amass"));
-        list.add(makeItem("spiderfoot", "SpiderFoot", "Threat Intelligence and Attack Mapping", "sfcli", "spiderfoot"));
+        list.add(makeItem("spiderfoot", "SpiderFoot", "Threat Intelligence and Attack Mapping", "spiderfoot", "spiderfoot"));
         list.add(makeItem("onesixtyone", "Onesixtyone", "Fast SNMP Scanner", "onesixtyone", "onesixtyone"));
         list.add(makeItem("braa", "Braa", "Mass snmp scanner", "braa", "braa"));
         list.add(makeItem("snmpwn", "SNMPwn", "SNMPv3 user enumerator and attack tool", "snmpwn --help", "andraxtool"));
         list.add(makeItem("swaks", "Swaks", "Swiss Army Knife for SMTP", "swaks", "swaks"));
-        list.add(makeItem("ismtp", "iSMTP", "SMTP Server Tester", "iSMTP", "ismtp"));
+        list.add(makeItem("ismtp", "iSMTP", "SMTP Server Tester", "ismtp", "ismtp"));
         list.add(makeItem("smtpuserenum", "SMTP-User-Enum", "SMTP User Enumeration", "smtp-user-enum", "smtpuserenum"));
         return list;
     }

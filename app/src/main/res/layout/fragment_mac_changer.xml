@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/layout_for_dco" android:padding="6dp">
+
+    <LinearLayout android:id="@+id/header" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:gravity="center_vertical"
+        android:orientation="horizontal" android:padding="6dp">
+        <ImageView android:layout_width="32dp" android:layout_height="32dp"
+            android:scaleType="fitXY" android:src="@drawable/ic_mac_changer" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:orientation="vertical" android:paddingStart="8dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="MAC CHANGER" android:textColor="#2fff00"
+                android:textSize="14sp" android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Spoof wireless interface MAC" android:textColor="#8FBC8F"
+                android:textSize="10sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View android:id="@+id/divider" android:layout_below="@id/header"
+        android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="#2fff00" android:layout_marginBottom="6dp" />
+
+    <ScrollView android:layout_below="@id/divider" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:layout_marginTop="6dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:padding="2dp">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="INTERFACE" android:textColor="#2fff00" android:textSize="11sp"
+                android:textStyle="bold" android:paddingBottom="4dp" />
+
+            <androidx.cardview.widget.CardView android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
+                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="8dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="WLAN0" android:textColor="#2fff00" android:textSize="12sp"
+                        android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Primary WiFi interface" android:textColor="#8FBC8F"
+                        android:textSize="10sp" />
+                    <TextView android:id="@+id/mac_wlan0_btn" android:layout_width="match_parent"
+                        android:layout_height="36dp" android:gravity="center" android:text="CHANGE"
+                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
+                        android:background="#2fff00" android:layout_marginTop="6dp"
+                        android:clickable="true" android:focusable="true" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
+                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="8dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="P2P0" android:textColor="#2fff00" android:textSize="12sp"
+                        android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="WiFi Direct interface" android:textColor="#8FBC8F"
+                        android:textSize="10sp" />
+                    <TextView android:id="@+id/mac_p2p0_btn" android:layout_width="match_parent"
+                        android:layout_height="36dp" android:gravity="center" android:text="CHANGE"
+                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
+                        android:background="#2fff00" android:layout_marginTop="6dp"
+                        android:clickable="true" android:focusable="true" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
+                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="8dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="RANDOM MAC" android:textColor="#2fff00" android:textSize="12sp"
+                        android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Generate random OUI-valid MAC" android:textColor="#8FBC8F"
+                        android:textSize="10sp" />
+                    <TextView android:id="@+id/mac_random_btn" android:layout_width="match_parent"
+                        android:layout_height="36dp" android:gravity="center" android:text="GENERATE"
+                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
+                        android:background="#2fff00" android:layout_marginTop="6dp"
+                        android:clickable="true" android:focusable="true" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
+                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="8dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="RESTORE ORIGINAL" android:textColor="#2fff00"
+                        android:textSize="12sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Reset MAC to device default" android:textColor="#8FBC8F"
+                        android:textSize="10sp" />
+                    <TextView android:id="@+id/mac_restore_btn" android:layout_width="match_parent"
+                        android:layout_height="36dp" android:gravity="center" android:text="RESTORE"
+                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
+                        android:background="#2fff00" android:layout_marginTop="6dp"
+                        android:clickable="true" android:focusable="true" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </ScrollView>
+</RelativeLayout>

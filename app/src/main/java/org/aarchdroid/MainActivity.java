@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.navigation.NavigationView;
 import org.aarchdroid.andraxdialogs.Alert;
@@ -219,10 +220,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (itemId == R.id.nav_neovim) {
             startActivity(new Intent(this, (Class<?>) org.aarchdroid.neovim.NeovimEditorActivity.class));
         } else if (itemId == R.id.nav_hidrastrike) {
-            HIDraStrikeFragment hIDraStrikeFragment = new HIDraStrikeFragment();
-            FragmentTransaction fragmentTransactionBeginTransaction = getSupportFragmentManager().beginTransaction();
-            fragmentTransactionBeginTransaction.replace(R.id.fragment_container, hIDraStrikeFragment);
-            fragmentTransactionBeginTransaction.commit();
+            replaceFragment(new HIDraStrikeFragment());
+        } else if (itemId == R.id.nav_hid_keyboard) {
+            replaceFragment(new HIDKeyboardFragment());
+        } else if (itemId == R.id.nav_mana) {
+            replaceFragment(new ManaFragment());
+        } else if (itemId == R.id.nav_mitm) {
+            replaceFragment(new MITMFragment());
+        } else if (itemId == R.id.nav_mac_changer) {
+            replaceFragment(new MacChangerFragment());
+        } else if (itemId == R.id.nav_bluetooth) {
+            replaceFragment(new BluetoothFragment());
+        } else if (itemId == R.id.nav_usb_arsenal) {
+            replaceFragment(new USBArsenalFragment());
+        } else if (itemId == R.id.nav_gps) {
+            replaceFragment(new GPSFragment());
+        } else if (itemId == R.id.nav_kali_services) {
+            replaceFragment(new KaliServicesFragment());
+        } else if (itemId == R.id.nav_custom_commands) {
+            replaceFragment(new CustomCommandsFragment());
         } else if (itemId == R.id.nav_telegram) {
             startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://t.me/snakesecurityofficial")));
         } else if (itemId == R.id.nav_x) {
@@ -232,6 +248,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void replaceFragment(Fragment fragment) {
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.fragment_container, fragment);
+        ft.commit();
     }
 
     public void run_hack_cmd(String str) {

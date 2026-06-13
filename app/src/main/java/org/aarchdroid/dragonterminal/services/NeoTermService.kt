@@ -84,7 +84,7 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         if (profile.loginShell == defaultScript) {
             ChrootManager.ensureMounted()
             parameter.executablePath("su")
-            parameter.arguments(arrayOf("su", "-c", ChrootManager.getEntryCommand()))
+            parameter.arguments(ChrootManager.getSuEntryArgs())
         } else {
             parameter.executablePath(profile.loginShell)
         }

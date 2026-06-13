@@ -29,7 +29,7 @@
     </Preference>
 
     <CheckBoxPreference
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="notif_silent"
         android:summary="Notificación silenciosa sin sonido ni pop-up"
         android:title="Notificación silenciosa" />

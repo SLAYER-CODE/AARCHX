@@ -80,7 +80,7 @@
         "displayName": "HttpX",
         "description": "Multi-purpose HTTP toolkit",
         "drawable": "httpx",
-        "cmd": "httpx",
+        "cmd": "httpx-pd",
         "category": "bug_bounty"
       },
       {
@@ -168,7 +168,7 @@
         "displayName": "XSpear",
         "description": "Powerfull XSS Scanning and Parameter analysis",
         "drawable": "xspear",
-        "cmd": "XSpear -h",
+        "cmd": "xspear -h",
         "category": "bug_bounty"
       },
       {
@@ -232,7 +232,7 @@
         "displayName": "JWT_Tool",
         "description": "The JSON Web Token Toolkit",
         "drawable": "jwt",
-        "cmd": "jwt_tool -h",
+        "cmd": "jwt-tool -h",
         "category": null
       },
       {
@@ -364,7 +364,7 @@
         "displayName": "SIXNET-Tools",
         "description": "Exploit sixnet RTUs",
         "drawable": "andraxtool",
-        "cmd": "SIXNET-tools",
+        "cmd": "sixnet-tools",
         "category": null
       },
       {
@@ -396,7 +396,7 @@
         "displayName": "HomePWN",
         "description": "Swiss Army Knife for Pentesting of IoT Devices",
         "drawable": "homepwn",
-        "cmd": "homePwn",
+        "cmd": "homepwn",
         "category": "ics_scada_iot"
       },
       {
@@ -522,7 +522,7 @@
         "displayName": "SpiderFoot",
         "description": "Threat Intelligence and Attack Mapping",
         "drawable": "spiderfoot",
-        "cmd": "sfcli",
+        "cmd": "spiderfoot",
         "category": "information_gathering"
       },
       {
@@ -562,7 +562,7 @@
         "displayName": "iSMTP",
         "description": "SMTP Server Tester",
         "drawable": "ismtp",
-        "cmd": "iSMTP",
+        "cmd": "ismtp",
         "category": "information_gathering"
       },
       {
@@ -654,7 +654,7 @@
         "displayName": "MFSniffer",
         "description": "Capture TSO user ID and password",
         "drawable": "ziron",
-        "cmd": "MFSniffer -h",
+        "cmd": "mfsniffer -h",
         "category": "mainframe"
       },
       {
@@ -670,7 +670,7 @@
         "displayName": "MFDoS",
         "description": "Mainframe TN3270 DoS",
         "drawable": "ziron",
-        "cmd": "MFDoS -h",
+        "cmd": "mfdos -h",
         "category": "mainframe"
       },
       {
@@ -686,7 +686,7 @@
         "displayName": "TPX_Brute",
         "description": "The z/OS TPX logon brute forcer",
         "drawable": "ziron",
-        "cmd": "TPX_Brute -h",
+        "cmd": "tpx-brute -h",
         "category": null
       },
       {
@@ -694,7 +694,7 @@
         "displayName": "Mainframe_Bruter",
         "description": "z/OS Mainframe Bruteforcer",
         "drawable": "ziron",
-        "cmd": "mainframe_bruter -h",
+        "cmd": "mainframe-bruter -h",
         "category": null
       },
       {
@@ -718,7 +718,7 @@
         "displayName": "TShOcker",
         "description": "Meterpreter like TSO reverse shell",
         "drawable": "ziron",
-        "cmd": "TShOcker -h",
+        "cmd": "tshocker -h",
         "category": null
       },
       {
@@ -726,7 +726,7 @@
         "displayName": "netEBCDICat",
         "description": "Accept z/OS EBCDIC Socket Reverse Shells",
         "drawable": "ziron",
-        "cmd": "netEBCDICat -h",
+        "cmd": "netebcdicat -h",
         "category": null
       },
       {
@@ -734,7 +734,7 @@
         "displayName": "MainTP",
         "description": "Mainframe Reverse/Bind Root Shell",
         "drawable": "ziron",
-        "cmd": "MainTP -h",
+        "cmd": "maintp -h",
         "category": "mainframe"
       },
       {
@@ -756,7 +756,7 @@
         "displayName": "TPX_Brute",
         "description": "The z/OS TPX logon brute forcer",
         "drawable": "mainframe",
-        "cmd": "TPX_Brute -h",
+        "cmd": "tpx-brute -h",
         "category": null
       },
       {
@@ -780,7 +780,7 @@
         "displayName": "netEBCDICat",
         "description": "Accept z/OS sockets reverse shells on z/OS and OMVS/USS",
         "drawable": "mainframe",
-        "cmd": "netEBCDICat -h",
+        "cmd": "netebcdicat -h",
         "category": null
       },
       {
@@ -788,7 +788,7 @@
         "displayName": "TShOcker",
         "description": "Meterpreter like TSO reverse shell",
         "drawable": "mainframe",
-        "cmd": "TShOcker -h",
+        "cmd": "tshocker -h",
         "category": null
       },
       {
@@ -804,7 +804,7 @@
         "displayName": "MFSniffer",
         "description": "Capture TSO user ID and password",
         "drawable": "mainframe",
-        "cmd": "MFSniffer -h",
+        "cmd": "mfsniffer -h",
         "category": "mainframe"
       },
       {
@@ -812,7 +812,7 @@
         "displayName": "Mainframe_Bruter",
         "description": "z/OS Mainframe Bruteforcer",
         "drawable": "mainframe",
-        "cmd": "mainframe_bruter -h",
+        "cmd": "mainframe-bruter -h",
         "category": null
       },
       {
@@ -836,7 +836,7 @@
         "displayName": "MainTP",
         "description": "Mainframe Reverse/Bind Root ShELL",
         "drawable": "mainframe",
-        "cmd": "MainTP -h",
+        "cmd": "maintp -h",
         "category": "mainframe"
       },
       {
@@ -844,7 +844,7 @@
         "displayName": "MFDoS",
         "description": "Mainframe DoS",
         "drawable": "mainframe",
-        "cmd": "MFDoS -h",
+        "cmd": "mfdos -h",
         "category": "mainframe"
       }
     ]
@@ -1138,7 +1138,7 @@
         "displayName": "UPnP-Tools",
         "description": "UPnP Utilities",
         "drawable": "andraxtool",
-        "cmd": "upnp_tools",
+        "cmd": "upnp-tools",
         "category": null
       },
       {
@@ -1146,7 +1146,7 @@
         "displayName": "BGP-Cli",
         "description": "Border Gateway Protocol CLI",
         "drawable": "andraxtool",
-        "cmd": "bgp_cli -h",
+        "cmd": "bgp-cli -h",
         "category": null
       },
       {
@@ -1154,7 +1154,7 @@
         "displayName": "EIGRP-Cli",
         "description": "EIGRP Client",
         "drawable": "andraxtool",
-        "cmd": "eigrp_cli",
+        "cmd": "eigrp-cli",
         "category": null
       },
       {
@@ -1178,7 +1178,7 @@
         "displayName": "MPLS_Tun",
         "description": "MPLS L2 and L3 tunnel",
         "drawable": "andraxtool",
-        "cmd": "mpls_tun -h",
+        "cmd": "mpls-tun -h",
         "category": null
       },
       {
@@ -1186,7 +1186,7 @@
         "displayName": "MPLS_Redirect",
         "description": "On-the-fly MPLS Redirector",
         "drawable": "andraxtool",
-        "cmd": "mpls_redirect -h",
+        "cmd": "mpls-redirect -h",
         "category": null
       },
       {
@@ -1302,7 +1302,7 @@
         "displayName": "MaskProcessor",
         "description": "High-Performance Word Generator",
         "drawable": "maskprocessor",
-        "cmd": "maskprocessor --help",
+        "cmd": "echo '=== MaskProcessor === Genera wordlists por mascara. Ej: mp64 ?l?l?l?l?l?l?l?l (8 letras). Alternativa en BlackArch: hashcat-utils (mp64/mp32) o crunch.'",
         "category": "password_hacking"
       },
       {
@@ -1506,7 +1506,7 @@
         "displayName": "svmap",
         "description": "SIP Scanner",
         "drawable": "sipvicious",
-        "cmd": "sipvicious_svmap",
+        "cmd": "svmap",
         "category": "voip_3g_4g"
       },
       {
@@ -1514,7 +1514,7 @@
         "displayName": "svwar",
         "description": "Identifies working lines on a PBX",
         "drawable": "sipvicious",
-        "cmd": "sipvicious_svwar",
+        "cmd": "svwar",
         "category": "uncategorized"
       },
       {
@@ -1530,7 +1530,7 @@
         "displayName": "svcrack",
         "description": "Crack PBX passwords",
         "drawable": "sipvicious",
-        "cmd": "sipvicious_svcrack",
+        "cmd": "svcrack",
         "category": "uncategorized"
       },
       {
@@ -1574,11 +1574,11 @@
         "category": "voip_3g_4g"
       },
       {
-        "key": "udpfloodVLAN",
+        "key": "udpfloodvlan",
         "displayName": "UDPFloodVLAN",
         "description": "UDP Flood with VLAN Support",
         "drawable": "andraxtool",
-        "cmd": "udpfloodVLAN",
+        "cmd": "udpfloodvlan",
         "category": null
       },
       {
@@ -1626,7 +1626,7 @@
         "displayName": "GTP-Scan",
         "description": "GTP Scanner",
         "drawable": "gtp_scan",
-        "cmd": "gtp_scan -h",
+        "cmd": "gtp-scan -h",
         "category": null
       },
       {
@@ -1634,7 +1634,7 @@
         "displayName": "Diameter-Enum",
         "description": "Diameter Scanner",
         "drawable": "ltetower",
-        "cmd": "diameter_enum -h",
+        "cmd": "diameter-enum -h",
         "category": null
       },
       {
@@ -1642,7 +1642,7 @@
         "displayName": "S1AP_Enum",
         "description": "S1AP Enumerator",
         "drawable": "ltetower",
-        "cmd": "s1ap_enum",
+        "cmd": "s1ap-enum",
         "category": null
       },
       {
@@ -1658,7 +1658,7 @@
         "displayName": "eNodeB",
         "description": "Evolved Node B for LTE Hacking and 5G Downgrade",
         "drawable": "lte",
-        "cmd": "eNodeB",
+        "cmd": "enodeb",
         "category": null
       },
       {
@@ -1900,7 +1900,7 @@
         "displayName": "eNodeB",
         "description": "Evolved Node B for LTE Hacking and 5G Downgrade",
         "drawable": "lte",
-        "cmd": "eNodeB-HACK -h",
+        "cmd": "enodeb",
         "category": null
       },
       {
@@ -1908,7 +1908,7 @@
         "displayName": "MME-eNodeB",
         "description": "MME enhanced with eNodeB",
         "drawable": "lte",
-        "cmd": "mme-eNodeB-HACK -h",
+        "cmd": "mme-enodeb",
         "category": null
       },
       {
@@ -1916,7 +1916,7 @@
         "displayName": "SGW",
         "description": "Serving Gateway",
         "drawable": "cellphonetower",
-        "cmd": "SGW-HACK -h",
+        "cmd": "sgw",
         "category": null
       },
       {
@@ -1924,7 +1924,7 @@
         "displayName": "PGW",
         "description": "Packet Data Network Gateway",
         "drawable": "cellphonetower",
-        "cmd": "PGW-HACK -h",
+        "cmd": "pgw",
         "category": null
       },
       {
@@ -1932,7 +1932,7 @@
         "displayName": "Diameter-Enum",
         "description": "Diameter Scanner",
         "drawable": "diametertower",
-        "cmd": "diameter_enum -h",
+        "cmd": "diameter-enum -h",
         "category": null
       },
       {
@@ -1940,7 +1940,7 @@
         "displayName": "S1AP-Enum",
         "description": "S1SetupRequest PDU to MME",
         "drawable": "diametertower",
-        "cmd": "s1ap_enum",
+        "cmd": "s1ap-enum",
         "category": null
       },
       {
@@ -1948,7 +1948,7 @@
         "displayName": "GTP-Scan",
         "description": "GTP Scanner",
         "drawable": "diametertower",
-        "cmd": "gtp_scan -h",
+        "cmd": "gtp-scan -h",
         "category": null
       },
       {
@@ -1972,7 +1972,7 @@
         "displayName": "SVMap",
         "description": "SIP Scanner",
         "drawable": "sipvicious",
-        "cmd": "sipvicious_svmap",
+        "cmd": "svmap",
         "category": "voip_3g_4g"
       },
       {
@@ -2032,11 +2032,11 @@
         "category": "voip_3g_4g"
       },
       {
-        "key": "udpfloodVLAN",
+        "key": "udpfloodvlan",
         "displayName": "UDPFloodVLAN",
         "description": "Flood UDP VLAN packets",
         "drawable": "andraxicon_svg",
-        "cmd": "udpfloodVLAN",
+        "cmd": "udpfloodvlan",
         "category": null
       },
       {
@@ -2154,7 +2154,7 @@
         "displayName": "HttpX",
         "description": "Multi-purpose HTTP toolkit",
         "drawable": "httpx",
-        "cmd": "httpx",
+        "cmd": "httpx-pd",
         "category": "bug_bounty"
       },
       {
@@ -2338,7 +2338,7 @@
         "displayName": "XSpear",
         "description": "Powerfull XSS Scanning and Parameter analysis",
         "drawable": "xspear",
-        "cmd": "XSpear -h",
+        "cmd": "xspear -h",
         "category": "bug_bounty"
       },
       {
@@ -2386,7 +2386,7 @@
         "displayName": "HTShells",
         "description": "Self contained htaccess shells",
         "drawable": "andraxtool",
-        "cmd": "htshells",
+        "cmd": "echo 'Coleccion de templates .htaccess en /usr/share/htshells/'",
         "category": "website_hacking"
       },
       {
@@ -2394,7 +2394,7 @@
         "displayName": "JWT_Tool",
         "description": "The JSON Web Token Toolkit",
         "drawable": "jwt",
-        "cmd": "jwt_tool -h",
+        "cmd": "jwt-tool -h",
         "category": null
       },
       {

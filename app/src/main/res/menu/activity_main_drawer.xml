@@ -59,6 +59,63 @@
         </menu>
     </item>
 
+    <item android:title="NetHunter Attacks">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_hid_keyboard"
+                    android:icon="@drawable/ic_hid_keyboard"
+                    android:title="HID Keyboard" />
+                <item
+                    android:id="@+id/nav_mana"
+                    android:icon="@drawable/ic_mana_ap"
+                    android:title="MANA Evil AP" />
+                <item
+                    android:id="@+id/nav_mitm"
+                    android:icon="@drawable/ic_mitm"
+                    android:title="MITM Framework" />
+            </group>
+        </menu>
+    </item>
+
+    <item android:title="Hardware / System">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_mac_changer"
+                    android:icon="@drawable/ic_mac_changer"
+                    android:title="MAC Changer" />
+                <item
+                    android:id="@+id/nav_bluetooth"
+                    android:icon="@drawable/ic_bluetooth_attack"
+                    android:title="Bluetooth Attacks" />
+                <item
+                    android:id="@+id/nav_usb_arsenal"
+                    android:icon="@drawable/ic_usb_arsenal"
+                    android:title="USB Arsenal" />
+                <item
+                    android:id="@+id/nav_gps"
+                    android:icon="@drawable/ic_gps_spoof"
+                    android:title="GPS Spoofing" />
+            </group>
+        </menu>
+    </item>
+
+    <item android:title="Services / Dashboard">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_kali_services"
+                    android:icon="@drawable/ic_kali_services"
+                    android:title="Kali Services" />
+                <item
+                    android:id="@+id/nav_custom_commands"
+                    android:icon="@drawable/ic_custom_commands"
+                    android:title="Custom Commands" />
+            </group>
+        </menu>
+    </item>
+
     <item android:title="Scanning">
         <menu>
             <group android:checkableBehavior="single">

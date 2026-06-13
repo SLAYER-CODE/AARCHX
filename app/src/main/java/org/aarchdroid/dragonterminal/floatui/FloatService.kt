@@ -238,7 +238,7 @@ class FloatService : Service() {
         if (!profile.enableExecveWrapper && profile.loginShell == defaultScript) {
             ChrootManager.ensureMounted()
             builder.executablePath("su")
-            builder.argArray(arrayOf("su", "-c", ChrootManager.getEntryCommand()))
+            builder.argArray(ChrootManager.getSuEntryArgs())
         } else {
             builder.executablePath(profile.loginShell)
         }

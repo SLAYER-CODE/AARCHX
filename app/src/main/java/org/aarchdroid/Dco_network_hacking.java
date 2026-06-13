@@ -32,7 +32,7 @@ public class Dco_network_hacking extends DcoBaseActivity {
             createAdapter(list, buildToolList(), new ToolAdapter.OnToolClickListener() {
                 @Override
                 public void onToolClick(ToolItem item) {
-                    run_hack_cmd(item.cmd, item.iconResId);
+                    handleCardClick(item);
                 }
 
                 @Override
@@ -94,13 +94,13 @@ public class Dco_network_hacking extends DcoBaseActivity {
         list.add(makeItem("bettercap", "Bettercap", "Swiss Army knife for networks recon and attacks", "sudo bettercap", "bettercap"));
         list.add(makeItem("yersinia", "Yersinia", "A framework for layer 2 attacks", "sudo yersinia -h", "yersinia"));
         list.add(makeItem("miranda", "Miranda", "Interactive UPnP Client", "sudo miranda", "miranda"));
-        list.add(makeItem("upnptools", "UPnP-Tools", "UPnP Utilities", "upnp_tools", "andraxtool"));
-        list.add(makeItem("bgpcli", "BGP-Cli", "Border Gateway Protocol CLI", "bgp_cli -h", "andraxtool"));
-        list.add(makeItem("eigrpcli", "EIGRP-Cli", "EIGRP Client", "eigrp_cli", "andraxtool"));
+        list.add(makeItem("upnptools", "UPnP-Tools", "UPnP Utilities", "upnp-tools", "andraxtool"));
+        list.add(makeItem("bgpcli", "BGP-Cli", "Border Gateway Protocol CLI", "bgp-cli -h", "andraxtool"));
+        list.add(makeItem("eigrpcli", "EIGRP-Cli", "EIGRP Client", "eigrp-cli", "andraxtool"));
         list.add(makeItem("ldpcli", "LDP_Cli", "Label Distribution Protocol CLI", "ldp_cli", "andraxtool"));
         list.add(makeItem("sdnpwn", "SDNPwn", "SDN Penetration Testing Toolkit", "sdnpwn", "sdnpwn"));
-        list.add(makeItem("mplstun", "MPLS_Tun", "MPLS L2 and L3 tunnel", "mpls_tun -h", "andraxtool"));
-        list.add(makeItem("mplsredirect", "MPLS_Redirect", "On-the-fly MPLS Redirector", "mpls_redirect -h", "andraxtool"));
+        list.add(makeItem("mplstun", "MPLS_Tun", "MPLS L2 and L3 tunnel", "mpls-tun -h", "andraxtool"));
+        list.add(makeItem("mplsredirect", "MPLS_Redirect", "On-the-fly MPLS Redirector", "mpls-redirect -h", "andraxtool"));
         list.add(makeItem("fiked", "Fiked", "FakeIKEd, fake IKE daemon", "fiked", "andraxtool"));
         list.add(makeItem("socat", "Socat", "Relay for bidirectional data transfer", "socat -h", "andraxtool"));
         list.add(makeItem("dns2tcp", "DNS2TCP", "Designed to relay TCP connections through DNS", "dns2tcpc", "dns2tcp"));
