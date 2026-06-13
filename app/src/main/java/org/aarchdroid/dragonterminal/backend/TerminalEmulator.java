@@ -194,6 +194,8 @@ public final class TerminalEmulator {
      * Not really DECSET bit... - http://www.vt100.net/docs/vt510-rm/DECSACE
      */
     private static final int DECSET_BIT_RECTANGULAR_CHANGEATTRIBUTE = 1 << 12;
+    /** DECSET 2048 - In-band window resize notifications. */
+    private static final int DECSET_BIT_RESIZE_2048 = 1 << 13;
 
     private String mTitle;
     private final Stack<String> mTitleStack = new Stack<>();
@@ -209,6 +211,9 @@ public final class TerminalEmulator {
      * The number of character rows and columns in the terminal screen.
      */
     public int mRows, mColumns;
+
+    /** Cell pixel dimensions (for accurate CSI 14 t / CSI 16 t responses). */
+    private int mCellWidth, mCellHeight;
 
     /**
      * The normal screen buffer. Stores the characters that appear on the screen of the emulated terminal.
@@ -365,18 +370,22 @@ public final class TerminalEmulator {
                 return DECSET_BIT_MOUSE_PROTOCOL_SGR;
             case 2004:
                 return DECSET_BIT_BRACKETED_PASTE_MODE;
+            case 2048:
+                return DECSET_BIT_RESIZE_2048;
             default:
                 return -1;
             // throw new IllegalArgumentException("Unsupported decset: " + decsetBit);
         }
     }
 
-    public TerminalEmulator(TerminalOutput session, int columns, int rows, int transcriptRows) {
+    public TerminalEmulator(TerminalOutput session, int columns, int rows, int transcriptRows, int cellWidth, int cellHeight) {
         mSession = session;
         mScreen = mMainBuffer = new TerminalBuffer(columns, transcriptRows, rows);
         mAltBuffer = new TerminalBuffer(columns, rows, rows);
         mRows = rows;
         mColumns = columns;
+        mCellWidth = cellWidth;
+        mCellHeight = cellHeight;
         mTabStop = new boolean[mColumns];
         reset();
     }
@@ -387,6 +396,10 @@ public final class TerminalEmulator {
 
     public boolean isAlternateBufferActive() {
         return mScreen == mAltBuffer;
+    }
+
+    public boolean isResize2048Enabled() {
+        return isDecsetInternalBitSet(DECSET_BIT_RESIZE_2048);
     }
 
     /**
@@ -413,7 +426,9 @@ public final class TerminalEmulator {
         }
     }
 
-    public void resize(int columns, int rows) {
+    public void resize(int columns, int rows, int cellWidth, int cellHeight) {
+        mCellWidth = cellWidth;
+        mCellHeight = cellHeight;
         if (mRows == rows && mColumns == columns) {
             return;
         } else if (columns < 2 || rows < 2) {
@@ -850,7 +865,7 @@ public final class TerminalEmulator {
                                 value = (mScreen == mAltBuffer) ? 1 : 2;
                             } else {
                                 int internalBit = mapDecSetBitToInternalBit(mode);
-                                if (internalBit == -1) {
+                                if (internalBit != -1) {
                                     value = isDecsetInternalBitSet(internalBit) ? 1 : 2; // 1=set, 2=reset.
                                 } else {
                                     Log.e(EmulatorDebug.LOG_TAG, "Got DECRQM for unrecognized private DEC mode=" + mode);
@@ -1172,6 +1187,8 @@ public final class TerminalEmulator {
             case 1006: // SGR Mouse Mode
             case 1015:
             case 1034: // Interpret "meta" key, sets eighth bit.
+                break;
+            case 2048:
                 break;
             case 1048: // Set: Save cursorColor as in DECSC. Reset: Restore cursorColor as in DECRC.
                 if (setting)
@@ -1732,8 +1749,10 @@ public final class TerminalEmulator {
                         mSession.write("\033[3;0;0t");
                         break;
                     case 14: // Report xterm window in pixels. Result is CSI 4 ; height ; width t
-                        // We just report characters time 12 here.
-                        mSession.write(String.format(Locale.US, "\033[4;%d;%dt", mRows * 12, mColumns * 12));
+                        mSession.write(String.format(Locale.US, "\033[4;%d;%dt", mRows * mCellHeight, mColumns * mCellWidth));
+                        break;
+                    case 16: // Report xterm character cell size in pixels. Result is CSI 6 ; height ; width t
+                        mSession.write(String.format(Locale.US, "\033[6;%d;%dt", mCellHeight, mCellWidth));
                         break;
                     case 18: // Report the size of the text area in characters. Result is CSI 8 ; height ; width t
                         mSession.write(String.format(Locale.US, "\033[8;%d;%dt", mRows, mColumns));

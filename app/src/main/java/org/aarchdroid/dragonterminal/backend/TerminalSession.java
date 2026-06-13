@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -161,14 +162,10 @@ public class TerminalSession extends TerminalOutput {
             initializeEmulator(columns, rows, cellWidth, cellHeight);
         } else {
             JNI.setPtyWindowSize(mTerminalFileDescriptor, rows, columns, cellWidth, cellHeight);
-            // Fallback: algunos procesos (nvim con libvterm) no siempre responden
-            // al SIGWINCH generado por TIOCSWINSZ. Enviar manualmente al grupo.
-            try {
-                Os.kill(-mShellPid, OsConstants.SIGWINCH);
-            } catch (ErrnoException e) {
-                // Señal redundante, ignorar
+            mEmulator.resize(columns, rows, cellWidth, cellHeight);
+            if (mEmulator.isResize2048Enabled()) {
+                write(String.format(Locale.US, "\033[48;%d;%d;0;0t", rows, columns));
             }
-            mEmulator.resize(columns, rows);
         }
     }
 
@@ -184,7 +181,7 @@ public class TerminalSession extends TerminalOutput {
      * @param rows    The number of rows in the terminal window.
      */
     public void initializeEmulator(int columns, int rows, int cellWidth, int cellHeight) {
-        mEmulator = new TerminalEmulator(this, columns, rows, /* transcript= */2000);
+        mEmulator = new TerminalEmulator(this, columns, rows, /* transcript= */2000, cellWidth, cellHeight);
 
         int[] processId = new int[1];
         mTerminalFileDescriptor = JNI.createSubprocess(mShellPath, mCwd, mArgs, mEnv, processId, rows, columns, cellWidth, cellHeight);
