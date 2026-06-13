@@ -10,6 +10,7 @@ object ChrootManager {
 
     private val SETUP_COMMANDS: String by lazy {
         buildString {
+            append("setenforce 0 2>/dev/null; ")
             append("mount -o remount,exec,suid,dev,rw /data 2>/dev/null; ")
             append("mkdir -p $CHROOT_BASE/data/data/org.aarchdroid $CHROOT_BASE/dev $CHROOT_BASE/dev/pts $CHROOT_BASE/proc $CHROOT_BASE/sys $CHROOT_BASE/tmp; ")
             append("mount -t proc proc $CHROOT_BASE/proc 2>/dev/null; ")
