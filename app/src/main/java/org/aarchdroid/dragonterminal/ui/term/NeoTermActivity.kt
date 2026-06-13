@@ -32,6 +32,7 @@ import android.widget.Toast
 import org.aarchdroid.AArchDroidApp
 import org.aarchdroid.R
 import android.content.DialogInterface
+import org.aarchdroid.dragonterminal.backend.ChrootManager
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.component.profile.ProfileComponent
 import org.aarchdroid.dragonterminal.data.CommandInterceptor
@@ -170,7 +171,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 if (tabSwitcher.selectedTab is TermTab) {
                     val tab = tabSwitcher.selectedTab as TermTab
                     toggleToolbar(tab.toolbar, !isShow)
-                    tab.termData.termView?.updateSize()
                 }
             }
         })
@@ -849,9 +849,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
         val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/archdroid.sh"
         if (!systemShell && profile.loginShell == defaultScript) {
+            ChrootManager.ensureMounted()
             parameter.executablePath("su")
-            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mkdir -p /data/local/aarchdroid/data/data/org.aarchdroid /data/local/aarchdroid/dev /data/local/aarchdroid/dev/pts /data/local/aarchdroid/tmp; mknod -m 666 /data/local/aarchdroid/dev/null c 1 3 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/zero c 1 5 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/random c 1 8 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/urandom c 1 9 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/ptmx c 5 2 2>/dev/null; mount -t proc proc /data/local/aarchdroid/proc 2>/dev/null; mount -t sysfs sys /data/local/aarchdroid/sys 2>/dev/null; mount -o bind /dev/pts /data/local/aarchdroid/dev/pts 2>/dev/null; chmod 1777 /data/local/aarchdroid/tmp 2>/dev/null; mount -o bind /data/data/org.aarchdroid /data/local/aarchdroid/data/data/org.aarchdroid 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
-            parameter.arguments(arrayOf("su", "-c", inlineCmd))
+            parameter.arguments(arrayOf("su", "-c", ChrootManager.getEntryCommand()))
         }
 
         val session = try {
@@ -914,9 +914,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 .profile(profile)
 
             if (!systemShell && profile.loginShell == defaultScript) {
+                ChrootManager.ensureMounted()
                 parameter.executablePath("su")
-                val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mkdir -p /data/local/aarchdroid/data/data/org.aarchdroid /data/local/aarchdroid/dev /data/local/aarchdroid/dev/pts /data/local/aarchdroid/tmp; mknod -m 666 /data/local/aarchdroid/dev/null c 1 3 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/zero c 1 5 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/random c 1 8 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/urandom c 1 9 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/ptmx c 5 2 2>/dev/null; mount -t proc proc /data/local/aarchdroid/proc 2>/dev/null; mount -t sysfs sys /data/local/aarchdroid/sys 2>/dev/null; mount -o bind /dev/pts /data/local/aarchdroid/dev/pts 2>/dev/null; chmod 1777 /data/local/aarchdroid/tmp 2>/dev/null; mount -o bind /data/data/org.aarchdroid /data/local/aarchdroid/data/data/org.aarchdroid 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
-                parameter.arguments(arrayOf("su", "-c", inlineCmd))
+                parameter.arguments(arrayOf("su", "-c", ChrootManager.getEntryCommand()))
             }
 
             val newSession = try {
@@ -1288,38 +1288,44 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     private fun updatePlaceholderVisibility() {
         val placeholder = findViewById<View>(R.id.placeholder_empty)
+        val emptyContainer = findViewById<View>(R.id.empty_state_container)
+        val emptyText = findViewById<TextView>(R.id.empty_logs_text)
+        val historyList = findViewById<View>(R.id.sessionHistoryList)
+        val launchBtn = findViewById<Button>(R.id.launch_terminal_button)
+
         if (::tabSwitcher.isInitialized) {
             placeholder.visibility = if (tabSwitcher.count == 0) View.VISIBLE else View.GONE
         }
-        findViewById<TextView>(R.id.empty_terminals_text).visibility =
-            if (tabSwitcher.count == 0) View.VISIBLE else View.GONE
         toolbar.menu?.findItem(R.id.toggle_tab_switcher_menu_item)?.isVisible = tabSwitcher.count > 0
+
         if (tabSwitcher.count == 0) {
             val logsDisabled = org.aarchdroid.dragonterminal.frontend.config.NeoPreference.isLoggingDisabled()
+
             if (logsDisabled) {
                 toolbar.title = "Terminal"
                 toolbar.menu?.findItem(R.id.menu_item_clear_logs)?.isVisible = false
-                findViewById<TextView>(R.id.empty_logs_text).apply {
-                    text = "Historial deshabilitado en Ajustes"
-                    visibility = View.VISIBLE
-                }
-                findViewById<View>(R.id.sessionHistoryList).visibility = View.GONE
+                emptyText.text = "Historial deshabilitado en Ajustes"
+                emptyText.visibility = View.VISIBLE
+                emptyContainer.visibility = View.VISIBLE
+                historyList.visibility = View.GONE
             } else {
                 val freshData = SessionHistory.getHistory(this@NeoTermActivity)
                 val hasLogs = freshData.sessions.isNotEmpty()
 
                 sessionHistoryAdapter?.updateData(freshData)
-                toolbar.title = if (hasLogs) "(${freshData.sessions.size}) Logs" else "Sin eventos"
+                toolbar.title = if (hasLogs) "(${freshData.sessions.size}) Logs" else "Terminal"
                 toolbar.menu?.findItem(R.id.menu_item_clear_logs)?.isVisible = hasLogs
 
-                findViewById<TextView>(R.id.empty_logs_text).visibility =
-                    if (hasLogs) View.GONE else View.VISIBLE
-                findViewById<View>(R.id.sessionHistoryList).visibility =
-                    if (hasLogs) View.VISIBLE else View.GONE
+                if (hasLogs) {
+                    emptyContainer.visibility = View.GONE
+                    historyList.visibility = View.VISIBLE
+                } else {
+                    emptyText.visibility = View.VISIBLE
+                    emptyContainer.visibility = View.VISIBLE
+                    historyList.visibility = View.GONE
+                }
             }
 
-            val launchBtn = findViewById<Button>(R.id.launch_terminal_button)
-            launchBtn.visibility = View.VISIBLE
             launchBtn.setOnClickListener { addNewSession() }
         }
     }

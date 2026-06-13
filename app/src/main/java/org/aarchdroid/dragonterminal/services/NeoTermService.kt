@@ -19,6 +19,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import org.aarchdroid.R
+import org.aarchdroid.dragonterminal.backend.ChrootManager
 import org.aarchdroid.dragonterminal.backend.EmulatorDebug
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.frontend.logging.NLog
@@ -81,9 +82,9 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
             .profile(profile)
 
         if (profile.loginShell == defaultScript) {
-            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mkdir -p /data/local/aarchdroid/data/data/org.aarchdroid /data/local/aarchdroid/dev /data/local/aarchdroid/dev/pts /data/local/aarchdroid/tmp; mknod -m 666 /data/local/aarchdroid/dev/null c 1 3 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/zero c 1 5 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/random c 1 8 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/urandom c 1 9 2>/dev/null; mknod -m 666 /data/local/aarchdroid/dev/ptmx c 5 2 2>/dev/null; mount -t proc proc /data/local/aarchdroid/proc 2>/dev/null; mount -t sysfs sys /data/local/aarchdroid/sys 2>/dev/null; mount -o bind /dev/pts /data/local/aarchdroid/dev/pts 2>/dev/null; chmod 1777 /data/local/aarchdroid/tmp 2>/dev/null; mount -o bind /data/data/org.aarchdroid /data/local/aarchdroid/data/data/org.aarchdroid 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
+            ChrootManager.ensureMounted()
             parameter.executablePath("su")
-            parameter.arguments(arrayOf("su", "-c", inlineCmd))
+            parameter.arguments(arrayOf("su", "-c", ChrootManager.getEntryCommand()))
         } else {
             parameter.executablePath(profile.loginShell)
         }

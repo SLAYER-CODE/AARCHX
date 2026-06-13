@@ -27,6 +27,7 @@ import org.aarchdroid.dragonterminal.frontend.session.shell.ShellParameter
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.TermSessionCallback
 import org.aarchdroid.dragonterminal.services.NeoTermService
 import org.aarchdroid.dragonterminal.utils.MediaUtils
+import org.aarchdroid.dragonterminal.backend.ChrootManager
 import org.aarchdroid.dragonterminal.utils.TerminalUtils
 import java.io.File
 
@@ -259,9 +260,9 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
         val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/archdroid.sh"
         val loginShell = NeoPreference.getLoginShellPath()
         if (!detectSystemShell() && loginShell == defaultScript) {
+            ChrootManager.ensureMounted()
             parameter.executablePath("su")
-            val inlineCmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; mount -o bind /data /data/local/aarchdroid/data 2>/dev/null; exec chroot /data/local/aarchdroid /bin/bash --rcfile /root/.bashrc"
-            parameter.arguments(arrayOf("su", "-c", inlineCmd))
+            parameter.arguments(arrayOf("su", "-c", ChrootManager.getEntryCommand()))
         }
 
         val toolName = toolKey.ifEmpty {
