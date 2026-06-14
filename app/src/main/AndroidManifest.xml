@@ -139,7 +139,6 @@
         <!-- Dragon Terminal (launcher, disabled until install complete) -->
         <activity
             android:name="org.aarchdroid.dragonterminal.ui.term.NeoTermActivity"
-            android:enabled="false"
             android:configChanges="keyboardHidden|screenSize|orientation"
             android:icon="@mipmap/dragon_terminal_al"
             android:label="Terminal"

@@ -11,4 +11,5 @@
     <color name="whitefull">#ffffff</color>
     <color name="grennfull">#08ff00</color>
     <color name="background_material_dark">#111111</color>
+    <color name="codehack_al_background">#000000</color>
 </resources>

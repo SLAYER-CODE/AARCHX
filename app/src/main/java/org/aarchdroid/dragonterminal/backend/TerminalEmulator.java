@@ -1550,6 +1550,9 @@ public final class TerminalEmulator {
                         // move..
                         blockClear(0, 0, mColumns, mRows);
                         break;
+                    case 3: // Erase saved lines (xterm etc) - clear scrollback
+                        mMainBuffer.clearTranscript();
+                        break;
                     default:
                         unknownSequence(b);
                         return;

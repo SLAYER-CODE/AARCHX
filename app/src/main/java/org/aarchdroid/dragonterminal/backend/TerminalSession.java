@@ -84,7 +84,7 @@ public class TerminalSession extends TerminalOutput {
      * A queue written to from the main thread due to user interaction, and read by another thread which forwards by
      * writing to the {@link #mTerminalFileDescriptor}.
      */
-    private final ByteQueue mTerminalToProcessIOQueue = new ByteQueue(4096);
+    private final ByteQueue mTerminalToProcessIOQueue = new ByteQueue(64 * 1024);
     /** Buffer to write translate code points into utf8 before writing to mTerminalToProcessIOQueue */
     private final byte[] mUtf8InputBuffer = new byte[5];
 
@@ -192,7 +192,7 @@ public class TerminalSession extends TerminalOutput {
      * @param rows    The number of rows in the terminal window.
      */
     public void initializeEmulator(int columns, int rows, int cellWidth, int cellHeight) {
-        mEmulator = new TerminalEmulator(this, columns, rows, /* transcript= */2000, cellWidth, cellHeight);
+        mEmulator = new TerminalEmulator(this, columns, rows, /* transcript= */4000, cellWidth, cellHeight);
 
         int[] processId = new int[1];
         mTerminalFileDescriptor = JNI.createSubprocess(mShellPath, mCwd, mArgs, mEnv, processId, rows, columns, cellWidth, cellHeight);
