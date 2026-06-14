@@ -124,10 +124,21 @@ public class TerminalSession extends TerminalOutput {
         @Override
         public void handleMessage(Message msg) {
             if (msg.what == MSG_NEW_INPUT && isRunning()) {
-                int bytesRead = mProcessToTerminalIOQueue.read(mReceiveBuffer, false);
-                if (bytesRead > 0) {
+                int totalProcessed = 0;
+                final int maxBatch = 4 * 1024;
+                while (totalProcessed < maxBatch) {
+                    int bytesRead = mProcessToTerminalIOQueue.read(mReceiveBuffer, false);
+                    if (bytesRead <= 0) break;
                     mEmulator.append(mReceiveBuffer, bytesRead);
+                    totalProcessed += bytesRead;
+                }
+                if (totalProcessed > 0) {
                     notifyScreenUpdate();
+                    if (totalProcessed >= maxBatch) {
+                        // Remove all reader MSG_NEW_INPUT that piled up, then self-post
+                        removeMessages(MSG_NEW_INPUT);
+                        sendEmptyMessage(MSG_NEW_INPUT);
+                    }
                 }
             } else if (msg.what == MSG_PROCESS_EXITED) {
                 int exitCode = (Integer) msg.obj;
