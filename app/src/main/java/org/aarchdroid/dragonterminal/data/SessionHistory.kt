@@ -187,6 +187,46 @@ object SessionHistory {
         init(context)
         Log.d("SessionHistory", "closeSession -> sessionId=$sessionId, crashReason=$crashReason, current=null? ${current == null}")
 
+        // Auto-clear old sessions when closing the 2nd+ terminal of a new day
+        runCatching {
+            val readDb = db?.readableDatabase ?: return@runCatching
+            val cal = java.util.Calendar.getInstance()
+            cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+            cal.set(java.util.Calendar.MINUTE, 0)
+            cal.set(java.util.Calendar.SECOND, 0)
+            cal.set(java.util.Calendar.MILLISECOND, 0)
+            val todayStart = cal.timeInMillis
+
+            readDb.rawQuery(
+                "SELECT COUNT(*) FROM terminal WHERE created >= ?",
+                arrayOf(todayStart.toString())
+            )?.use { c ->
+                if (c.moveToFirst() && c.getInt(0) >= 2) {
+                    readDb.rawQuery(
+                        "SELECT COUNT(*) FROM session WHERE created < ?",
+                        arrayOf(todayStart.toString())
+                    )?.use { c2 ->
+                        if (c2.moveToFirst() && c2.getInt(0) > 0) {
+                            Log.d("SessionHistory", "closeSession: auto-clearing sessions from before today")
+                            db?.writableDatabase?.execSQL(
+                                "DELETE FROM command WHERE terminalId IN (SELECT id FROM terminal WHERE sessionId IN (SELECT id FROM session WHERE created < ?))",
+                                arrayOf(todayStart.toString())
+                            )
+                            db?.writableDatabase?.execSQL(
+                                "DELETE FROM terminal WHERE sessionId IN (SELECT id FROM session WHERE created < ?)",
+                                arrayOf(todayStart.toString())
+                            )
+                            db?.writableDatabase?.execSQL(
+                                "DELETE FROM session WHERE created < ?",
+                                arrayOf(todayStart.toString())
+                            )
+                            current?.sessions?.removeAll { it.created < todayStart }
+                        }
+                    }
+                }
+            }
+        }
+
         // Always write to DB first, regardless of in-memory cache state
         runCatching {
             val cv = ContentValues().apply {
