@@ -35,6 +35,19 @@ android {
         }
     }
 
+    lintOptions {
+        checkReleaseBuilds false
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('release.keystore')
+            storePassword 'android'
+            keyAlias 'aarchdroid'
+            keyPassword 'android'
+        }
+    }
+
     buildTypes {
         debug {
             zipAlignEnabled true
@@ -42,6 +55,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         release {
+            signingConfig signingConfigs.release
             zipAlignEnabled true
             shrinkResources false
             minifyEnabled true

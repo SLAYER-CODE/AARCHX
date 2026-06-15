@@ -258,7 +258,7 @@ class TermViewClient(val context: Context) : TerminalViewClient {
     private fun changeFontSize(increase: Boolean) {
         val termView = termSessionData?.termView
         if (termView != null) {
-            val changedSize = (if (increase) 1 else -1) * 1
+            val changedSize = (if (increase) 1 else -1) * 2
             val fontSize = NeoPreference.validateFontSize(termView.textSize + changedSize)
             termView.textSize = fontSize
             NeoPreference.store(NeoPreference.KEY_FONT_SIZE, fontSize)
