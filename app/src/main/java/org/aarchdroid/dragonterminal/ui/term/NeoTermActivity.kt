@@ -381,7 +381,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                                 imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
                             }
                         }
-                    }, 300)
+                    }, 0)
                 }
 
                 override fun onSelectionChanged(tabSwitcher: TabSwitcher, selectedTabIndex: Int, selectedTab: Tab?) {
@@ -1205,19 +1205,26 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onTabCloseEvent(tabCloseEvent: TabCloseEvent) {
         val tab = tabCloseEvent.termTab
-        toggleSwitcher(showSwitcher = true, easterEgg = false)
-        tabSwitcher.removeTab(tab)
 
         if (tabSwitcher.count > 1) {
-            var index = tabSwitcher.indexOf(tab)
+            val closingIndex = tabSwitcher.indexOf(tab)
+            tabSwitcher.removeTab(tab)
+
+            var targetIndex: Int
             if (NeoPreference.isNextTabEnabled()) {
-                // 关闭当前窗口后，向下一个窗口切换
-                if (--index < 0) index = tabSwitcher.count - 1
+                targetIndex = closingIndex
+                if (targetIndex >= tabSwitcher.count)
+                    targetIndex = tabSwitcher.count - 1
             } else {
-                // 关闭当前窗口后，向上一个窗口切换
-                if (++index >= tabSwitcher.count) index = 0
+                targetIndex = closingIndex - 1
+                if (targetIndex < 0)
+                    targetIndex = tabSwitcher.count - 1
             }
-            switchToSession(tabSwitcher.getTab(index))
+            switchToSession(tabSwitcher.getTab(targetIndex))
+        } else {
+            tab.requireHideIme()
+            toggleSwitcher(showSwitcher = true, easterEgg = false)
+            tabSwitcher.removeTab(tab)
         }
     }
 

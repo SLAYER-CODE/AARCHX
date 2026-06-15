@@ -146,7 +146,7 @@
             android:screenOrientation="fullUser"
             android:taskAffinity=".task.Terminal"
             android:theme="@style/AppTheme.NoActionBar.Dark2"
-            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:windowSoftInputMode="adjustResize|stateUnchanged"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

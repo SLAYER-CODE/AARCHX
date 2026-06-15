@@ -63,7 +63,6 @@ class TermTab(title: CharSequence) : NeoTab(title), TermUiPresenter {
     }
 
     override fun requireClose() {
-        requireHideIme()
         EventBus.getDefault().post(TabCloseEvent(this))
     }
 
