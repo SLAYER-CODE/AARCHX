@@ -3,6 +3,7 @@ package org.aarchdroid.neovim
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.provider.OpenableColumns
 import android.util.Log
 import android.view.Menu
@@ -54,6 +55,20 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
 
         editorView = findViewById(R.id.editor_view)
 
+        findViewById<View>(R.id.key_esc).setOnClickListener {
+            sendInput("<Esc>")
+            hideKeyboard()
+        }
+        findViewById<View>(R.id.key_ins).setOnClickListener {
+            sendInput("i")
+            showKeyboard()
+        }
+        findViewById<View>(R.id.key_left).setOnClickListener { sendInput("<Left>") }
+        findViewById<View>(R.id.key_down).setOnClickListener { sendInput("<Down>") }
+        findViewById<View>(R.id.key_up).setOnClickListener { sendInput("<Up>") }
+        findViewById<View>(R.id.key_right).setOnClickListener { sendInput("<Right>") }
+        findViewById<View>(R.id.key_ime).setOnClickListener { toggleKeyboard() }
+
         client.setCallback(this)
         // Single consumer: processes keystrokes FIFO, waiting for connection+uiAttach
         scope.launch {
@@ -94,6 +109,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             client.apiInfo()
             delay(50)
             client.uiAttach(80, 28)
+            client.command("startinsert")
+            delay(200)
             // Defensive: ensure buffer matches requested size even if grid_resize is delayed
             buffer.resize(80, 28)
             // Discard keystrokes typed before connection was ready (would be sent in normal mode)
@@ -110,6 +127,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
 
             withContext(Dispatchers.Main) {
                 supportActionBar?.title = currentFileName
+                editorView.fileName = currentFileName
             }
         }
     }
@@ -140,6 +158,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 currentFilePath = null
                 currentFileName = "untitled"
                 fileUri = null
+                editorView.fileName = "untitled"
                 updateToolbarTitle(buffer.mode.name, buffer.cursor.row, buffer.cursor.col)
                 true
             }
@@ -360,6 +379,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                     currentFileName = title.substringAfterLast("/").substringBeforeLast(".")
                     scope.launch(Dispatchers.Main) {
                         supportActionBar?.title = currentFileName
+                        editorView.fileName = currentFileName
                     }
                 }
             }
@@ -398,6 +418,25 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         }
     }
 
+    private fun sendInput(keys: String) {
+        Log.d(TAG, "extraKey: \"$keys\"")
+        editorView.onInput?.invoke(keys)
+    }
+
+    private fun toggleKeyboard() {
+        val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+        imm?.toggleSoftInput(android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT, 0)
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+        imm?.hideSoftInputFromWindow(editorView.windowToken, 0)
+    }
+
+    private fun showKeyboard() {
+        editorView.requestKeyboard("extrakey")
+    }
+
     private fun updateToolbarTitle(modeName: String, cursorRow: Int, cursorCol: Int) {
         val mode = modeName.uppercase().take(4)
         val line = cursorRow + 1
@@ -425,6 +464,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                     fileUri = uri
                     currentFilePath = uri.toString()
                     currentFileName = getFileName(uri)
+                    editorView.fileName = currentFileName
 
                     scope.launch {
                         client.command("enew!")
@@ -509,6 +549,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             if (ok) {
                 delay(100)
                 client.uiAttach(80, 28)
+                client.command("startinsert")
+                delay(200)
                 buffer.resize(80, 28)
                 while (inputQueue.tryReceive().isSuccess) { }
                 connected.set(true)
@@ -519,6 +561,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
                 withContext(Dispatchers.Main) {
                     supportActionBar?.title = currentFileName
+                    editorView.fileName = currentFileName
                 }
             }
         }

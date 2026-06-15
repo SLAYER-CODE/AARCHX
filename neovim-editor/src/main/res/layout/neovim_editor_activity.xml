@@ -27,6 +27,139 @@
     <org.aarchdroid.neovim.NeovimEditorView
         android:id="@+id/editor_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:id="@+id/extra_keys"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#FF2A2A2A"
+        android:paddingVertical="2dp"
+        android:paddingHorizontal="2dp">
+
+        <Button
+            android:id="@+id/key_esc"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_margin="1dp"
+            android:background="#FF444444"
+            android:textColor="#FFCCCCCC"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:text="ESC"
+            android:focusable="false"
+            android:gravity="center"
+            android:padding="0dp"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:stateListAnimator="@null" />
+
+        <Button
+            android:id="@+id/key_ins"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_margin="1dp"
+            android:background="#FF444444"
+            android:textColor="#FFCCCCCC"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:text="INS"
+            android:focusable="false"
+            android:gravity="center"
+            android:padding="0dp"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:stateListAnimator="@null" />
+
+        <Button
+            android:id="@+id/key_left"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_margin="1dp"
+            android:background="#FF444444"
+            android:textColor="#FFCCCCCC"
+            android:textSize="16sp"
+            android:text="←"
+            android:focusable="false"
+            android:gravity="center"
+            android:padding="0dp"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:stateListAnimator="@null" />
+
+        <Button
+            android:id="@+id/key_down"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_margin="1dp"
+            android:background="#FF444444"
+            android:textColor="#FFCCCCCC"
+            android:textSize="16sp"
+            android:text="↓"
+            android:focusable="false"
+            android:gravity="center"
+            android:padding="0dp"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:stateListAnimator="@null" />
+
+        <Button
+            android:id="@+id/key_up"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_margin="1dp"
+            android:background="#FF444444"
+            android:textColor="#FFCCCCCC"
+            android:textSize="16sp"
+            android:text="↑"
+            android:focusable="false"
+            android:gravity="center"
+            android:padding="0dp"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:stateListAnimator="@null" />
+
+        <Button
+            android:id="@+id/key_right"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_margin="1dp"
+            android:background="#FF444444"
+            android:textColor="#FFCCCCCC"
+            android:textSize="16sp"
+            android:text="→"
+            android:focusable="false"
+            android:gravity="center"
+            android:padding="0dp"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:stateListAnimator="@null" />
+
+        <Button
+            android:id="@+id/key_ime"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_margin="1dp"
+            android:background="#FF444444"
+            android:textColor="#FFCCCCCC"
+            android:textSize="16sp"
+            android:text="⌨"
+            android:focusable="false"
+            android:gravity="center"
+            android:padding="0dp"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:stateListAnimator="@null" />
+
+    </LinearLayout>
 
 </LinearLayout>

@@ -28,6 +28,8 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     private val underlinePaint = Paint().apply {
         style = Paint.Style.FILL
     }
+    private val statusBgPaint = Paint().apply { style = Paint.Style.FILL }
+    private val statusTextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
 
     private var cellWidth = 0f
     private var cellHeight = 0f
@@ -70,6 +72,10 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
 
     private var savedLines = ""
     var statusLine: String = ""
+        set(value) {
+            field = value; postInvalidate()
+        }
+    var fileName: String = "untitled"
         set(value) {
             field = value; postInvalidate()
         }
@@ -129,7 +135,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     override fun onCheckIsTextEditor(): Boolean = true
 
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection {
-        outAttrs.inputType = EditorInfo.TYPE_CLASS_TEXT or EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        outAttrs.inputType = EditorInfo.TYPE_CLASS_TEXT or EditorInfo.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD or EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_FULLSCREEN or EditorInfo.IME_ACTION_NONE or EditorInfo.IME_FLAG_NO_ENTER_ACTION
         return object : BaseInputConnection(this, true) {
             override fun commitText(text: CharSequence, newCursorPosition: Int): Boolean {
@@ -286,6 +292,8 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     internal fun fontChanged() {
         textPaint.typeface = Typeface.MONOSPACE
         textPaint.textSize = fontSize * context.resources.displayMetrics.density
+        statusTextPaint.typeface = Typeface.MONOSPACE
+        statusTextPaint.textSize = textPaint.textSize * 0.85f
         val metrics = textPaint.fontMetrics
         cellWidth = textPaint.measureText("M")
         cellHeight = metrics.descent - metrics.ascent + 2f
@@ -298,8 +306,9 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         if (cellWidth <= 0 || cellHeight <= 0) fontChanged()
+        val statusHeight = (cellHeight + 4f).toInt().coerceAtLeast(20)
         val cols = (w / cellWidth).toInt().coerceAtLeast(20)
-        val rows = (h / cellHeight).toInt().coerceAtLeast(8)
+        val rows = ((h - statusHeight) / cellHeight).toInt().coerceAtLeast(8)
         gridOffsetX = (w - cols * cellWidth) / 2f
         gridOffsetY = 0f
         if (cols != buffer.gridWidth || rows != buffer.gridHeight) {
@@ -376,6 +385,26 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
                 cursorPaint.alpha = 255
             }
         }
+
+        // Status bar
+        val sbHeight = (cellHeight + 4f).coerceAtLeast(20f)
+        val sbY = height.toFloat() - sbHeight
+        statusBgPaint.color = 0xFF2A2A2A.toInt()
+        canvas.drawRect(0f, sbY, width.toFloat(), height.toFloat(), statusBgPaint)
+
+        val modeLabel: String = when {
+            buffer.mode.name.contains("insert") -> "INSERT"
+            buffer.mode.name.contains("visual") -> "VISUAL"
+            buffer.mode.name.contains("replace") -> "REPLACE"
+            buffer.mode.name == "normal" -> "NORMAL"
+            else -> buffer.mode.name.uppercase()
+        }
+        val pos = "${buffer.cursor.row + 1}:${buffer.cursor.col + 1}"
+        val statusText = "$modeLabel  $fileName  Ln $pos"
+        statusTextPaint.color = 0xFFCCCCCC.toInt()
+        val fm = statusTextPaint.fontMetrics
+        val baseline = sbY + (sbHeight - fm.ascent - fm.descent) / 2f
+        canvas.drawText(statusText, 6f, baseline, statusTextPaint)
     }
 
     private fun drawBackground(canvas: Canvas) {
