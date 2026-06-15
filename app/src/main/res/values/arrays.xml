@@ -14,4 +14,44 @@
         <item>50</item>
         <item>0</item>
     </string-array>
+    <string-array name="macchanger_opts">
+        <item>Random MAC</item>
+        <item>Specific MAC</item>
+        <item>Reset to Original</item>
+    </string-array>
+    <string-array name="usbarsenal_target_platform">
+        <item>Windows</item>
+        <item>Linux</item>
+        <item>Mac OS</item>
+    </string-array>
+    <string-array name="usbarsenal_usb_states_win_lin">
+        <item>RNDIS (USB Ethernet)</item>
+        <item>CDC ECM (USB Ethernet)</item>
+        <item>Mass Storage</item>
+        <item>Serial (CDC ACM)</item>
+        <item>HID Keyboard</item>
+        <item>MTP</item>
+        <item>None</item>
+    </string-array>
+    <string-array name="usbarsenal_usb_adb">
+        <item>Disabled</item>
+        <item>Enabled</item>
+    </string-array>
+    <string-array name="usbarsenal_usb_network_attack_mode">
+        <item>Internet Pass-through (RNDIS)</item>
+        <item>NAT (IP forwarding + masquerade)</item>
+        <item>Bridged (usb0 bridge)</item>
+    </string-array>
+    <string-array name="payloads">
+        <item>windows/meterpreter/reverse_tcp</item>
+        <item>windows/meterpreter/reverse_http</item>
+        <item>windows/meterpreter/reverse_https</item>
+        <item>windows/shell/reverse_tcp</item>
+        <item>windows/shell/bind_tcp</item>
+    </string-array>
+    <string-array name="interface_opts">
+        <item>wlan0</item>
+        <item>wlan1</item>
+        <item>p2p0</item>
+    </string-array>
 </resources>

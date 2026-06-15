@@ -10,6 +10,8 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -72,6 +74,11 @@ public final class TerminalView extends View {
     float mSelectionDownX, mSelectionDownY;
     private ActionMode mActionMode;
     private BitmapDrawable mLeftSelectionHandle, mRightSelectionHandle;
+
+    private Handler mCursorBlinkerHandler;
+    private CursorBlinkerRunnable mCursorBlinkerRunnable;
+    private boolean mCursorBlinkingEnabled = false;
+    private static final int CURSOR_BLINK_RATE = 500;
 
     float mScaleFactor = 1.f;
     /* final */ GestureAndScaleRecognizer mGestureRecognizer;
@@ -519,6 +526,31 @@ public final class TerminalView extends View {
         }
     }
 
+    public void setCursorBlinkEnabled(boolean enabled) {
+        mCursorBlinkingEnabled = enabled;
+        if (mEmulator != null) {
+            mEmulator.setCursorBlinkingEnabled(enabled);
+        }
+        if (enabled) {
+            startCursorBlinker();
+        } else {
+            stopCursorBlinker();
+        }
+    }
+
+    public void startCursorBlinker() {
+        if (mCursorBlinkerHandler == null)
+            mCursorBlinkerHandler = new Handler(Looper.getMainLooper());
+        stopCursorBlinker();
+        mCursorBlinkerRunnable = new CursorBlinkerRunnable();
+        mCursorBlinkerRunnable.run();
+    }
+
+    public void stopCursorBlinker() {
+        if (mCursorBlinkerHandler != null && mCursorBlinkerRunnable != null)
+            mCursorBlinkerHandler.removeCallbacks(mCursorBlinkerRunnable);
+    }
+
     public int getTextSize() {
         return mTextSize;
     }
@@ -947,6 +979,7 @@ public final class TerminalView extends View {
             int cellHeight = mRenderer.mFontLineSpacing;
             mTermSession.updateSize(newColumns, newRows, cellWidth, cellHeight);
             mEmulator = mTermSession.getEmulator();
+            startCursorBlinker();
 
             mTopRow = 0;
             scrollTo(0, 0);
@@ -1133,5 +1166,20 @@ public final class TerminalView extends View {
 
     public void setEnableWordBasedIme(boolean mEnableWordBasedIme) {
         this.mEnableWordBasedIme = mEnableWordBasedIme;
+    }
+
+    private class CursorBlinkerRunnable implements Runnable {
+        private boolean mCursorVisible = false;
+
+        @Override
+        public void run() {
+            if (!mCursorBlinkingEnabled) return;
+            if (mEmulator != null) {
+                mCursorVisible = !mCursorVisible;
+                mEmulator.setCursorBlinkState(mCursorVisible);
+                invalidate();
+            }
+            mCursorBlinkerHandler.postDelayed(this, CURSOR_BLINK_RATE);
+        }
     }
 }

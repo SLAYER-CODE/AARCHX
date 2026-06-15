@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#000000">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:orientation="vertical"
+        android:focusableInTouchMode="true">
+
+        <TextView
+            android:id="@+id/badbt_desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="BadUSB over Bluetooth - inject keystrokes via Bluetooth HID."
+            android:textColor="#8FBC8F"
+            android:layout_gravity="center_horizontal|center"
+            android:gravity="center"
+            android:textSize="12sp"
+            android:padding="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bluetooth interface"
+                android:textColor="#e0e0e0"
+                android:padding="4dp"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <EditText
+                android:id="@+id/badbt_interface"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#e0e0e0"
+                android:inputType="text"
+                android:text="hci0" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bluetooth address"
+                android:textColor="#e0e0e0"
+                android:padding="4dp"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <EditText
+                android:id="@+id/badbt_address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#e0e0e0"
+                android:inputType="text"
+                android:text="22:22:EA:CF:3C:1E" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bluetooth class"
+            android:textColor="#e0e0e0"
+            android:padding="4dp"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/badbt_class_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:prompt="@string/select_class" />
+
+            <EditText
+                android:id="@+id/badbt_class"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="none"
+                android:textColor="#e0e0e0"
+                android:inputType="text"
+                android:text="0x000540"
+                android:hint="0x000540" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name"
+                android:textColor="#e0e0e0"
+                android:padding="4dp"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <EditText
+                android:id="@+id/badbt_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textColor="#e0e0e0"
+                android:text="Evil Keyboard"
+                android:layout_weight="15" />
+
+            <ImageButton
+                android:id="@+id/refreshBadBTStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:src="@android:drawable/ic_menu_rotate"
+                android:backgroundTint="#2fff00"
+                android:layout_weight="1"
+                android:contentDescription="Refresh" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/divider2"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#2fff00" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:layout_marginTop="10dp"
+            android:focusableInTouchMode="true"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/badbt_server"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:text="Server:"
+                android:textColor="#e0e0e0"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/guideline_1"/>
+
+            <TextView
+                android:id="@+id/BadBTServerStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:textColor="#2fff00"
+                android:hint="Loading.."
+                android:maxLength="50"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/guideline_1" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintGuide_percent="0.50"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <Button
+            android:id="@+id/badbtserver_button"
+            android:text="Start"
+            android:textColor="#000000"
+            android:backgroundTint="#2fff00"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <View
+            android:id="@+id/divider3"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#2fff00" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mode"
+                android:textColor="#e0e0e0"
+                android:padding="4dp"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <Spinner
+                android:id="@+id/badbtmode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:prompt="@string/select_mode" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/badbtsettings_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/badbtprefix_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Prefix"
+                    android:textColor="#e0e0e0"
+                    android:padding="4dp"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                <Spinner
+                    android:id="@+id/badbtprefix"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:prompt="@string/select_prefix" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/badbtpreset_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Preset"
+                    android:textColor="#e0e0e0"
+                    android:padding="4dp"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                <Spinner
+                    android:id="@+id/badbtpresets"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:prompt="@string/select_preset" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/badbtuac_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="4dp">
+
+                <CheckBox
+                    android:id="@+id/uac_bypass"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    android:textColor="#e0e0e0"
+                    android:text="UAC Bypass" />
+
+                <Spinner
+                    android:id="@+id/badbtpresets_uac"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone"/>
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/injectstringbrowse"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Load from file"
+                android:textColor="#2fff00"
+                android:backgroundTint="#1a1a1a" />
+
+            <View
+                android:id="@+id/divider4"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#2fff00" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="String to inject"
+                android:textColor="#e0e0e0"
+                android:padding="4dp" />
+
+            <EditText
+                android:id="@+id/editBadBT"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="none"
+                android:textColor="#e0e0e0"
+                android:includeFontPadding="false"
+                android:inputType="textMultiLine"
+                android:hint="Hello friend" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/start_badbt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Send"
+            android:textColor="#000000"
+            android:backgroundTint="#2fff00" />
+
+    </LinearLayout>
+</ScrollView>

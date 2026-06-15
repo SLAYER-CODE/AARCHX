@@ -28,4 +28,10 @@
         android:key="@string/key_ui_eks_weight_explicit"
         android:summary="@string/pref_ui_eks_weight_explicit_desc"
         android:title="@string/pref_ui_eks_weight_explicit" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="@string/key_ui_cursor_blink"
+        android:title="@string/pref_ui_cursor_blink"
+        android:summary="@string/pref_ui_cursor_blink_desc" />
 </PreferenceScreen>

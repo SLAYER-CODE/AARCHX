@@ -19,6 +19,8 @@
     <string name="key_ui_eks_weight_explicit" translatable="false">neoterm_ui_eks_weight_explicit</string>
     <string name="key_ui_eks_enabled" translatable="false">neoterm_ui_eks_enabled</string>
 
+    <string name="key_ui_cursor_blink" translatable="false">neoterm_ui_cursor_blink</string>
+
     <string name="key_package_source" translatable="false">neoterm_package_source</string>
 
     <string name="key_customization_font" translatable="false">neoterm_ui_font</string>

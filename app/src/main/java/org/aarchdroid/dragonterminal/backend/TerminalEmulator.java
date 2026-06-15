@@ -318,6 +318,9 @@ public final class TerminalEmulator {
      */
     private int mScrollCounter = 0;
 
+    private boolean mCursorBlinkingEnabled;
+    private boolean mCursorBlinkState;
+
     private byte mUtf8ToFollow, mUtf8Index;
     private final byte[] mUtf8InputBuffer = new byte[4];
     private int mLastEmittedCodePoint = -1;
@@ -485,6 +488,19 @@ public final class TerminalEmulator {
 
     public boolean isShowingCursor() {
         return isDecsetInternalBitSet(DECSET_BIT_SHOWING_CURSOR);
+    }
+
+    public boolean shouldCursorBeVisible() {
+        if (!isShowingCursor()) return false;
+        return mCursorBlinkingEnabled ? mCursorBlinkState : true;
+    }
+
+    public void setCursorBlinkingEnabled(boolean enabled) {
+        mCursorBlinkingEnabled = enabled;
+    }
+
+    public void setCursorBlinkState(boolean state) {
+        mCursorBlinkState = state;
     }
 
     public boolean isKeypadApplicationMode() {
@@ -2142,7 +2158,7 @@ public final class TerminalEmulator {
             // Horizontal margin: Do not put anything into scroll history, just non-margin part of screen up.
             mScreen.blockCopy(mLeftMargin, mTopMargin + 1, mRightMargin - mLeftMargin, mBottomMargin - mTopMargin - 1, mLeftMargin, mTopMargin);
             // .. and blank bottom row between margins:
-            mScreen.blockSet(mLeftMargin, mBottomMargin - 1, mRightMargin - mLeftMargin, 1, ' ', mEffect);
+            mScreen.blockSet(mLeftMargin, mBottomMargin - 1, mRightMargin - mLeftMargin, 1, ' ', getStyle());
         } else {
             mScreen.scrollDownOneLine(mTopMargin, mBottomMargin, getStyle());
         }
@@ -2388,8 +2404,10 @@ public final class TerminalEmulator {
                 mScreen.blockCopy(mCursorCol, mCursorRow, mRightMargin - destCol, 1, destCol, mCursorRow);
         }
 
-        int offsetDueToCombiningChar = ((displayWidth <= 0 && mCursorCol > 0 && !mAboutToAutoWrap) ? 1 : 0);
-        mScreen.setChar(mCursorCol - offsetDueToCombiningChar, mCursorRow, codePoint, getStyle());
+        int column = mCursorCol;
+        if (displayWidth <= 0 && mCursorCol > 0 && !mAboutToAutoWrap) column--;
+        if (column < 0) column = 0;
+        mScreen.setChar(column, mCursorRow, codePoint, getStyle());
 
         if (autoWrap && displayWidth > 0)
             mAboutToAutoWrap = (mCursorCol == mRightMargin - displayWidth);

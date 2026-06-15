@@ -1,5 +1,7 @@
 package org.aarchdroid.dragonterminal.backend;
 
+import android.graphics.Color;
+
 import java.util.Map;
 import java.util.Properties;
 
@@ -88,6 +90,7 @@ public final class TerminalColorScheme {
 
     public void updateWith(Properties props) {
         reset();
+        boolean cursorPropExists = false;
         for (Map.Entry<Object, Object> entries : props.entrySet()) {
             String key = (String) entries.getKey();
             String value = (String) entries.getValue();
@@ -99,6 +102,7 @@ public final class TerminalColorScheme {
                 colorIndex = TextStyle.COLOR_INDEX_BACKGROUND;
             } else if (key.equals("cursor")) {
                 colorIndex = TextStyle.COLOR_INDEX_CURSOR;
+                cursorPropExists = true;
             } else if (key.startsWith("color")) {
                 try {
                     colorIndex = Integer.parseInt(key.substring(5));
@@ -115,6 +119,28 @@ public final class TerminalColorScheme {
 
             mDefaultColors[colorIndex] = colorValue;
         }
+
+        if (!cursorPropExists)
+            setCursorColorForBackground();
+    }
+
+    public void setCursorColorForBackground() {
+        int backgroundColor = mDefaultColors[TextStyle.COLOR_INDEX_BACKGROUND];
+        int brightness = getPerceivedBrightnessOfColor(backgroundColor);
+        if (brightness > 0) {
+            if (brightness < 130)
+                mDefaultColors[TextStyle.COLOR_INDEX_CURSOR] = 0xffffffff;
+            else
+                mDefaultColors[TextStyle.COLOR_INDEX_CURSOR] = 0xff000000;
+        }
+    }
+
+    public static int getPerceivedBrightnessOfColor(int color) {
+        return (int) Math.floor(Math.sqrt(
+            Math.pow(Color.red(color), 2) * 0.241 +
+                Math.pow(Color.green(color), 2) * 0.691 +
+                Math.pow(Color.blue(color), 2) * 0.068
+        ));
     }
 
 }

@@ -250,4 +250,8 @@ object NeoPreference {
         return loadBoolean(R.string.key_general_clear_on_start,
                 DefaultValues.clearOnStart)
     }
+
+    fun isCursorBlinkEnabled(): Boolean {
+        return loadBoolean(R.string.key_ui_cursor_blink, DefaultValues.cursorBlinkEnabled)
+    }
 }

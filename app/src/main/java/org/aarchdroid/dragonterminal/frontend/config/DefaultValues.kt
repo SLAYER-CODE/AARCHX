@@ -16,6 +16,7 @@ object DefaultValues {
     val enableFullScreen = false
     val enableAutoHideToolbar = false
     val enableSwitchNextTab = false
+    val cursorBlinkEnabled = false
     val enableExtraKeys = true
     val enableExplicitExtraKeysWeight = false
     val enableBackButtonBeMappedToEscape = false

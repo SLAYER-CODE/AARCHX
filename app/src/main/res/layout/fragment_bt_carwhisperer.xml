@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#000000">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:orientation="vertical"
+        android:focusableInTouchMode="true">
+
+        <TextView
+            android:id="@+id/carwhisp_desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Car Whisperer - Capture and inject audio into Bluetooth car kits."
+            android:textColor="#8FBC8F"
+            android:layout_gravity="center_horizontal|center"
+            android:gravity="center"
+            android:textSize="12sp"
+            android:padding="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bluetooth interface"
+                android:textColor="#e0e0e0"
+                android:padding="4dp"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <EditText
+                android:id="@+id/hci_interface"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="none"
+                android:textColor="#e0e0e0"
+                android:inputType="text"
+                android:text="hci0" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/set_target"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Use selected target"
+            android:textColor="#2fff00"
+            android:backgroundTint="#1a1a1a" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Address"
+                android:textColor="#e0e0e0"
+                android:padding="4dp"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <EditText
+                android:id="@+id/hci_address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#e0e0e0"
+                android:hint="00:11:22:33:44:55"
+                android:textColorHint="#666666" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Channel"
+                android:textColor="#e0e0e0"
+                android:padding="4dp"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <EditText
+                android:id="@+id/hci_channel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="left"
+                android:layout_marginStart="10dp"
+                android:textColor="#e0e0e0"
+                android:text="2"
+                android:inputType="number" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mode"
+                android:textColor="#e0e0e0"
+                android:padding="4dp"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <Spinner
+                android:id="@+id/cwmode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:prompt="@string/select_mode" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save recorded sound to /sdcard/"
+            android:textColor="#e0e0e0"
+            android:padding="4dp" />
+
+        <EditText
+            android:id="@+id/listenfilename"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="none"
+            android:textColor="#e0e0e0"
+            android:ems="10"
+            android:inputType="text"
+            android:text="record.wav" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="10dp">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#2fff00"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Custom Text-To-Speech:"
+                android:textColor="#2fff00"
+                android:padding="4dp"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:id="@+id/tts_settings_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:weightSum="2">
+
+                <Spinner
+                    android:id="@+id/tts_voice_spinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp" />
+
+                <Spinner
+                    android:id="@+id/tts_speed_spinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+            <Spinner
+                android:layout_marginTop="10dp"
+                android:id="@+id/tts_message_dropdown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/tts_input"
+            android:hint="Enter text to convert to speech"
+            android:textColor="#e0e0e0"
+            android:textColorHint="#666666"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/generate_tts"
+            android:text="Generate TTS"
+            android:textColor="#000000"
+            android:backgroundTint="#2fff00"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#2fff00"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sound file to inject"
+            android:textColor="#e0e0e0"
+            android:padding="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/injectfilename"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:autofillHints="none"
+                android:textColor="#e0e0e0"
+                android:inputType="text"
+                android:text="/root/carwhisperer/message.wav" />
+
+            <Button
+                android:id="@+id/injectfilebrowse"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="5"
+                android:text="..."
+                android:textColor="#2fff00"
+                android:backgroundTint="#1a1a1a" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/start_cw"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="Launch"
+                android:textColor="#000000"
+                android:backgroundTint="#2fff00" />
+
+            <Button
+                android:id="@+id/stop_cw"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:text="Kill"
+                android:textColor="#000000"
+                android:backgroundTint="#ff3333" />
+
+            <ImageButton
+                android:id="@+id/play_audio"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:contentDescription="Play"
+                android:src="@android:drawable/ic_media_play"
+                android:backgroundTint="#2fff00" />
+
+            <ImageButton
+                android:id="@+id/stop_audio"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:contentDescription="Stop"
+                android:src="@android:drawable/ic_media_pause"
+                android:backgroundTint="#ff3333" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

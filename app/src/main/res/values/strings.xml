@@ -149,6 +149,9 @@
     <string name="pref_ui_eks_enabled_desc">Some useful keys like arrow, esc, tab, etc.</string>
     <string name="pref_customization_font">Font</string>
     <string name="pref_customization_color_scheme">Color Scheme</string>
+    <string name="pref_ui_cursor_blink">Cursor blink</string>
+    <string name="pref_ui_cursor_blink_desc">Parpadeo del cursor</string>
+
     <string name="pref_customization_eks">Extra Keys</string>
     <string name="pref_package_source">Source</string>
 
@@ -284,4 +287,11 @@
     <string name="float_resize">Resize</string>
     <string name="float_exit">Exit</string>
     <string name="float_anchor">Anclar al gestor</string>
+
+    <string name="interface_select">Select Interface</string>
+    <string name="select_mode">Select Mode</string>
+    <string name="select_payload">Select payload</string>
+    <string name="select_class">Select class</string>
+    <string name="select_prefix">Select prefix</string>
+    <string name="select_preset">Select preset</string>
 </resources>

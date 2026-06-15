@@ -1,114 +1,378 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:background="@drawable/layout_for_dco" android:padding="6dp">
+    android:id="@+id/eviltwin_scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
 
-    <LinearLayout android:id="@+id/header" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:gravity="center_vertical"
-        android:orientation="horizontal" android:padding="6dp">
-        <ImageView android:layout_width="32dp" android:layout_height="32dp"
-            android:scaleType="fitXY" android:src="@drawable/ic_mitm" />
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:orientation="vertical" android:paddingStart="8dp">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="MITM ATTACKS" android:textColor="#2fff00"
-                android:textSize="14sp" android:textStyle="bold" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Man-in-the-middle tools" android:textColor="#8FBC8F"
-                android:textSize="10sp" />
-        </LinearLayout>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp">
+
+        <!-- Card 1: Target Configuration -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="#111111"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="@android:color/transparent">
+
+                <TextView
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#2fff00"
+                    android:paddingBottom="12dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="TARGET CONFIGURATION"/>
+
+                <TextView
+                    android:textSize="12sp"
+                    android:textColor="#2fff00"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="Monitor Interface"/>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="4dp"
+                    app:cardCornerRadius="4dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#1a1a1a"
+                    app:strokeColor="#2fff00"
+                    app:strokeWidth="2dp">
+
+                    <Spinner
+                        android:id="@+id/eviltwin_interface"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:spinnerMode="dropdown"
+                        android:textColor="#e0e0e0"/>
+                </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    android:textSize="12sp"
+                    android:textColor="#2fff00"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="4dp"
+                    android:text="Target Network"/>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="4dp"
+                    app:cardCornerRadius="4dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#1a1a1a"
+                    app:strokeColor="#2fff00"
+                    app:strokeWidth="2dp">
+
+                    <Spinner
+                        android:id="@+id/eviltwin_target"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:spinnerMode="dropdown"
+                        android:textColor="#e0e0e0"/>
+                </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    android:id="@+id/eviltwin_channel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Channel: --"
+                    android:textColor="#2fff00"
+                    android:textSize="14sp"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 2: Scan Button -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="#111111"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="@android:color/transparent"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/eviltwin_scan"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="SCAN NETWORKS"
+                    android:textColor="#2fff00"
+                    android:background="?attr/selectableItemBackgroundBorderless"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 3: AP Configuration -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="#111111"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="@android:color/transparent">
+
+                <TextView
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#2fff00"
+                    android:paddingBottom="12dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="FAKE ACCESS POINT"/>
+
+                <RadioGroup
+                    android:id="@+id/eviltwin_ap_source"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp">
+
+                    <RadioButton
+                        android:id="@+id/eviltwin_ap_virtual"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Virtual AP from wlan0"
+                        android:textColor="#e0e0e0"
+                        android:checked="true"/>
+
+                    <RadioButton
+                        android:id="@+id/eviltwin_ap_existing"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Use External Adapter"
+                        android:textColor="#e0e0e0"/>
+
+                </RadioGroup>
+
+                <TextView
+                    android:textSize="12sp"
+                    android:textColor="#2fff00"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="AP Interface Name"/>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="4dp"
+                    app:cardCornerRadius="4dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#1a1a1a"
+                    app:strokeColor="#2fff00"
+                    app:strokeWidth="2dp">
+
+                    <EditText
+                        android:id="@+id/eviltwin_ap_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="wlan3"
+                        android:textColor="#e0e0e0"
+                        android:background="@android:color/transparent"
+                        android:padding="8dp"
+                        android:hint="AP Interface Name"
+                        android:textColorHint="#666666"/>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 4: Internet Source -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="#111111"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="@android:color/transparent">
+
+                <TextView
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#2fff00"
+                    android:paddingBottom="12dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="INTERNET SOURCE"/>
+
+                <RadioGroup
+                    android:id="@+id/eviltwin_internet_source"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp">
+
+                    <RadioButton
+                        android:id="@+id/eviltwin_internet_auto"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Auto-detect (recommended)"
+                        android:textColor="#e0e0e0"
+                        android:checked="true"/>
+
+                    <RadioButton
+                        android:id="@+id/eviltwin_internet_wifi"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="WiFi (wlan0)"
+                        android:textColor="#e0e0e0"/>
+                </RadioGroup>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 5: Controls -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="#111111"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="@android:color/transparent"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/eviltwin_start"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="START"
+                    android:textColor="#000000"
+                    android:backgroundTint="#2fff00"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 6: Output Logs -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="#111111"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:strokeColor="#2fff00"
+            app:strokeWidth="2dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="@android:color/transparent">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#2fff00"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="OUTPUT"/>
+
+                    <TextView
+                        android:textSize="14sp"
+                        android:textColor="#8FBC8F"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Made by @dr.rootsu"/>
+
+                    <Button
+                        android:id="@+id/eviltwin_clear"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CLEAR"
+                        android:textColor="#2fff00"
+                        android:background="?attr/selectableItemBackgroundBorderless"/>
+
+                </LinearLayout>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="4dp"
+                    app:cardCornerRadius="4dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#000000"
+                    app:strokeColor="#2fff00"
+                    app:strokeWidth="1dp">
+
+                    <androidx.core.widget.NestedScrollView
+                        android:background="#000000"
+                        android:padding="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp">
+
+                        <TextView
+                            android:id="@+id/eviltwin_log"
+                            android:textSize="11sp"
+                            android:textColor="#2fff00"
+                            android:fontFamily="monospace"
+                            android:scrollbars="vertical"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Ready. Select options and click START."/>
+
+                    </androidx.core.widget.NestedScrollView>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
     </LinearLayout>
-
-    <View android:id="@+id/divider" android:layout_below="@id/header"
-        android:layout_width="match_parent" android:layout_height="1dp"
-        android:background="#2fff00" android:layout_marginBottom="6dp" />
-
-    <ScrollView android:layout_below="@id/divider" android:layout_width="match_parent"
-        android:layout_height="match_parent" android:layout_marginTop="6dp">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="vertical" android:padding="2dp">
-
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="ATTACK TYPE" android:textColor="#2fff00" android:textSize="11sp"
-                android:textStyle="bold" android:paddingBottom="4dp" />
-
-            <androidx.cardview.widget.CardView android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
-                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="vertical" android:padding="8dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="ARP SPOOF" android:textColor="#2fff00" android:textSize="12sp"
-                        android:textStyle="bold" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="ARP cache poisoning + traffic forward" android:textColor="#8FBC8F"
-                        android:textSize="10sp" />
-                    <TextView android:id="@+id/mitm_arp_btn" android:layout_width="match_parent"
-                        android:layout_height="36dp" android:gravity="center" android:text="START"
-                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
-                        android:background="#2fff00" android:layout_marginTop="6dp"
-                        android:clickable="true" android:focusable="true" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
-                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="vertical" android:padding="8dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="SSL STRIP" android:textColor="#2fff00" android:textSize="12sp"
-                        android:textStyle="bold" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="HTTPS downgrade + session hijack" android:textColor="#8FBC8F"
-                        android:textSize="10sp" />
-                    <TextView android:id="@+id/mitm_ssl_btn" android:layout_width="match_parent"
-                        android:layout_height="36dp" android:gravity="center" android:text="START"
-                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
-                        android:background="#2fff00" android:layout_marginTop="6dp"
-                        android:clickable="true" android:focusable="true" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
-                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="vertical" android:padding="8dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="DNS SPOOF" android:textColor="#2fff00" android:textSize="12sp"
-                        android:textStyle="bold" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="DNS response manipulation" android:textColor="#8FBC8F"
-                        android:textSize="10sp" />
-                    <TextView android:id="@+id/mitm_dns_btn" android:layout_width="match_parent"
-                        android:layout_height="36dp" android:gravity="center" android:text="START"
-                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
-                        android:background="#2fff00" android:layout_marginTop="6dp"
-                        android:clickable="true" android:focusable="true" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
-                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="vertical" android:padding="8dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="SESSION HIJACK" android:textColor="#2fff00" android:textSize="12sp"
-                        android:textStyle="bold" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Cookie theft via proxy injection" android:textColor="#8FBC8F"
-                        android:textSize="10sp" />
-                    <TextView android:id="@+id/mitm_session_btn" android:layout_width="match_parent"
-                        android:layout_height="36dp" android:gravity="center" android:text="START"
-                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
-                        android:background="#2fff00" android:layout_marginTop="6dp"
-                        android:clickable="true" android:focusable="true" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-        </LinearLayout>
-    </ScrollView>
-</RelativeLayout>
+</ScrollView>

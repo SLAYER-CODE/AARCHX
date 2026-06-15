@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#000000">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:orientation="vertical"
+        android:focusableInTouchMode="true">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bluetooth tools - L2ping, Redfang, Blueranger, SDP."
+            android:textColor="#8FBC8F"
+            android:layout_gravity="center_horizontal|center"
+            android:gravity="center"
+            android:textSize="12sp"
+            android:padding="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bluetooth interface"
+                android:textColor="#e0e0e0"
+                android:padding="4dp"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <EditText
+                android:id="@+id/hci_interface"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="none"
+                android:textColor="#e0e0e0"
+                android:inputType="text"
+                android:text="hci0" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/set_target"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Use selected target"
+            android:textColor="#2fff00"
+            android:backgroundTint="#1a1a1a" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Target address"
+                android:textColor="#e0e0e0"
+                android:padding="4dp" />
+
+            <EditText
+                android:id="@+id/sdp_address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="none"
+                android:textColor="#e0e0e0"
+                android:ems="10"
+                android:hint="00:11:22:33:44:55"
+                android:textColorHint="#666666" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#2fff00" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="L2ping"
+            android:textColor="#2fff00"
+            android:padding="4dp"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Size"
+                android:textColor="#e0e0e0"
+                android:padding="4dp"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <EditText
+                android:id="@+id/l2ping_size"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:autofillHints="none"
+                android:gravity="center"
+                android:layout_weight="1"
+                android:textColor="#e0e0e0"
+                android:text="44"
+                android:inputType="number" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Count"
+                android:textColor="#e0e0e0"
+                android:padding="4dp"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <EditText
+                android:id="@+id/l2ping_count"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:autofillHints="none"
+                android:gravity="center"
+                android:layout_weight="1"
+                android:textColor="#e0e0e0"
+                android:text="5"
+                android:inputType="number" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <CheckBox
+                android:id="@+id/l2ping_flood"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checked="false"
+                android:textColor="#e0e0e0"
+                android:text="Flood ping" />
+
+            <CheckBox
+                android:id="@+id/l2ping_reverse"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="#e0e0e0"
+                android:text="Reverse ping" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/start_l2ping"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="l2ping"
+                android:textColor="#000000"
+                android:backgroundTint="#2fff00" />
+
+            <Button
+                android:id="@+id/start_rfcommscan"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:visibility="gone"
+                android:text="rfcomm scan"
+                android:textColor="#000000"
+                android:backgroundTint="#2fff00" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/divider2"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#2fff00" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Redfang"
+            android:textColor="#2fff00"
+            android:padding="4dp"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Range"
+                android:textColor="#e0e0e0"
+                android:padding="4dp" />
+
+            <EditText
+                android:id="@+id/redfang_range"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="none"
+                android:textColor="#e0e0e0"
+                android:hint="00803789EE76-00803789EEff" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Logfile path"
+                android:textColor="#e0e0e0"
+                android:padding="4dp" />
+
+            <EditText
+                android:id="@+id/redfang_log"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="none"
+                android:textColor="#e0e0e0"
+                android:inputType="text"
+                android:text="/root/redfang.log" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/start_redfang"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hunt for devices"
+            android:textColor="#000000"
+            android:backgroundTint="#2fff00" />
+
+        <View
+            android:id="@+id/divider3"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#2fff00" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Blueranger"
+            android:textColor="#2fff00"
+            android:padding="4dp"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/start_blueranger"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Check proximity"
+            android:textColor="#000000"
+            android:backgroundTint="#2fff00" />
+
+        <View
+            android:id="@+id/divider4"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#2fff00" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SDP Tool"
+            android:textColor="#2fff00"
+            android:padding="4dp"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/start_sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Discover services"
+            android:textColor="#000000"
+            android:backgroundTint="#2fff00" />
+
+        <TextView
+            android:id="@+id/SDPoutput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#2fff00"/>
+    </LinearLayout>
+</ScrollView>

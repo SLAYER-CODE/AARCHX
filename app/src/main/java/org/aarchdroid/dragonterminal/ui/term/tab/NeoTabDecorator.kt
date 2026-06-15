@@ -209,6 +209,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
 
         termData.initializeViewWith(tab, termView, extraKeysView)
         termView.setEnableWordBasedIme(termData.profile?.enableWordBasedIme ?: DefaultValues.enableWordBasedIme)
+        termView.setCursorBlinkEnabled(NeoPreference.isCursorBlinkEnabled())
         termView.setTerminalViewClient(termData.viewClient)
         termView.attachSession(termData.termSession)
 

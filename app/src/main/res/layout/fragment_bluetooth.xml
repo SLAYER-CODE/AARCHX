@@ -1,114 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:background="@drawable/layout_for_dco" android:padding="6dp">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#000000">
 
-    <LinearLayout android:id="@+id/header" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:gravity="center_vertical"
-        android:orientation="horizontal" android:padding="6dp">
-        <ImageView android:layout_width="32dp" android:layout_height="32dp"
-            android:scaleType="fitXY" android:src="@drawable/ic_bluetooth_attack" />
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:orientation="vertical" android:paddingStart="8dp">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="BLUETOOTH ATTACKS" android:textColor="#2fff00"
-                android:textSize="14sp" android:textStyle="bold" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="BT/BLE exploitation toolkit" android:textColor="#8FBC8F"
-                android:textSize="10sp" />
-        </LinearLayout>
-    </LinearLayout>
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayoutBt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:tabTextColor="#8FBC8F"
+        app:tabSelectedTextColor="#2fff00"
+        app:tabIndicatorColor="#2fff00" />
 
-    <View android:id="@+id/divider" android:layout_below="@id/header"
-        android:layout_width="match_parent" android:layout_height="1dp"
-        android:background="#2fff00" android:layout_marginBottom="6dp" />
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/pagerBt"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
-    <ScrollView android:layout_below="@id/divider" android:layout_width="match_parent"
-        android:layout_height="match_parent" android:layout_marginTop="6dp">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="vertical" android:padding="2dp">
-
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="MODULES" android:textColor="#2fff00" android:textSize="11sp"
-                android:textStyle="bold" android:paddingBottom="4dp" />
-
-            <androidx.cardview.widget.CardView android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
-                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="vertical" android:padding="8dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="PING / PROBE" android:textColor="#2fff00" android:textSize="12sp"
-                        android:textStyle="bold" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Discover BT devices in range" android:textColor="#8FBC8F"
-                        android:textSize="10sp" />
-                    <TextView android:id="@+id/bt_ping_btn" android:layout_width="match_parent"
-                        android:layout_height="36dp" android:gravity="center" android:text="SCAN"
-                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
-                        android:background="#2fff00" android:layout_marginTop="6dp"
-                        android:clickable="true" android:focusable="true" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
-                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="vertical" android:padding="8dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="BLUETOOTH SCANNER" android:textColor="#2fff00"
-                        android:textSize="12sp" android:textStyle="bold" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Deep device enumeration + services" android:textColor="#8FBC8F"
-                        android:textSize="10sp" />
-                    <TextView android:id="@+id/bt_scanner_btn" android:layout_width="match_parent"
-                        android:layout_height="36dp" android:gravity="center" android:text="START"
-                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
-                        android:background="#2fff00" android:layout_marginTop="6dp"
-                        android:clickable="true" android:focusable="true" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
-                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="vertical" android:padding="8dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="RFCOMM ATTACK" android:textColor="#2fff00" android:textSize="12sp"
-                        android:textStyle="bold" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="BT serial port exploitation" android:textColor="#8FBC8F"
-                        android:textSize="10sp" />
-                    <TextView android:id="@+id/bt_rfcomm_btn" android:layout_width="match_parent"
-                        android:layout_height="36dp" android:gravity="center" android:text="ATTACK"
-                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
-                        android:background="#2fff00" android:layout_marginTop="6dp"
-                        android:clickable="true" android:focusable="true" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginBottom="6dp"
-                app:cardBackgroundColor="#000000" app:cardCornerRadius="2dp" app:contentPadding="0dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="vertical" android:padding="8dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="BLE SNIFF" android:textColor="#2fff00" android:textSize="12sp"
-                        android:textStyle="bold" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Bluetooth Low Energy packet capture" android:textColor="#8FBC8F"
-                        android:textSize="10sp" />
-                    <TextView android:id="@+id/bt_ble_btn" android:layout_width="match_parent"
-                        android:layout_height="36dp" android:gravity="center" android:text="SNIFF"
-                        android:textColor="#000000" android:textSize="11sp" android:textStyle="bold"
-                        android:background="#2fff00" android:layout_marginTop="6dp"
-                        android:clickable="true" android:focusable="true" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-        </LinearLayout>
-    </ScrollView>
-</RelativeLayout>
+</LinearLayout>

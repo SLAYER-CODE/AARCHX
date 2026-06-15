@@ -563,6 +563,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             }
         } else if (key == getString(R.string.key_general_disable_logs)) {
             updatePlaceholderVisibility()
+        } else if (key == getString(R.string.key_ui_cursor_blink)) {
+            for (i in 0 until tabSwitcher.count) {
+                val tab = tabSwitcher.getTab(i)
+                if (tab is TermTab) {
+                    tab.termData.termView?.setCursorBlinkEnabled(NeoPreference.isCursorBlinkEnabled())
+                }
+            }
         }
     }
 
