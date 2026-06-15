@@ -146,16 +146,14 @@ object NeoPreference {
 
     private fun symlinkLoginShell(loginProgramPath: String) {
         File(NeoTermPath.CUSTOM_PATH).mkdirs()
+        val shellSymlink = File(NeoTermPath.NEOTERM_LOGIN_SHELL_PATH)
+        if (shellSymlink.exists() && shellSymlink.canonicalPath == loginProgramPath) return
         try {
-            val shellSymlink = File(NeoTermPath.NEOTERM_LOGIN_SHELL_PATH)
-            if (shellSymlink.exists()) {
-                shellSymlink.delete()
-            }
+            Os.remove(NeoTermPath.NEOTERM_LOGIN_SHELL_PATH)
             Os.symlink(loginProgramPath, NeoTermPath.NEOTERM_LOGIN_SHELL_PATH)
             Os.chmod(NeoTermPath.NEOTERM_LOGIN_SHELL_PATH, 448 /* Decimal of 0700 */)
         } catch (e: ErrnoException) {
             NLog.e("Preference", "Failed to symlink login shell: ${e.localizedMessage}")
-            e.printStackTrace()
         }
     }
 
