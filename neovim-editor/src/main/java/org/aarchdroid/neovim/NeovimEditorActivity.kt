@@ -46,6 +46,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     private var currentFilePath: String? = null
     private var currentFileName: String = "untitled"
     private var fileUri: Uri? = null
+    private var prevCursorRow = 0
+    private var prevCursorCol = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -245,6 +247,39 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             Log.e(TAG, "Redraw error", e)
             return
         }
+        // Detectar BS/delete rápido: cursor movido a la izquierda en misma fila
+        // + hubo grid_line en esa fila → limpiar celdas intermedias que nvim
+        // no envió por consolidación de redibujos
+        val curRow = buffer.cursor.row
+        val curCol = buffer.cursor.col
+        if (curRow == prevCursorRow && curCol < prevCursorCol) {
+            var hasGridLine = false
+            for (update in updates) {
+                if (update.name == "grid_line") {
+                    for (arg in update.args) {
+                        val row = if (arg.size >= 4) arg[1].asIntegerValue().toInt()
+                                  else if (arg.size >= 3) arg[1].asIntegerValue().toInt()
+                                  else -1
+                        if (row == curRow) { hasGridLine = true; break }
+                    }
+                }
+                if (hasGridLine) break
+            }
+            if (hasGridLine) {
+                val clearFrom = curCol
+                val clearTo = prevCursorCol - 1
+                Log.d(TAG, "BS remnants: row=$curRow cols=$clearFrom..$clearTo (prev=$prevCursorCol cur=$curCol)")
+                for (c in clearFrom..clearTo) {
+                    buffer.setCell(curRow, c, NeovimCell(char = ' '))
+                }
+            } else {
+                Log.d(TAG, "BS remnants: no gridLine for row=$curRow, skipping")
+            }
+        } else {
+            Log.d(TAG, "BS remnants: no left move (prev=$prevCursorRow,$prevCursorCol cur=$curRow,$curCol)")
+        }
+        prevCursorRow = curRow
+        prevCursorCol = curCol
         val snapshot = buffer.copySnapshot()
         val modeName = snapshot.mode.name
         val cursorRow = snapshot.cursor.row

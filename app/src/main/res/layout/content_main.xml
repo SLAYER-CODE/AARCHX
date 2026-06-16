@@ -177,7 +177,7 @@
                     android:id="@+id/btn_nvim"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
-                    android:src="@drawable/console"
+                    android:src="@drawable/ic_neovim"
                     android:tint="#00FF00"
                     android:background="@null"
                     android:scaleType="fitCenter" />

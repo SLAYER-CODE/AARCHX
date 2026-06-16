@@ -1348,6 +1348,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
         toolbar.menu?.findItem(R.id.toggle_tab_switcher_menu_item)?.isVisible = tabSwitcher.count > 0
 
+        Log.d("NeoTermAct", "updatePlaceholderVisibility: tabSwitcher.count=${tabSwitcher.count}, logsDisabled=${org.aarchdroid.dragonterminal.frontend.config.NeoPreference.isLoggingDisabled()}, initialized=${::tabSwitcher.isInitialized}")
+
         if (tabSwitcher.count == 0) {
             val logsDisabled = org.aarchdroid.dragonterminal.frontend.config.NeoPreference.isLoggingDisabled()
 

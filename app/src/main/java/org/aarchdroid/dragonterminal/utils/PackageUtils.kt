@@ -14,6 +14,8 @@ import java.io.File
  */
 object PackageUtils {
     fun pacman(context: Context, args: Array<String>, callback: (Int, TerminalDialog) -> Unit) {
+        val command = args.joinToString(" ")
+        val shell = org.aarchdroid.dragonterminal.frontend.config.NeoPreference.getLoginShellPath()
         TerminalDialog(context)
                 .onFinish(object : TerminalDialog.SessionFinishedCallback {
                     override fun onSessionFinished(dialog: TerminalDialog, finishedSession: TerminalSession?) {
@@ -22,7 +24,7 @@ object PackageUtils {
                     }
                 })
                 .imeEnabled(true)
-                .execute("", args)
-                .show("pacman ${args.joinToString(" ")}")
+                .execute(shell, arrayOf("-c", command))
+                .show(command)
     }
 }

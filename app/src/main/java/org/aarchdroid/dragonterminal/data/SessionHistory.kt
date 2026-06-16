@@ -43,7 +43,7 @@ object SessionHistory {
     private const val KEY_FLAG_ACTIVE = "flagActive"
     private const val KEY_CURRENT_DATE = "currentDate"
 
-    private var current: SessionHistoryData? = null
+    @Volatile private var current: SessionHistoryData? = null
     private var currentSession: SessionRecord? = null
     private var terminalIdCounter = 0
     private var db: HistoryDatabase? = null
@@ -319,12 +319,25 @@ object SessionHistory {
     }
 
     fun getHistoryCount(context: Context): Int {
+        current?.let {
+            Log.d("SessionHistory", "getHistoryCount -> from cache: ${it.sessions.size}")
+            return it.sessions.size
+        }
         init(context)
-        return runCatching {
-            db?.readableDatabase?.rawQuery("SELECT COUNT(*) FROM session", null)?.use {
+        val count = runCatching {
+            db?.readableDatabase?.rawQuery("""
+                SELECT COUNT(*) FROM session s
+                WHERE EXISTS (
+                  SELECT 1 FROM command c
+                  JOIN terminal t ON c.terminalId = t.id
+                  WHERE t.sessionId = s.id
+                )
+            """.trimIndent(), null)?.use {
                 if (it.moveToFirst()) it.getInt(0) else 0
             }
         }.getOrNull() ?: 0
+        Log.d("SessionHistory", "getHistoryCount -> from SQL: $count")
+        return count
     }
 
     fun getHistory(context: Context): SessionHistoryData {
@@ -389,14 +402,25 @@ object SessionHistory {
 
     fun clearAll(context: Context) {
         init(context)
+        Log.d("SessionHistory", "clearAll: db=null? ${db == null}, writable=null? ${db?.writableDatabase == null}")
         current = null
         currentSession = null
         runCatching {
-            db?.writableDatabase?.execSQL("DELETE FROM command")
-            db?.writableDatabase?.execSQL("DELETE FROM terminal")
-            db?.writableDatabase?.execSQL("DELETE FROM session")
+            val writeDb = db?.writableDatabase
+            if (writeDb == null) {
+                Log.e("SessionHistory", "clearAll: writableDatabase is null, cannot delete!")
+                return@runCatching
+            }
+            writeDb.execSQL("DELETE FROM command")
+            writeDb.execSQL("DELETE FROM terminal")
+            writeDb.execSQL("DELETE FROM session")
+            Log.d("SessionHistory", "clearAll: DB tables truncated successfully")
+        }.onFailure { e ->
+            Log.e("SessionHistory", "clearAll: DB error", e)
         }
         prefs?.edit()?.putBoolean(KEY_FLAG_ACTIVE, false)?.apply()
+        val afterCount = getHistoryCount(context)
+        Log.d("SessionHistory", "clearAll: done, getHistoryCount=$afterCount")
     }
 
     fun verifyDateAndReset(context: Context) {

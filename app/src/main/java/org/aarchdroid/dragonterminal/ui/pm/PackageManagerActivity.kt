@@ -16,20 +16,27 @@ import android.widget.Toast
 import org.aarchdroid.dragonterminal.util.SortedListAdapter
 import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.backend.TerminalSession
+import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.floating.TerminalDialog
 import org.aarchdroid.dragonterminal.ui.pm.adapter.PackageAdapter
 import org.aarchdroid.dragonterminal.ui.pm.model.PackageModel
 import org.aarchdroid.dragonterminal.ui.pm.model.PacmanPackage
 import org.aarchdroid.dragonterminal.ui.pm.utils.StringDistance
+import org.aarchdroid.dragonterminal.backend.ChrootManager
 import org.aarchdroid.dragonterminal.utils.PackageUtils
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import kotlin.math.min
 
 /**
  * @author kiva
  */
 
 class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListener, SortedListAdapter.Callback {
+    companion object {
+        private const val BATCH_SIZE = 300
+    }
+
     private val COMPARATOR = SortedListAdapter.ComparatorBuilder<PackageModel>()
             .setOrderForModel<PackageModel>(PackageModel::class.java) { a, b ->
                 a.pkg.name.compareTo(b.pkg.name)
@@ -41,6 +48,7 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
     lateinit var models: ArrayList<PackageModel>
 
     private val searchHandler = Handler(Looper.getMainLooper())
+    private val batchHandler = Handler(Looper.getMainLooper())
     private val searchRunnable = Runnable { performSearch() }
     private var pendingQuery: String? = null
 
@@ -76,9 +84,10 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
     }
 
     private fun installPackage(packageName: String) {
+        val shell = NeoPreference.getLoginShellPath()
         TerminalDialog(this@PackageManagerActivity)
-                .execute("",
-                        arrayOf("pacman", "-S", "--needed", "--noconfirm", packageName))
+                .execute(shell,
+                        arrayOf("-c", "pacman -S --needed --noconfirm $packageName"))
                 .onFinish(object : TerminalDialog.SessionFinishedCallback {
                     override fun onSessionFinished(dialog: TerminalDialog, finishedSession: TerminalSession?) {
                         dialog.setTitle(getString(R.string.done))
@@ -132,9 +141,19 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
 
     private fun refreshPackageList() {
         models.clear()
+        adapter.edit().replaceAll(emptyList<PackageModel>()).commit()
         Thread {
             try {
-                val process = Runtime.getRuntime().exec(arrayOf("pacman", "-Sl"))
+                if (!ChrootManager.ensureMounted()) {
+                    this@PackageManagerActivity.runOnUiThread {
+                        Toast.makeText(this@PackageManagerActivity, "Chroot not mounted", Toast.LENGTH_SHORT).show()
+                    }
+                    return@Thread
+                }
+                val process = Runtime.getRuntime().exec(arrayOf(
+                    "su", "-M", "-c",
+                    "env PACMAN_DISABLE_SANDBOX=1 chroot /data/local/aarchdroid /usr/bin/pacman -Sl"
+                ))
                 val reader = BufferedReader(InputStreamReader(process.inputStream))
                 var line: String?
                 while (reader.readLine().also { line = it } != null) {
@@ -151,14 +170,22 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
             }
 
             this@PackageManagerActivity.runOnUiThread {
-                adapter.edit()
-                        .replaceAll(models)
-                        .commit()
+                insertBatch(0)
                 if (models.isEmpty()) {
                     Toast.makeText(this@PackageManagerActivity, R.string.package_list_empty, Toast.LENGTH_SHORT).show()
                 }
             }
         }.start()
+    }
+
+    private fun insertBatch(start: Int) {
+        val end = min(start + BATCH_SIZE, models.size)
+        val batch = adapter.edit()
+        batch.add(models.subList(start, end))
+        batch.commit()
+        if (end < models.size) {
+            batchHandler.postDelayed({ insertBatch(end) }, 1)
+        }
     }
 
     private fun sortDistance(models: List<PackageModel>, query: String,
