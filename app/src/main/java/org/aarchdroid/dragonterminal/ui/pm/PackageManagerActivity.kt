@@ -2,6 +2,8 @@ package org.aarchdroid.dragonterminal.ui.pm
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.core.view.MenuItemCompat
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -42,6 +44,10 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
     lateinit var recyclerView: RecyclerView
     lateinit var adapter: PackageAdapter
     lateinit var models: ArrayList<PackageModel>
+
+    private val searchHandler = Handler(Looper.getMainLooper())
+    private val searchRunnable = Runnable { performSearch() }
+    private var pendingQuery: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -253,17 +259,38 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
     }
 
     override fun onQueryTextSubmit(text: String?): Boolean {
-        return false
+        searchHandler.removeCallbacks(searchRunnable)
+        pendingQuery = text
+        performSearch(true)
+        return true
     }
 
     override fun onQueryTextChange(text: String?): Boolean {
-        if (text != null) {
-            val filteredModelList = filter(models, text)
-            adapter.edit()
-                    .replaceAll(filteredModelList)
-                    .commit()
-        }
+        pendingQuery = text
+        searchHandler.removeCallbacks(searchRunnable)
+        searchHandler.postDelayed(searchRunnable, 300)
         return true
+    }
+
+    private fun performSearch(forceSync: Boolean = false) {
+        val query = pendingQuery ?: return
+        if (query.isEmpty()) {
+            adapter.edit().replaceAll(models).commit()
+            return
+        }
+        val runnable = Runnable {
+            val filteredModelList = filter(models, query)
+            runOnUiThread {
+                adapter.edit()
+                        .replaceAll(filteredModelList)
+                        .commit()
+            }
+        }
+        if (forceSync) {
+            runnable.run()
+        } else {
+            Thread(runnable).start()
+        }
     }
 
     override fun onEditStarted() {
