@@ -1174,10 +1174,20 @@ public final class TerminalView extends View {
         @Override
         public void run() {
             if (!mCursorBlinkingEnabled) return;
-            if (mEmulator != null) {
+            if (mEmulator != null && mRenderer != null) {
                 mCursorVisible = !mCursorVisible;
                 mEmulator.setCursorBlinkState(mCursorVisible);
-                invalidate();
+                int row = mEmulator.getCursorRow() - mTopRow;
+                if (row >= 0 && row < mEmulator.mRows) {
+                    int col = mEmulator.getCursorCol();
+                    int left = (int) (col * mRenderer.mFontWidth);
+                    int top = (int) (row * mRenderer.mFontLineSpacing);
+                    int right = (int) ((col + 2) * mRenderer.mFontWidth);
+                    int bottom = top + mRenderer.mFontLineSpacing;
+                    invalidate(left - 1, top - 1, right + 1, bottom + 1);
+                } else {
+                    invalidate();
+                }
             }
             mCursorBlinkerHandler.postDelayed(this, CURSOR_BLINK_RATE);
         }
