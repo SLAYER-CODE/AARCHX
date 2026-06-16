@@ -51,6 +51,7 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
     private val batchHandler = Handler(Looper.getMainLooper())
     private val searchRunnable = Runnable { performSearch() }
     private var pendingQuery: String? = null
+    private var currentInsertIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -141,6 +142,7 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
 
     private fun refreshPackageList() {
         models.clear()
+        currentInsertIndex = 0
         adapter.edit().replaceAll(emptyList<PackageModel>()).commit()
         Thread {
             try {
@@ -179,10 +181,13 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
     }
 
     private fun insertBatch(start: Int) {
+        if (pendingQuery != null && pendingQuery != "") return
+        currentInsertIndex = start
         val end = min(start + BATCH_SIZE, models.size)
         val batch = adapter.edit()
         batch.add(models.subList(start, end))
         batch.commit()
+        currentInsertIndex = end
         if (end < models.size) {
             batchHandler.postDelayed({ insertBatch(end) }, 1)
         }
@@ -225,9 +230,12 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
     private fun performSearch(forceSync: Boolean = false) {
         val query = pendingQuery ?: return
         if (query.isEmpty()) {
+            batchHandler.removeCallbacksAndMessages(null)
             adapter.edit().replaceAll(models).commit()
+            currentInsertIndex = models.size
             return
         }
+        batchHandler.removeCallbacksAndMessages(null)
         val runnable = Runnable {
             val filteredModelList = filter(models, query)
             runOnUiThread {

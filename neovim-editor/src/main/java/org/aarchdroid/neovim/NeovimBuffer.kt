@@ -53,6 +53,15 @@ object NeovimColor {
     fun from24Bit(rgb: Int): Int = rgb or 0xFF000000.toInt()
 }
 
+data class HighlightAttrs(
+    val foreground: Int = -1,
+    val background: Int = -1,
+    val bold: Boolean = false,
+    val italic: Boolean = false,
+    val underline: Boolean = false,
+    val reverse: Boolean = false
+)
+
 data class NeovimWindow(
     val grid: Int,
     val row: Int,
@@ -129,47 +138,51 @@ class NeovimBuffer {
             val safeLeft = left.coerceIn(0, gridWidth - 1)
             val safeRight = right.coerceIn(safeLeft, gridWidth - 1)
             if (rows > 0) {
+                // scroll down: content moves DOWN, copy from above, clear top
                 val count = rows.coerceAtMost(safeBottom - safeTop)
-                for (r in safeTop until safeBottom - count) {
+                for (r in safeBottom - 1 downTo safeTop + count) {
                     for (c in safeLeft..safeRight) {
-                        cells[r][c] = cells[r + count][c]
+                        cells[r][c] = cells[r - count][c]
                     }
                 }
-                for (r in (safeBottom - count).coerceAtLeast(safeTop) until safeBottom) {
+                for (r in safeTop until (safeTop + count).coerceAtMost(safeBottom)) {
                     for (c in safeLeft..safeRight) {
                         cells[r][c] = NeovimCell()
                     }
                 }
             } else if (rows < 0) {
+                // scroll up: content moves UP, copy from below, clear bottom
                 val absCount = (-rows).coerceAtMost(safeBottom - safeTop)
-                for (r in safeBottom - 1 downTo safeTop + absCount) {
+                for (r in safeTop until safeBottom - absCount) {
                     for (c in safeLeft..safeRight) {
-                        cells[r][c] = cells[r - absCount][c]
+                        cells[r][c] = cells[r + absCount][c]
                     }
                 }
-                for (r in safeTop until (safeTop + absCount).coerceAtMost(safeBottom)) {
+                for (r in (safeBottom - absCount).coerceAtLeast(safeTop) until safeBottom) {
                     for (c in safeLeft..safeRight) {
                         cells[r][c] = NeovimCell()
                     }
                 }
             }
             if (cols > 0) {
+                // scroll right: content moves RIGHT, copy from left, clear left
                 val count = cols.coerceAtMost(safeRight - safeLeft)
                 for (r in safeTop until safeBottom) {
-                    for (c in safeLeft until safeRight - count) {
-                        cells[r][c] = cells[r][c + count]
+                    for (c in safeRight downTo safeLeft + count) {
+                        cells[r][c] = cells[r][c - count]
                     }
-                    for (c in (safeRight - count).coerceAtLeast(safeLeft)..safeRight) {
+                    for (c in safeLeft until (safeLeft + count).coerceAtMost(safeRight)) {
                         cells[r][c] = NeovimCell()
                     }
                 }
             } else if (cols < 0) {
+                // scroll left: content moves LEFT, copy from right, clear right
                 val absCount = (-cols).coerceAtMost(safeRight - safeLeft)
                 for (r in safeTop until safeBottom) {
-                    for (c in safeRight downTo safeLeft + absCount) {
-                        cells[r][c] = cells[r][c - absCount]
+                    for (c in safeLeft until safeRight - absCount) {
+                        cells[r][c] = cells[r][c + absCount]
                     }
-                    for (c in safeLeft until (safeLeft + absCount).coerceAtMost(safeRight)) {
+                    for (c in (safeRight - absCount).coerceAtLeast(safeLeft)..safeRight) {
                         cells[r][c] = NeovimCell()
                     }
                 }

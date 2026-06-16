@@ -361,12 +361,14 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     override fun onPause() {
         super.onPause()
+        Log.d("NeoTermAct", "onPause: tabCount=${tabSwitcher.count}")
         val tab = tabSwitcher.selectedTab as NeoTab?
         tab?.onPause()
     }
 
     override fun onResume() {
         super.onResume()
+        Log.d("NeoTermAct", "onResume: tabCount=${tabSwitcher.count}, selectedTab=null? ${tabSwitcher.selectedTab == null}, termView=null? ${(tabSwitcher.selectedTab as? TermTab)?.termData?.termView == null}")
 
         try {
 
@@ -575,10 +577,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         } else if (key == getString(R.string.key_general_disable_logs)) {
             updatePlaceholderVisibility()
         } else if (key == getString(R.string.key_ui_cursor_blink)) {
+            Log.d("NeoTermAct", "blink pref changed: enabled=${NeoPreference.isCursorBlinkEnabled()}, tabCount=${tabSwitcher.count}")
             for (i in 0 until tabSwitcher.count) {
                 val tab = tabSwitcher.getTab(i)
                 if (tab is TermTab) {
-                    tab.termData.termView?.setCursorBlinkEnabled(NeoPreference.isCursorBlinkEnabled())
+                    val tv = tab.termData.termView
+                    Log.d("NeoTermAct", "blink: tab=$i, termView=null? ${tv == null}, parent=null? ${tv?.parent == null}")
+                    tv?.setCursorBlinkEnabled(NeoPreference.isCursorBlinkEnabled())
                 }
             }
         }

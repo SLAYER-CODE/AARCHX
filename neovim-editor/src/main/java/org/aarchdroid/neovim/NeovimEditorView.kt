@@ -303,7 +303,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         if (width > 0 && height > 0) {
             val statusHeight = (cellHeight + 4f).toInt().coerceAtLeast(20)
             val cols = (width / cellWidth).toInt().coerceAtLeast(20)
-            val rows = ((height - statusHeight) / cellHeight).toInt().coerceAtLeast(8) + 1
+            val rows = ((height - statusHeight) / cellHeight).toInt().coerceAtLeast(8)
             if (cols != buffer.gridWidth || rows != buffer.gridHeight) {
                 onResize?.invoke(rows, cols)
             }
@@ -317,7 +317,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         if (cellWidth <= 0 || cellHeight <= 0) fontChanged()
         val statusHeight = (cellHeight + 4f).toInt().coerceAtLeast(20)
         val cols = (w / cellWidth).toInt().coerceAtLeast(20)
-        val rows = ((h - statusHeight) / cellHeight).toInt().coerceAtLeast(8) + 1
+        val rows = ((h - statusHeight) / cellHeight).toInt().coerceAtLeast(8)
         gridOffsetX = (w - cols * cellWidth) / 2f
         gridOffsetY = 0f
         if (cols != buffer.gridWidth || rows != buffer.gridHeight) {

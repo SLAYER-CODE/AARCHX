@@ -17,6 +17,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import org.msgpack.value.ValueFactory
 
 import org.aarchdroid.dragonterminal.bridge.Bridge
 import java.io.BufferedReader
@@ -48,6 +49,9 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     private var fileUri: Uri? = null
     private var prevCursorRow = 0
     private var prevCursorCol = 0
+    private val hlAttrs = mutableMapOf<Int, HighlightAttrs>()
+    private var defaultFg: Int = NeovimColor.WHITE
+    private var defaultBg: Int = 0xFF1E1E1E.toInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -350,7 +354,17 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 val text = cellArr[0].asStringValue().asString()
                                 val hlId = if (cellArr.size > 1 && cellArr[1].isIntegerValue) cellArr[1].asIntegerValue().toInt() else -1
                                 val repeat = if (cellArr.size > 2 && cellArr[2].isIntegerValue) cellArr[2].asIntegerValue().toInt() else 1
-                                val cell = NeovimCell(char = text[0], foregroundId = hlId.takeIf { it >= 0 } ?: -1)
+                                val attrs = if (hlId >= 0) hlAttrs[hlId] else null
+                                val fg = attrs?.foreground?.takeIf { it >= 0 } ?: defaultFg
+                                val bg = attrs?.background?.takeIf { it >= 0 } ?: defaultBg
+                                val cell = NeovimCell(
+                                    char = text[0],
+                                    foreground = fg,
+                                    background = bg,
+                                    bold = attrs?.bold ?: false,
+                                    italic = attrs?.italic ?: false,
+                                    underline = attrs?.underline ?: false
+                                )
                                 if (repeat == 0) {
                                     Log.w(TAG, "grid_line: repeat=0 at row=$row col=$col, char='${text[0]}'(${text[0].code}) hlId=$hlId")
                                 }
@@ -405,7 +419,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
             }
             "grid_scroll" -> {
-                if (event.args.isNotEmpty()) {
+                if (event.args.isNotEmpty() && event.args[0].size >= 6) {
                     val a = event.args[0]
                     val grid = a[0].asIntegerValue().toInt()
                     val top = a[1].asIntegerValue().toInt()
@@ -416,6 +430,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                     val cols = if (a.size > 6) a[6].asIntegerValue().toInt() else 0
                     buffer.scroll(top, bot, left, right, rows, cols)
                     Log.d(TAG, "grid_scroll: grid=$grid top=$top bot=$bot left=$left right=$right rows=$rows cols=$cols")
+                } else {
+                    Log.w(TAG, "grid_scroll: unexpected args=${event.args}")
                 }
             }
             "grid_clear" -> {
@@ -459,11 +475,44 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                     Log.d(TAG, "Option: $name = $value")
                 }
             }
+            "hl_attr_define" -> {
+                if (event.args.isNotEmpty() && event.args[0].size >= 4) {
+                    val id = event.args[0][0].asIntegerValue().toInt()
+                    val rgbAttr = event.args[0][1]
+                    if (rgbAttr.isMapValue) {
+                        val map = rgbAttr.asMapValue().map()
+                        val fg = map[ValueFactory.newString("foreground")]?.let {
+                            if (it.isIntegerValue) it.asIntegerValue().toInt() else -1
+                        } ?: -1
+                        val bg = map[ValueFactory.newString("background")]?.let {
+                            if (it.isIntegerValue) it.asIntegerValue().toInt() else -1
+                        } ?: -1
+                        val bold = map[ValueFactory.newString("bold")]?.let {
+                            it.isBooleanValue && it.asBooleanValue().boolean
+                        } ?: false
+                        val italic = map[ValueFactory.newString("italic")]?.let {
+                            it.isBooleanValue && it.asBooleanValue().boolean
+                        } ?: false
+                        val underline = map[ValueFactory.newString("underline")]?.let {
+                            it.isBooleanValue && it.asBooleanValue().boolean
+                        } ?: false
+                        val reverse = map[ValueFactory.newString("reverse")]?.let {
+                            it.isBooleanValue && it.asBooleanValue().boolean
+                        } ?: false
+                        hlAttrs[id] = HighlightAttrs(
+                            foreground = if (fg >= 0) NeovimColor.from24Bit(fg) else -1,
+                            background = if (bg >= 0) NeovimColor.from24Bit(bg) else -1,
+                            bold = bold, italic = italic, underline = underline, reverse = reverse
+                        )
+                    }
+                }
+            }
             "default_colors_set" -> {
                 if (event.args.isNotEmpty() && event.args[0].size >= 3) {
                     val fg = event.args[0][0].asIntegerValue().toInt()
                     val bg = event.args[0][1].asIntegerValue().toInt()
-                    val sp = event.args[0][2].asIntegerValue().toInt()
+                    defaultFg = NeovimColor.from24Bit(fg)
+                    defaultBg = NeovimColor.from24Bit(bg)
                 }
             }
         }
@@ -592,6 +641,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     }
 
     private suspend fun reconnect() {
+        withContext(Dispatchers.IO) { client.disconnect() }
         launcher.shutdown()
         delay(500)
         val launched = launcher.launch()

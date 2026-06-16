@@ -45,6 +45,10 @@ class NeovimClient(
     suspend fun connect(timeoutMs: Long = 5000): Boolean {
         return withContext(Dispatchers.IO) {
             try {
+                // Close previous socket if any (prevents FD leak on reconnect)
+                try { socket?.close() } catch (_: Exception) {}
+                socket = null
+                output = null
                 val sock = Socket()
                 sock.connect(InetSocketAddress(host, port), timeoutMs.toInt())
                 sock.soTimeout = 45000
@@ -73,7 +77,9 @@ class NeovimClient(
         } catch (_: Exception) {}
         socket = null
         output = null
+        scope.coroutineContext[Job]?.let { it.children.forEach { c -> c.cancel() } }
         callback?.onDisconnected()
+        callback = null
     }
 
     suspend fun request(method: String, vararg args: Any?) {
