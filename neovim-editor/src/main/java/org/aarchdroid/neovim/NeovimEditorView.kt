@@ -298,6 +298,16 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         cellHeight = metrics.descent - metrics.ascent + 2f
         cellWidth = maxOf(cellWidth, 1f)
         cellHeight = maxOf(cellHeight, 1f)
+        // Recalcular grid y notificar a nvim inmediatamente
+        // onSizeChanged no se dispara si el tamaño del view no cambia
+        if (width > 0 && height > 0) {
+            val statusHeight = (cellHeight + 4f).toInt().coerceAtLeast(20)
+            val cols = (width / cellWidth).toInt().coerceAtLeast(20)
+            val rows = ((height - statusHeight) / cellHeight).toInt().coerceAtLeast(8) + 1
+            if (cols != buffer.gridWidth || rows != buffer.gridHeight) {
+                onResize?.invoke(rows, cols)
+            }
+        }
         requestLayout()
         postInvalidate()
     }

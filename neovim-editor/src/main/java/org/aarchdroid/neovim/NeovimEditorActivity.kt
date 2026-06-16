@@ -292,6 +292,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                         val colStart = arg[2].asIntegerValue().toInt()
                         val cellsData = arg[3].asArrayValue().list()
                         var segCells = 0
+                        val chars = StringBuilder()
 
                         var col = colStart
                         var i = 0
@@ -304,6 +305,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                         buffer.setCell(row, col, NeovimCell(char = ch))
                                         totalCells++
                                         segCells++
+                                        chars.append(ch)
                                     }
                                     col++
                                 }
@@ -322,6 +324,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                         buffer.setCell(row, col, cell)
                                         totalCells++
                                         segCells++
+                                        chars.append(text[0])
                                     }
                                     col++
                                 }
@@ -330,12 +333,16 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 i++
                             }
                         }
-                        segmentInfo.add("g${grid}r${row}c${colStart}[$segCells]")
+                        val display = chars.toString().replace(' ', '·')
+                        val capped = if (display.length > 40) display.take(40) + "…" else display
+                        segmentInfo.add("g${grid}r${row}c${colStart}[$segCells:\"$capped\"]")
                     } else if (arg.size >= 3) {
                         val grid = arg[0].asIntegerValue().toInt()
                         val row = arg[1].asIntegerValue().toInt()
                         val text = arg[2].asStringValue().asString()
-                        segmentInfo.add("g${grid}r${row}text[${text.length}]")
+                        val display = text.replace(' ', '·')
+                        val capped = if (display.length > 40) display.take(40) + "…" else display
+                        segmentInfo.add("g${grid}r${row}text[${text.length}:\"$capped\"]")
                         for ((col, ch) in text.withIndex()) {
                             if (col < buffer.gridWidth) {
                                 buffer.setCell(row, col, NeovimCell(char = ch))
