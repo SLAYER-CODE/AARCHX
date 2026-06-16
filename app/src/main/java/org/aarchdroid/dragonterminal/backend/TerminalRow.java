@@ -24,6 +24,16 @@ public final class TerminalRow {
     /** If this row might contain chars with width != 1, used for deactivating fast path */
     boolean mHasNonOneWidthOrSurrogateChars;
 
+    /** Caches for findStartOfColumn() — exact result with mSpaceUsed guard */
+    private int mFindStartCacheCol = -1;
+    private int mFindStartCacheRes = 0;
+    private short mFindStartCacheSpace = -1;
+
+    /** Caches for wideDisplayCharacterStartingAt() */
+    private int mWideCheckCacheCol = -2;
+    private boolean mWideCheckCacheRes = false;
+    private short mWideCheckCacheSpace = -1;
+
     /** Construct a blank row (containing only whitespace, ' ') with a specified style. */
     public TerminalRow(int columns, long style) {
         mColumns = columns;
@@ -66,6 +76,11 @@ public final class TerminalRow {
     public int findStartOfColumn(int column) {
         if (column == mColumns) return getSpaceUsed();
 
+        // Exact cache hit: same column, no text mutations since last query
+        if (mFindStartCacheCol == column && mFindStartCacheSpace == mSpaceUsed) {
+            return mFindStartCacheRes;
+        }
+
         int currentColumn = 0;
         int currentCharIndex = 0;
         while (true) { // 0<2 1 < 2
@@ -91,9 +106,15 @@ public final class TerminalRow {
                             break;
                         }
                     }
+                    mFindStartCacheCol = column;
+                    mFindStartCacheRes = newCharIndex;
+                    mFindStartCacheSpace = mSpaceUsed;
                     return newCharIndex;
                 } else if (currentColumn > column) {
                     // Wide column going past end.
+                    mFindStartCacheCol = column;
+                    mFindStartCacheRes = currentCharIndex;
+                    mFindStartCacheSpace = mSpaceUsed;
                     return currentCharIndex;
                 }
             }
@@ -102,16 +123,32 @@ public final class TerminalRow {
     }
 
     private boolean wideDisplayCharacterStartingAt(int column) {
+        if (mWideCheckCacheCol == column && mWideCheckCacheSpace == mSpaceUsed) {
+            return mWideCheckCacheRes;
+        }
         for (int currentCharIndex = 0, currentColumn = 0; currentCharIndex < mSpaceUsed; ) {
             char c = mText[currentCharIndex++];
             int codePoint = Character.isHighSurrogate(c) ? Character.toCodePoint(c, mText[currentCharIndex++]) : c;
             int wcwidth = WcWidth.width(codePoint);
             if (wcwidth > 0) {
-                if (currentColumn == column && wcwidth == 2) return true;
+                if (currentColumn == column && wcwidth == 2) {
+                    mWideCheckCacheCol = column;
+                    mWideCheckCacheRes = true;
+                    mWideCheckCacheSpace = mSpaceUsed;
+                    return true;
+                }
                 currentColumn += wcwidth;
-                if (currentColumn > column) return false;
+                if (currentColumn > column) {
+                    mWideCheckCacheCol = column;
+                    mWideCheckCacheRes = false;
+                    mWideCheckCacheSpace = mSpaceUsed;
+                    return false;
+                }
             }
         }
+        mWideCheckCacheCol = column;
+        mWideCheckCacheRes = false;
+        mWideCheckCacheSpace = mSpaceUsed;
         return false;
     }
 
@@ -120,6 +157,8 @@ public final class TerminalRow {
         Arrays.fill(mStyle, style);
         mSpaceUsed = (short) mColumns;
         mHasNonOneWidthOrSurrogateChars = false;
+        mFindStartCacheCol = -1;
+        mWideCheckCacheCol = -2;
     }
 
     // https://github.com/steven676/Android-Terminal-Emulator/commit/9a47042620bec87617f0b4f5d50568535668fe26
