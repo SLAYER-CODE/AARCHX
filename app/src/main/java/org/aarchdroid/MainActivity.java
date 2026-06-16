@@ -1,20 +1,31 @@
 package org.aarchdroid;
 
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.PopupMenu;
+import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.FrameLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
@@ -26,21 +37,40 @@ import com.google.android.material.navigation.NavigationView;
 import org.aarchdroid.andraxdialogs.Alert;
 import org.aarchdroid.codehackide.MainActivityCodeHackIDE;
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import org.aarchdroid.dragonterminal.bridge.Bridge;
 
-/* JADX INFO: loaded from: classes2.dex */
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     public static final int progressType = 0;
     private ProgressDialog progressDialog;
     private ProgressDialog unpackprogressDialog;
     int install_return = 0;
     int is_debug_build = 0;
-    ActivityResultLauncher<Intent> install_dialog_result = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() { // from class: org.snakesecurity.andrax.MainActivity.1
+
+    private static final String CHROOT_DIR = "/data/local/aarchdroid";
+    private static final String MARKER = CHROOT_DIR + "/.aarchdroid_chroot";
+    private static final String BUSYBOX_DST = "/data/data/org.aarchdroid/files/bin/busybox";
+    private static final String BUSYBOX_SRC = "arm/static/bin/busybox";
+    private static final String DEBUG_LOG = "/sdcard/aarchdroid_debug.log";
+
+    private TextView logText;
+    private ScrollView logScroll;
+    private Button retryBtn;
+    private Button exitBtn;
+    private Toolbar toolbar;
+    private View logCuadro;
+    private DrawerLayout drawerLayout;
+    private boolean isFragmentOpen;
+    private View gridContainer;
+
+    ActivityResultLauncher<Intent> install_dialog_result = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
         static final /* synthetic */ boolean $assertionsDisabled = false;
 
-        @Override // androidx.activity.result.ActivityResultCallback
+        @Override
         public void onActivityResult(ActivityResult activityResult) {
             Process processExec;
             if (activityResult.getResultCode() == -1) {
@@ -87,10 +117,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
     });
-    ActivityResultLauncher<Intent> uninstall_dialog_result = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() { // from class: org.snakesecurity.andrax.MainActivity.2
+    ActivityResultLauncher<Intent> uninstall_dialog_result = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
         static final /* synthetic */ boolean $assertionsDisabled = false;
 
-        @Override // androidx.activity.result.ActivityResultCallback
+        @Override
         public void onActivityResult(ActivityResult activityResult) {
             if (activityResult.getResultCode() == -1) {
                 activityResult.getData();
@@ -125,92 +155,212 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.putExtra("icon", "error");
         intent.putExtra("title", "Uninstall ANDRAX-NG?");
         intent.putExtra("subtitle", "This action can't be undone!");
-        intent.putExtra("content", "Are you sure you want to uninstall ANDRAX-NG?\n\nBy clicking the “OK” button, all files in the container will be destroyed!");
+        intent.putExtra("content", "Are you sure you want to uninstall ANDRAX-NG?\n\nBy clicking the \u201cOK\u201d button, all files in the container will be destroyed!");
         intent.putExtra("ok_button", true);
         intent.putExtra("cancel_button", true);
         this.uninstall_dialog_result.launch(intent);
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    @Override
     protected void onCreate(Bundle bundle) {
-        Log.d("AArchDroid", "MainActivity: onCreate() — starting main dashboard");
+        Log.d("AArchDroid", "MainActivity: onCreate()");
         super.onCreate(bundle);
         setContentView(R.layout.activity_main);
         getWindow().addFlags(128);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        toolbar.setTitle("AArchDroid");
+        toolbar.setTitleTextColor(0xFF00FF00);
+
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitAll().build());
-        try {
-            Log.d("AArchDroid", "MainActivity: remounting /data as exec,suid,dev,rw");
-            Runtime.getRuntime().exec("su -c toybox mount -o remount,exec,suid,dev,rw /data").waitFor();
-        } catch (Exception e) {
-            Log.e("AArchDroid", "MainActivity: remount failed — " + e.getMessage());
-            e.printStackTrace();
-        }
-        Log.d("AArchDroid", "MainActivity: loading MainFragment");
-        MainFragment mainFragment = new MainFragment();
-        FragmentTransaction fragmentTransactionBeginTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransactionBeginTransaction.replace(R.id.fragment_container, mainFragment);
-        fragmentTransactionBeginTransaction.commit();
-        DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawerLayout.setDrawerListener(actionBarDrawerToggle);
-        actionBarDrawerToggle.syncState();
+
+        logCuadro = findViewById(R.id.log_cuadro);
+        logText = findViewById(R.id.log_text);
+        logScroll = findViewById(R.id.log_scroll);
+        retryBtn = findViewById(R.id.btn_retry);
+        exitBtn = findViewById(R.id.btn_exit);
+        gridContainer = findViewById(R.id.grid_container);
+
+        drawerLayout = findViewById(R.id.drawer_layout);
+        toolbar.setNavigationIcon(R.drawable.ic_hamburger);
+        toolbar.setNavigationOnClickListener(v -> {
+            if (isFragmentOpen) {
+                closeFragment();
+            } else if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START);
+            } else {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
         ((NavigationView) findViewById(R.id.nav_view)).setNavigationItemSelectedListener(this);
-        // checkmount skipped — SplashActivity ya verificó el rootfs antes de llegar aquí
-        isRooted(this);
-        if (this.is_debug_build == 1) {
-            Log.d("AArchDroid", "MainActivity: debug build — launching InstallActivity");
-            startActivity(new Intent(this, (Class<?>) InstallActivity.class));
-        }
+
+        // Hide toolbar until root/install complete
+        toolbar.setVisibility(View.GONE);
+
+        // Show log cuadro (visible by default in XML)
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+
+        retryBtn.setOnClickListener(v -> {
+            retryBtn.setEnabled(false);
+            exitBtn.setEnabled(false);
+            appendLog("[*] Verificando root...");
+            new Thread(() -> {
+                final boolean rooted = checkRoot();
+                runOnUiThread(() -> {
+                    if (rooted) {
+                        appendLog("[+] Root detectado!");
+                        showToolbarAnimated();
+                        doInstall();
+                    } else {
+                        appendLog("[-] Root no detectado.");
+                        retryBtn.setEnabled(true);
+                        exitBtn.setEnabled(true);
+                    }
+                });
+            }).start();
+        });
+
+        exitBtn.setOnClickListener(v -> {
+            appendLog("[!] Saliendo...");
+            finishAffinity();
+            finishAndRemoveTask();
+        });
+
+        // Auto-check root on startup
+        appendLog("[*] Verificando instalacion...");
+        new Thread(() -> {
+            try {
+                if (isInstallComplete()) {
+                    runOnUiThread(() -> {
+                        showToolbarAnimated();
+                        enableLauncherActivities();
+                        appendLog("[+] AArchDroid ya instalado.");
+                        completeSetup();
+                    });
+                    return;
+                }
+                boolean installed = checkRootfsInstalled();
+                boolean rooted = checkRoot();
+                if (installed) {
+                    runOnUiThread(() -> {
+                        showToolbarAnimated();
+                        enableLauncherActivities();
+                        setInstallComplete();
+                        appendLog("[+] Rootfs ya instalado.");
+                        completeSetup();
+                    });
+                } else if (rooted) {
+                    runOnUiThread(() -> {
+                        appendLog("[+] Root detectado.");
+                        showToolbarAnimated();
+                        doInstall();
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        appendLog("[-] Root no detectado.");
+                        appendLog("[!] Se requiere root para instalar.");
+                        retryBtn.setVisibility(View.VISIBLE);
+                        exitBtn.setVisibility(View.VISIBLE);
+                    });
+                }
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    appendLog("[!] Error: " + e.getMessage());
+                });
+            }
+        }).start();
+
+        // Scroll indicator at bottom of log area
+        ProgressBar scrollIndicator = findViewById(R.id.scroll_indicator);
+        logScroll.getViewTreeObserver().addOnScrollChangedListener(() -> {
+            int max = logScroll.getChildAt(0).getHeight() - logScroll.getHeight();
+            if (max <= 0) {
+                scrollIndicator.setProgress(scrollIndicator.getMax());
+            } else {
+                int pct = logScroll.getScrollY() * scrollIndicator.getMax() / max;
+                scrollIndicator.setProgress(pct);
+            }
+        });
+
+        logCuadro.setOnClickListener(v -> expandToGrid());
+
+        findViewById(R.id.btn_terminal_box).setOnClickListener(v ->
+            run_hack_cmd("andrax"));
+
+        findViewById(R.id.btn_nvim_box).setOnClickListener(v ->
+            startActivity(new Intent(this,
+                org.aarchdroid.neovim.NeovimEditorActivity.class)));
+
+        findViewById(R.id.btn_wifi_box).setOnClickListener(v ->
+            run_hack_cmd("wifite2"));
+
+        findViewById(R.id.btn_tor_box).setOnClickListener(v ->
+            run_hack_cmd("torbrowser"));
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
+    @Override
     protected void onResume() {
         super.onResume();
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
+    @Override
     protected void onPause() {
         super.onPause();
     }
 
-    @Override // androidx.activity.ComponentActivity, android.app.Activity
+    @Override
     public void onBackPressed() {
-        DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+        if (isFragmentOpen) {
+            closeFragment();
+        } else if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
         } else {
             finish();
         }
     }
 
-    @Override // android.app.Activity
+    private void closeFragment() {
+        FrameLayout fc = findViewById(R.id.fragment_container);
+        Fragment f = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (f != null) {
+            getSupportFragmentManager().beginTransaction().remove(f).commit();
+        }
+        fc.setVisibility(View.GONE);
+        toolbar.setNavigationIcon(R.drawable.ic_hamburger);
+        isFragmentOpen = false;
+        invalidateOptionsMenu();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
-    @Override // android.app.Activity
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem gear = menu.findItem(R.id.action_settings);
+        if (gear != null) gear.setVisible(!isFragmentOpen);
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
-        int itemId = menuItem.getItemId();
-        if (itemId == R.id.action_help) {
-            String str = "mailto:weidsom@snakesecurity.org?subject=" + Uri.encode("About ANDRAX-NG");
-            Intent intent = new Intent("android.intent.action.SENDTO");
-            intent.setData(Uri.parse(str));
-            try {
-                startActivity(intent);
-            } catch (Exception unused) {
-            }
-        } else if (itemId == R.id.action_about) {
-            startActivity(new Intent(this, (Class<?>) AboutANDRAX.class));
-        } else if (itemId == R.id.action_uninstall) {
-            call_uninstall_dialog();
+        if (menuItem.getItemId() == R.id.action_settings) {
+            PopupMenu popup = new PopupMenu(this, toolbar, Gravity.END);
+            popup.getMenu().add("Uninstall");
+            popup.setOnMenuItemClickListener(item -> {
+                call_uninstall_dialog();
+                return true;
+            });
+            popup.show();
+            return true;
         }
         return super.onOptionsItemSelected(menuItem);
     }
 
-    @Override // com.google.android.material.navigation.NavigationView.OnNavigationItemSelectedListener
+    @Override
     public boolean onNavigationItemSelected(MenuItem menuItem) {
         int itemId = menuItem.getItemId();
         if (itemId == R.id.nav_terminal) {
@@ -219,73 +369,48 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(this, (Class<?>) MainActivityCodeHackIDE.class));
         } else if (itemId == R.id.nav_neovim) {
             startActivity(new Intent(this, (Class<?>) org.aarchdroid.neovim.NeovimEditorActivity.class));
-        } else if (itemId == R.id.nav_hidrastrike) {
-            replaceFragment(new HIDraStrikeFragment());
         } else if (itemId == R.id.nav_hid_keyboard) {
-            replaceFragment(new HIDKeyboardFragment());
+            toolbar.post(() -> replaceFragment(new HIDKeyboardFragment()));
         } else if (itemId == R.id.nav_mana) {
-            replaceFragment(new ManaFragment());
+            toolbar.post(() -> replaceFragment(new ManaFragment()));
         } else if (itemId == R.id.nav_mitm) {
-            replaceFragment(new MITMFragment());
+            toolbar.post(() -> replaceFragment(new MITMFragment()));
         } else if (itemId == R.id.nav_mac_changer) {
-            replaceFragment(new MacChangerFragment());
+            toolbar.post(() -> replaceFragment(new MacChangerFragment()));
         } else if (itemId == R.id.nav_bluetooth) {
-            replaceFragment(new BluetoothFragment());
+            toolbar.post(() -> replaceFragment(new BluetoothFragment()));
         } else if (itemId == R.id.nav_usb_arsenal) {
-            replaceFragment(new USBArsenalFragment());
+            toolbar.post(() -> replaceFragment(new USBArsenalFragment()));
         } else if (itemId == R.id.nav_gps) {
-            replaceFragment(new GPSFragment());
+            toolbar.post(() -> replaceFragment(new GPSFragment()));
         } else if (itemId == R.id.nav_kali_services) {
-            replaceFragment(new KaliServicesFragment());
+            toolbar.post(() -> replaceFragment(new KaliServicesFragment()));
         } else if (itemId == R.id.nav_custom_commands) {
-            replaceFragment(new CustomCommandsFragment());
-        } else if (itemId == R.id.nav_telegram) {
-            startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://t.me/snakesecurityofficial")));
-        } else if (itemId == R.id.nav_x) {
-            startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://x.com/snakesecurityOF")));
-        } else if (itemId == R.id.nav_github) {
-            startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://github.com/snakesec")));
+            toolbar.post(() -> replaceFragment(new CustomCommandsFragment()));
         }
-        ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawer(GravityCompat.START);
+        drawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
     private void replaceFragment(Fragment fragment) {
+        FrameLayout fc = findViewById(R.id.fragment_container);
+        fc.setVisibility(View.VISIBLE);
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         ft.replace(R.id.fragment_container, fragment);
         ft.commit();
+        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_green);
+        isFragmentOpen = true;
+        invalidateOptionsMenu();
     }
 
     public void run_hack_cmd(String str) {
-        Log.d("AArchDroid", "MainActivity: run_hack_cmd(\"" + str + "\") — creating Bridge execute intent");
         Intent intentCreateExecuteIntent = Bridge.createExecuteIntent(str);
         intentCreateExecuteIntent.setFlags(131072);
-        Log.d("AArchDroid", "MainActivity: starting activity with intent action=" + intentCreateExecuteIntent.getAction());
         startActivity(intentCreateExecuteIntent);
     }
 
-    public boolean isRooted(Context context) {
-        try {
-            Process process = Runtime.getRuntime().exec("su -c id");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line = reader.readLine();
-            process.waitFor();
-            boolean rooted = line != null && line.contains("uid=0");
-            reader.close();
-            if (!rooted) {
-                startActivity(new Intent(this, RootIt.class));
-                finish();
-            }
-            return rooted;
-        } catch (Exception e) {
-            e.printStackTrace();
-            startActivity(new Intent(this, RootIt.class));
-            finish();
-            return false;
-        }
-    }
-
-    @Override // android.app.Activity, android.view.Window.Callback
+    @Override
     public void onWindowFocusChanged(boolean z) {
         super.onWindowFocusChanged(z);
         if (z) {
@@ -295,5 +420,442 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void showSystemUI() {
         getWindow().getDecorView().setSystemUiVisibility(1792);
+    }
+
+    // ──────────────── Instalación ────────────────
+
+    private void appendLog(final String line) {
+        runOnUiThread(() -> {
+            SpannableStringBuilder ssb = new SpannableStringBuilder(line + "\n");
+            int firstBracket = line.indexOf('[');
+            int lastBracket = line.indexOf(']');
+            if (firstBracket >= 0 && lastBracket > firstBracket) {
+                ssb.setSpan(new ForegroundColorSpan(0xFFFF4444),
+                    firstBracket, firstBracket + 1, 0);
+                ssb.setSpan(new ForegroundColorSpan(0xFFFF4444),
+                    lastBracket, lastBracket + 1, 0);
+                if (lastBracket > firstBracket + 1) {
+                    char sym = line.charAt(firstBracket + 1);
+                    int color;
+                    switch (sym) {
+                        case '*': color = 0xFF4488FF; break;
+                        case '-': color = 0xFFFF4444; break;
+                        case '!': color = 0xFFFFFF44; break;
+                        default:  color = 0xFF00FF00; break;
+                    }
+                    ssb.setSpan(new ForegroundColorSpan(color),
+                        firstBracket + 1, firstBracket + 2, 0);
+                }
+            }
+            logText.append(ssb);
+            logScroll.post(() -> logScroll.fullScroll(ScrollView.FOCUS_DOWN));
+        });
+        Log.d("AArchDroid", line);
+        writeFileLog(line);
+    }
+
+    private void writeFileLog(String line) {
+        try {
+            FileOutputStream fos = new FileOutputStream(DEBUG_LOG, true);
+            fos.write((line + "\n").getBytes());
+            fos.close();
+        } catch (Exception e) {}
+    }
+
+    private boolean checkRootfsInstalled() {
+        try {
+            Process p = Runtime.getRuntime().exec(
+                new String[]{"su", "-c", "test -f " + MARKER + " && echo installed"});
+            BufferedReader r = new BufferedReader(
+                new InputStreamReader(p.getInputStream()));
+            String line = r.readLine();
+            r.close();
+            p.waitFor();
+            return "installed".equals(line);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean checkRoot() {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
+            BufferedReader r = new BufferedReader(
+                new InputStreamReader(p.getInputStream()));
+            String line = r.readLine();
+            p.waitFor();
+            r.close();
+            return line != null && line.contains("uid=0");
+        } catch (Exception e) {
+            appendLog("[-] checkRoot fallo: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private void suCp(InputStream src, String dstPath) throws Exception {
+        File tmp = new File(getCacheDir(), "tmp_" + new File(dstPath).getName());
+        tmp.getParentFile().mkdirs();
+        FileOutputStream fos = new FileOutputStream(tmp);
+        byte[] buf = new byte[8192];
+        int len;
+        while ((len = src.read(buf)) != -1) fos.write(buf, 0, len);
+        fos.close();
+        src.close();
+        String tmpPath = tmp.getAbsolutePath();
+        Runtime.getRuntime().exec("su -c mkdir -p " + new File(dstPath).getParent()).waitFor();
+        Runtime.getRuntime().exec("su -c cp " + tmpPath + " " + dstPath).waitFor();
+        Runtime.getRuntime().exec("su -c chmod 0755 " + dstPath).waitFor();
+        tmp.delete();
+    }
+
+    private void deployBusybox() {
+        try {
+            appendLog("[*] Instalando busybox...");
+            InputStream in = getAssets().open(BUSYBOX_SRC);
+            suCp(in, BUSYBOX_DST);
+            appendLog("[+] Busybox instalado.");
+        } catch (Exception e) {
+            appendLog("[-] Busybox fallo: " + e.getMessage());
+        }
+    }
+
+    private void deployScripts() {
+        try {
+            appendLog("[*] Instalando scripts...");
+            String[] scripts = {"archdroid.sh", "checkmount.sh", "checkinstall.sh",
+                "rootshell", "bashrc-aarchdroid", "andraxshell.sh", "modtar"};
+            String dstDir = "/data/data/org.aarchdroid/files/scripts/";
+            for (String script : scripts) {
+                try {
+                    InputStream in = getAssets().open("arm/static/bin/" + script);
+                    suCp(in, dstDir + script);
+                } catch (Exception e) {
+                    appendLog("[-] Script " + script + " fallo: " + e.getMessage());
+                }
+            }
+            appendLog("[+] Scripts instalados.");
+        } catch (Exception e) {
+            appendLog("[-] Scripts fallo: " + e.getMessage());
+        }
+    }
+
+    private void showToolbarAnimated() {
+        toolbar.setVisibility(View.VISIBLE);
+        int h = toolbar.getHeight();
+        if (h <= 0) h = 150;
+        toolbar.setTranslationY(-h);
+        toolbar.animate().translationY(0).setDuration(350).start();
+    }
+
+    private void setButtonsInstalling() {
+        runOnUiThread(() -> {
+            exitBtn.setVisibility(View.GONE);
+            retryBtn.setEnabled(false);
+            retryBtn.setText("Descomprimiendo...");
+            retryBtn.setTextSize(14);
+            retryBtn.setBackgroundResource(R.drawable.button_hacker_disabled);
+            retryBtn.setTextColor(0xFF003300);
+            retryBtn.setVisibility(View.VISIBLE);
+        });
+    }
+
+    private void setButtonsIniciando() {
+        runOnUiThread(() -> {
+            exitBtn.setVisibility(View.GONE);
+            retryBtn.setEnabled(false);
+            retryBtn.setText("Iniciando...");
+            retryBtn.setTextSize(14);
+            retryBtn.setBackgroundResource(R.drawable.button_hacker_disabled);
+            retryBtn.setTextColor(0xFF003300);
+            retryBtn.setVisibility(View.VISIBLE);
+        });
+    }
+
+    private void completeSetup() {
+        showToolbarAnimated();
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        logCuadro.postDelayed(this::expandToGrid, 400);
+    }
+
+    private void expandToGrid() {
+        if (gridContainer.getVisibility() == View.VISIBLE) return;
+        View logContent = findViewById(R.id.log_content);
+        int toolbarH = toolbar.getHeight() > 0 ? toolbar.getHeight() :
+            getResources().getDimensionPixelSize(
+                androidx.appcompat.R.attr.actionBarSize);
+        logContent.post(() -> {
+            int targetY = toolbarH + 24;
+            float translateY = -(logContent.getTop() - targetY);
+            logContent.animate()
+                .translationY(translateY)
+                .setDuration(200)
+                .start();
+        });
+        gridContainer.setAlpha(0f);
+        gridContainer.setVisibility(View.VISIBLE);
+        gridContainer.animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start();
+    }
+
+    private void installComplete() {
+        runOnUiThread(() -> {
+            appendLog("[+] Instalacion completada. Abriendo menu...");
+            completeSetup();
+        });
+    }
+
+    private void doInstall() {
+        setButtonsInstalling();
+        new Thread(() -> {
+            try {
+                if (checkRootfsInstalled() || isInstallComplete()) {
+                    appendLog("[+] Rootfs ya instalado.");
+                    setInstallComplete();
+                    enableLauncherActivities();
+                    installComplete();
+                    return;
+                }
+
+                appendLog("[*] Remontando /data con permisos de ejecucion...");
+                try {
+                    Runtime.getRuntime().exec("su -c toybox mount -o remount,exec,suid,dev,rw /data").waitFor();
+                } catch (Exception e) {
+                    appendLog("[-] mount fallo: " + e.getMessage());
+                }
+
+                appendLog("[*] Comenzando instalacion...");
+                deployBusybox();
+                deployScripts();
+
+                appendLog("[*] Verificando que rootfs.tgz existe en assets...");
+                try {
+                    InputStream test = getAssets().open("rootfs.tgz");
+                    appendLog("[*] rootfs.tgz disponible en assets");
+                    test.close();
+                } catch (Exception e) {
+                    appendLog("[-] rootfs.tgz NO encontrado en assets: " + e.getMessage());
+                    throw e;
+                }
+
+                appendLog("[*] Creando directorio " + CHROOT_DIR + "...");
+                Runtime.getRuntime().exec("su -c mkdir -p " + CHROOT_DIR).waitFor();
+
+                appendLog("[*] Extrayendo rootfs (~30s)...");
+                extractRootfs();
+
+                setInstallComplete();
+                enableLauncherActivities();
+                runOnUiThread(() -> {
+                    appendLog("[+] AArchDroid instalado!");
+                    appendLog("[*] Directorio: " + CHROOT_DIR);
+                    appendLog("[*] Rootfs extraido correctamente.");
+                    installComplete();
+                });
+            } catch (final Exception e) {
+                runOnUiThread(() -> {
+                    appendLog("[-] Instalacion fallo: " + e.getMessage());
+                    retryBtn.setEnabled(true);
+                    exitBtn.setEnabled(true);
+                    retryBtn.setBackgroundResource(R.drawable.button_hacker);
+                    retryBtn.setTextColor(0xFF00FF00);
+                    retryBtn.setText("REINTENTAR");
+                    exitBtn.setBackgroundResource(R.drawable.button_hacker);
+                    exitBtn.setTextColor(0xFF00FF00);
+                    exitBtn.setVisibility(View.VISIBLE);
+                });
+            }
+        }).start();
+    }
+
+    private boolean isInstallComplete() {
+        return getSharedPreferences(getPackageName(), MODE_PRIVATE)
+            .getBoolean("install_complete", false);
+    }
+
+    private void setInstallComplete() {
+        getSharedPreferences(getPackageName(), MODE_PRIVATE)
+            .edit().putBoolean("install_complete", true).apply();
+    }
+
+    private String detectTar() {
+        String[][] candidates = {
+            {"tar", "--version"},
+            {BUSYBOX_DST, "tar --version"},
+        };
+        for (String[] c : candidates) {
+            String bin = c[0];
+            String arg = c[1];
+            try {
+                appendLog("[*] Probando: " + bin + " " + arg);
+                Process p = Runtime.getRuntime().exec("su -c \"" + bin + " " + arg + " 2>&1\"");
+                p.waitFor();
+                BufferedReader r = new BufferedReader(
+                    new InputStreamReader(p.getInputStream()));
+                StringBuilder out = new StringBuilder();
+                String line;
+                while ((line = r.readLine()) != null) out.append(line).append(" | ");
+                r.close();
+                boolean ok = p.exitValue() == 0 || out.toString().toLowerCase().contains("tar");
+                if (ok) {
+                    appendLog("[+] Usando: " + bin);
+                    return bin;
+                }
+            } catch (Exception e) {
+                appendLog("[-] " + bin + " fallo: " + e.getMessage());
+            }
+        }
+        appendLog("[*] Usando fallback tar");
+        return "tar";
+    }
+
+    private void extractRootfs() throws Exception {
+        String tarBin = detectTar();
+        boolean zSupported = false;
+        boolean pSupported = false;
+
+        try {
+            appendLog("[*] Probando si tar soporta -z...");
+            String testCmd = tarBin + " -xzf /dev/null -C /data 2>&1 || true";
+            Process test = Runtime.getRuntime().exec(
+                new String[]{"su", "-c", testCmd});
+            test.waitFor();
+            BufferedReader testOut = new BufferedReader(
+                new InputStreamReader(test.getInputStream()));
+            BufferedReader testErr = new BufferedReader(
+                new InputStreamReader(test.getErrorStream()));
+            String stdoutStr = "", stderrStr = "";
+            String line;
+            while ((line = testOut.readLine()) != null) stdoutStr += line + " | ";
+            while ((line = testErr.readLine()) != null) stderrStr += line + " | ";
+            testOut.close(); testErr.close();
+            String combinedOut = stdoutStr + " " + stderrStr;
+            zSupported = test.exitValue() == 0
+                && !combinedOut.toLowerCase().contains("unrecognized")
+                && !combinedOut.toLowerCase().contains("unknown option")
+                && !combinedOut.toLowerCase().contains("not found");
+            appendLog("[*] Soporte -z: " + zSupported);
+        } catch (Exception e) {
+            writeFileLog("[-] Test -z exception: " + Log.getStackTraceString(e));
+        }
+
+        try {
+            appendLog("[*] Probando si tar soporta -P...");
+            String testCmd2 = tarBin + " -P -tf /dev/null 2>&1 || true";
+            Process test2 = Runtime.getRuntime().exec(
+                new String[]{"su", "-c", testCmd2});
+            test2.waitFor();
+            BufferedReader r2 = new BufferedReader(
+                new InputStreamReader(test2.getInputStream()));
+            BufferedReader e2 = new BufferedReader(
+                new InputStreamReader(test2.getErrorStream()));
+            String s2 = "", eStr2 = "";
+            String line;
+            while ((line = r2.readLine()) != null) s2 += line + " | ";
+            while ((line = e2.readLine()) != null) eStr2 += line + " | ";
+            r2.close(); e2.close();
+            String combined2 = s2 + " " + eStr2;
+            pSupported = test2.exitValue() == 0
+                && !combined2.toLowerCase().contains("unrecognized")
+                && !combined2.toLowerCase().contains("unknown option")
+                && !combined2.toLowerCase().contains("not found");
+            appendLog("[*] Soporte -P: " + pSupported);
+        } catch (Exception e) {
+            writeFileLog("[-] Test -P exception: " + Log.getStackTraceString(e));
+        }
+
+        String pFlag = pSupported ? " -P" : "";
+        String[] flags;
+        if (zSupported) {
+            flags = new String[]{
+                tarBin + pFlag + " -xzf - -C " + CHROOT_DIR,
+                tarBin + " -xzf - -C " + CHROOT_DIR,
+                "gunzip -c - | " + tarBin + pFlag + " -xf - -C " + CHROOT_DIR,
+                "gunzip -c - | " + tarBin + " -xf - -C " + CHROOT_DIR,
+            };
+        } else {
+            flags = new String[]{
+                "gunzip -c - | " + tarBin + pFlag + " -xf - -C " + CHROOT_DIR,
+                "gunzip -c - | " + tarBin + " -xf - -C " + CHROOT_DIR,
+                tarBin + pFlag + " -xf - -C " + CHROOT_DIR,
+                tarBin + " -xf - -C " + CHROOT_DIR,
+            };
+        }
+
+        boolean ok = false;
+        for (int attempt = 0; attempt < flags.length; attempt++) {
+            String shellCmd = flags[attempt];
+            appendLog("[*] Intento " + (attempt+1) + ": su -c \"" + shellCmd + "\"");
+
+            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", shellCmd});
+
+            OutputStream stdin = p.getOutputStream();
+            InputStream in = getAssets().open("rootfs.tgz");
+            byte[] buf = new byte[8192];
+            int len;
+            long total = 0;
+            boolean pipeBroken = false;
+            try {
+                while ((len = in.read(buf)) != -1) {
+                    stdin.write(buf, 0, len);
+                    total += len;
+                }
+            } catch (java.io.IOException e) {
+                pipeBroken = true;
+                appendLog("[!] Pipe roto: " + e.getMessage());
+            }
+            in.close();
+            try { stdin.flush(); } catch (Exception e) {}
+            try { stdin.close(); } catch (Exception e) {}
+
+            int exitCode = p.waitFor();
+            appendLog("[*] Intento " + (attempt+1) + ": " + total + " bytes, exit=" + exitCode
+                + (pipeBroken ? " (pipe roto)" : ""));
+
+            if (exitCode == 0 || (exitCode == 1 && total > 1000000)) {
+                ok = true;
+                break;
+            }
+        }
+
+        if (!ok) {
+            throw new RuntimeException("tar fallo con todos los metodos");
+        }
+    }
+
+    private void enableLauncherActivities() {
+        try {
+            PackageManager pm = getPackageManager();
+            ComponentName[][] launchers = {
+                {new ComponentName(this, Dco_Information_Gathering.class)},
+                {new ComponentName(this, Dco_Scanning.class)},
+                {new ComponentName(this, Dco_Packet_Crafting.class)},
+                {new ComponentName(this, Dco_network_hacking.class)},
+                {new ComponentName(this, Dco_bug_bounty.class)},
+                {new ComponentName(this, Dco_website_hacking.class)},
+                {new ComponentName(this, Dco_phishing.class)},
+                {new ComponentName(this, Dco_exploitation.class)},
+                {new ComponentName(this, Dco_c2_rat.class)},
+                {new ComponentName(this, Dco_macos_iphone.class)},
+                {new ComponentName(this, Dco_Password_Hacking.class)},
+                {new ComponentName(this, Dco_phreaking.class)},
+                {new ComponentName(this, Dco_ics_scada_iot.class)},
+                {new ComponentName(this, Dco_Mainframe.class)},
+                {new ComponentName(this, Dco_stress_testing.class)},
+                {new ComponentName(this, Dco_Wireless_Hacking.class)},
+                {new ComponentName(this, Dco_voip_3g_4g.class)},
+                {new ComponentName(this, org.aarchdroid.dragonterminal.ui.term.NeoTermActivity.class)},
+                {new ComponentName(this, org.aarchdroid.codehackide.MainActivityCodeHackIDE.class)},
+            };
+            for (ComponentName[] c : launchers) {
+                pm.setComponentEnabledSetting(c[0],
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP);
+            }
+            appendLog("[+] Launcher icons activados");
+        } catch (Exception e) {
+            appendLog("[-] Error activando launchers: " + e.getMessage());
+        }
     }
 }

@@ -32,25 +32,16 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:name">
 
-        <!-- Splash Activity (launcher) -->
+        <!-- Main Activity (launcher) -->
         <activity
-            android:name="org.aarchdroid.SplashActivity"
+            android:name="org.aarchdroid.MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:taskAffinity=".task.Launcher"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- Main Dashboard -->
-        <activity
-            android:name="org.aarchdroid.MainActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
         <!-- Alert Dialog -->

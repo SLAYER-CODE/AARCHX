@@ -20,41 +20,16 @@
                     android:icon="@drawable/marina"
                     android:title="M.A.R.I.N.A" />
 
-            </group>
-        </menu>
-    </item>
-
-    <item android:title="AArchDroid">
-        <menu>
-            <group android:checkableBehavior="single">
-                <item
-                    android:id="@+id/nav_terminal"
-                    android:icon="@drawable/console"
-                    android:title="Terminal" />
                 <item
                     android:id="@+id/nav_codehackide"
-                    android:icon="@drawable/andraxicon_svg"
-                    android:title="Editor (Legacy)" />
+                    android:icon="@drawable/codehack"
+                    android:title="CodeHACK IDE" />
+
                 <item
                     android:id="@+id/nav_neovim"
                     android:icon="@drawable/console"
                     android:title="Neovim Editor" />
-                <item
-                    android:id="@+id/nav_hidrastrike"
-                    android:icon="@drawable/hydra"
-                    android:title="HIDra Strike" />
-                <item
-                    android:id="@+id/nav_telegram"
-                    android:icon="@drawable/andraxicon_svg"
-                    android:title="Telegram" />
-                <item
-                    android:id="@+id/nav_x"
-                    android:icon="@drawable/andraxicon_svg"
-                    android:title="Twitter/X" />
-                <item
-                    android:id="@+id/nav_github"
-                    android:icon="@drawable/andraxicon_svg"
-                    android:title="GitHub" />
+
             </group>
         </menu>
     </item>
@@ -112,6 +87,69 @@
                     android:id="@+id/nav_custom_commands"
                     android:icon="@drawable/ic_custom_commands"
                     android:title="Custom Commands" />
+            </group>
+        </menu>
+    </item>
+
+    <item android:title="Programming">
+        <menu>
+            <group android:checkableBehavior="single">
+
+                <item
+                    android:id="@+id/nav_c_c_plus_plus"
+                    android:icon="@drawable/c"
+                    android:title="C/C++" />
+
+                <item
+                    android:id="@+id/nav_go"
+                    android:icon="@drawable/go"
+                    android:title="Go" />
+
+                <item
+                    android:id="@+id/nav_ruby"
+                    android:icon="@drawable/ruby"
+                    android:title="Ruby" />
+
+                <item
+                    android:id="@+id/nav_java"
+                    android:icon="@drawable/java"
+                    android:title="Java" />
+
+
+                <item
+                    android:id="@+id/nav_perl"
+                    android:icon="@drawable/perl"
+                    android:title="Perl" />
+
+                <item
+                    android:id="@+id/nav_nodejs"
+                    android:icon="@drawable/nodejs"
+                    android:title="NodeJS" />
+
+                <item
+                    android:id="@+id/nav_python"
+                    android:icon="@drawable/python"
+                    android:title="Python" />
+
+
+            </group>
+        </menu>
+    </item>
+
+    <item android:title="Anonymity">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_orbot"
+                    android:icon="@drawable/tor"
+                    android:title="Orbot (TOR)"
+                    />
+                <item
+                    android:id="@+id/nav_torbrowser"
+                    android:icon="@drawable/torbrowser"
+                    android:title="TorBrowser"
+                    />
+
             </group>
         </menu>
     </item>
@@ -1687,68 +1725,7 @@
         </menu>
     </item>
 
-    <item android:title="Programming">
-        <menu>
-            <group android:checkableBehavior="single">
 
-                <item
-                    android:id="@+id/nav_c_c_plus_plus"
-                    android:icon="@drawable/c"
-                    android:title="C/C++" />
-
-                <item
-                    android:id="@+id/nav_go"
-                    android:icon="@drawable/go"
-                    android:title="Go" />
-
-                <item
-                    android:id="@+id/nav_ruby"
-                    android:icon="@drawable/ruby"
-                    android:title="Ruby" />
-
-                <item
-                    android:id="@+id/nav_java"
-                    android:icon="@drawable/java"
-                    android:title="Java" />
-
-
-                <item
-                    android:id="@+id/nav_perl"
-                    android:icon="@drawable/perl"
-                    android:title="Perl" />
-
-                <item
-                    android:id="@+id/nav_nodejs"
-                    android:icon="@drawable/nodejs"
-                    android:title="NodeJS" />
-
-                <item
-                    android:id="@+id/nav_python"
-                    android:icon="@drawable/python"
-                    android:title="Python" />
-
-
-            </group>
-        </menu>
-    </item>
-
-    <item android:title="Anonymity">
-        <menu>
-            <group android:checkableBehavior="single">
-                <item
-                    android:id="@+id/nav_orbot"
-                    android:icon="@drawable/tor"
-                    android:title="Orbot (TOR)"
-                    />
-                <item
-                    android:id="@+id/nav_torbrowser"
-                    android:icon="@drawable/torbrowser"
-                    android:title="TorBrowser"
-                    />
-
-            </group>
-        </menu>
-    </item>
 
 
 

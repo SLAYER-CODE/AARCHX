@@ -18,12 +18,17 @@ public class HIDKeyboardFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_hid_keyboard, container, false);
+        root.setAlpha(0f);
 
-        ViewPager2 viewPager = root.findViewById(R.id.pagerHid);
-        TabLayout tabLayout = root.findViewById(R.id.tabLayoutHid);
+        root.post(() -> {
+            ViewPager2 viewPager = root.findViewById(R.id.pagerHid);
+            TabLayout tabLayout = root.findViewById(R.id.tabLayoutHid);
 
-        viewPager.setAdapter(new HidPagerAdapter(this));
-        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(TAB_TITLES[position])).attach();
+            viewPager.setAdapter(new HidPagerAdapter(this));
+            new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(TAB_TITLES[position])).attach();
+
+            root.animate().alpha(1f).setDuration(250);
+        });
 
         return root;
     }

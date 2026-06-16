@@ -2,6 +2,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- Settings (overflow - gear icon in toolbar) -->
+    <item
+        android:id="@+id/menu_item_settings"
+        android:title="Settings"
+        app:showAsAction="never" />
+
     <!-- Dragon / Tools -->
     <item
         android:id="@+id/dco_menu"
@@ -30,12 +36,6 @@
         android:title="New Tab"
         android:icon="@drawable/ic_add_box_white_24dp"
         app:showAsAction="always" />
-
-    <!-- Overflow items -->
-    <item
-        android:id="@+id/menu_item_settings"
-        android:title="Settings"
-        app:showAsAction="never" />
 
     <item
         android:id="@+id/dco_menumount"

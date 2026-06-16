@@ -6,8 +6,10 @@ import android.os.Bundle
 import android.view.View
 import android.provider.OpenableColumns
 import android.util.Log
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -32,6 +34,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
 
     private lateinit var editorView: NeovimEditorView
     private lateinit var toolbar: Toolbar
+    private lateinit var posView: TextView
 
     private val launcher = NeovimLauncher(this)
     private val client = NeovimClient(HOST, PORT)
@@ -53,11 +56,24 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Neovim"
 
+        posView = TextView(this).apply {
+            layoutParams = Toolbar.LayoutParams(
+                Toolbar.LayoutParams.WRAP_CONTENT,
+                Toolbar.LayoutParams.WRAP_CONTENT,
+                Gravity.RIGHT
+            )
+            text = "1,1"
+            setTextColor(0xFFAAAAAA.toInt())
+            textSize = 11f
+            typeface = android.graphics.Typeface.MONOSPACE
+            includeFontPadding = false
+        }
+        toolbar.addView(posView)
+
         editorView = findViewById(R.id.editor_view)
 
         findViewById<View>(R.id.key_esc).setOnClickListener {
             sendInput("<Esc>")
-            hideKeyboard()
         }
         findViewById<View>(R.id.key_ins).setOnClickListener {
             sendInput("i")
@@ -108,16 +124,22 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             delay(100)
             client.apiInfo()
             delay(50)
+            client.command("set laststatus=0 noshowmode noshowcmd noruler")
             client.uiAttach(80, 28)
             client.command("startinsert")
             delay(200)
-            // Defensive: ensure buffer matches requested size even if grid_resize is delayed
             buffer.resize(80, 28)
+            // Force insert mode cursor shape even if mode_change redraw hasn't arrived yet
+            buffer.applyModeChange("i")
             // Discard keystrokes typed before connection was ready (would be sent in normal mode)
             while (inputQueue.tryReceive().isSuccess) { }
             // Signal consumer: socket + uiAttach are ready
             connected.set(true)
-            withContext(Dispatchers.Main) { editorView.isReady = true }
+            withContext(Dispatchers.Main) {
+                // Push initial snapshot so cursor is beam from frame 1
+                editorView.updateBuffer(buffer.copySnapshot())
+                editorView.isReady = true
+            }
 
             // Sync terminal size with view (onSizeChanged may have fired before connect)
             val (viewCols, viewRows) = withContext(Dispatchers.Main) { editorView.getGridSize() }
@@ -307,14 +329,6 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 i++
                             }
                         }
-                        while (col < buffer.gridWidth) {
-                            buffer.getCell(row, col)?.let { prev ->
-                                if (prev.char != ' ') {
-                                    buffer.setCell(row, col, prev.copy(char = ' '))
-                                }
-                            }
-                            col++
-                        }
                         segmentInfo.add("r${row}c${colStart}[$segCells]")
                     } else if (arg.size >= 3) {
                         val row = arg[1].asIntegerValue().toInt()
@@ -324,15 +338,6 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 buffer.setCell(row, col, NeovimCell(char = ch))
                                 totalCells++
                             }
-                        }
-                        var c = text.length
-                        while (c < buffer.gridWidth) {
-                            buffer.getCell(row, c)?.let { prev ->
-                                if (prev.char != ' ') {
-                                    buffer.setCell(row, c, prev.copy(char = ' '))
-                                }
-                            }
-                            c++
                         }
                     }
                 }
@@ -441,9 +446,9 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         val mode = modeName.uppercase().take(4)
         val line = cursorRow + 1
         val col = cursorCol + 1
-        val text = "$mode  $currentFileName  Ln $line, Col $col"
-        supportActionBar?.title = text
-        Log.v(TAG, "title: $text")
+        supportActionBar?.title = "$mode  $currentFileName"
+        posView.text = "$line,$col"
+        Log.v(TAG, "title: $mode  $currentFileName  | posView: $line,$col")
     }
 
     private fun openFilePicker() {
@@ -548,6 +553,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             val ok = client.connect()
             if (ok) {
                 delay(100)
+                client.command("set laststatus=0 noshowmode noshowcmd noruler")
                 client.uiAttach(80, 28)
                 client.command("startinsert")
                 delay(200)

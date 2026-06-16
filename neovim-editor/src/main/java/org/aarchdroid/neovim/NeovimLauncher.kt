@@ -85,7 +85,8 @@ class NeovimLauncher(private val context: Context) {
         val relPath = fullPath.removePrefix(CHROOT_DIR)
         val cmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; " +
                 "exec chroot $CHROOT_DIR $relPath --headless --listen $HOST:$PORT " +
-                "-c 'set notermguicolors' -c 'highlight Normal ctermbg=NONE'"
+                "-c 'set notermguicolors' -c 'highlight Normal ctermbg=NONE' -c 'startinsert' " +
+                "-c 'set laststatus=0 noshowmode noshowcmd'"
         Log.d(TAG, "Launching via chroot: su -c $cmd")
         return Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
     }
@@ -96,7 +97,9 @@ class NeovimLauncher(private val context: Context) {
             "--headless",
             "--listen", "$HOST:$PORT",
             "-c", "set notermguicolors",
-            "-c", "highlight Normal ctermbg=NONE"
+            "-c", "highlight Normal ctermbg=NONE",
+            "-c", "startinsert",
+            "-c", "set laststatus=0 noshowmode noshowcmd"
         )
         pb.environment()["NVIM_LISTEN_ADDRESS"] = "$HOST:$PORT"
         pb.environment()["TERM"] = "xterm-256color"

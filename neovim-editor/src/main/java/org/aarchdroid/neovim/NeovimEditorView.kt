@@ -45,6 +45,10 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     var onResize: ((Int, Int) -> Unit)? = null
     var onModeChange: ((String) -> Unit)? = null
     var onPathChange: ((String) -> Unit)? = null
+    var fileName: String = "untitled"
+        set(value) {
+            field = value; postInvalidate()
+        }
     var isCursorBlinkingEnabled = true
     var isReady: Boolean = false
         set(value) {
@@ -75,11 +79,6 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         set(value) {
             field = value; postInvalidate()
         }
-    var fileName: String = "untitled"
-        set(value) {
-            field = value; postInvalidate()
-        }
-
     private val blinkHandler = Handler(Looper.getMainLooper())
     private val blinkRunnable: Runnable = object : Runnable {
         override fun run() {
@@ -308,7 +307,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         if (cellWidth <= 0 || cellHeight <= 0) fontChanged()
         val statusHeight = (cellHeight + 4f).toInt().coerceAtLeast(20)
         val cols = (w / cellWidth).toInt().coerceAtLeast(20)
-        val rows = ((h - statusHeight) / cellHeight).toInt().coerceAtLeast(8)
+        val rows = ((h - statusHeight) / cellHeight).toInt().coerceAtLeast(8) + 1
         gridOffsetX = (w - cols * cellWidth) / 2f
         gridOffsetY = 0f
         if (cols != buffer.gridWidth || rows != buffer.gridHeight) {

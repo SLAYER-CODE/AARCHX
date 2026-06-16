@@ -18,12 +18,17 @@ public class BluetoothFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_bluetooth, container, false);
+        root.setAlpha(0f);
 
-        ViewPager2 viewPager = root.findViewById(R.id.pagerBt);
-        TabLayout tabLayout = root.findViewById(R.id.tabLayoutBt);
+        root.post(() -> {
+            ViewPager2 viewPager = root.findViewById(R.id.pagerBt);
+            TabLayout tabLayout = root.findViewById(R.id.tabLayoutBt);
 
-        viewPager.setAdapter(new BtPagerAdapter(this));
-        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(TAB_TITLES[position])).attach();
+            viewPager.setAdapter(new BtPagerAdapter(this));
+            new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(TAB_TITLES[position])).attach();
+
+            root.animate().alpha(1f).setDuration(250);
+        });
 
         return root;
     }

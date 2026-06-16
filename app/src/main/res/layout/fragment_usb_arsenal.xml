@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="#000000">
@@ -9,7 +10,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- USB interface switch -->
+        <!-- ─── USB INTERFACE SWITCH ─── -->
+
         <LinearLayout
             android:id="@+id/f_usbarsenal_ll_usbswitch"
             android:layout_width="match_parent"
@@ -21,12 +23,11 @@
                 android:id="@+id/f_usbarsenal_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Configure USB gadget functions (HID, RNDIS, CDC ACM, Mass Storage) via configfs."
-                android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
+                android:padding="4dp"
+                android:text="Configure USB gadget functions (HID, RNDIS, CDC ACM, Mass Storage) via configfs."
                 android:textColor="#8FBC8F"
-                android:textSize="12sp"
-                android:padding="4dp" />
+                android:textSize="12sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -37,10 +38,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginBottom="4dp"
+                    android:layout_margin="4dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:text="USB SWITCH"
                     android:textColor="#2fff00"
@@ -54,219 +52,292 @@
                 android:layout_margin="12dp"
                 android:orientation="vertical">
 
-                <LinearLayout
+                <!-- Target + Spinner -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:layout_marginTop="4dp">
 
                     <TextView
+                        android:id="@+id/f_usbarsenal_tv_target"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="Target"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.4"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_spr_targetplatform"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.4" />
 
                     <Spinner
                         android:id="@+id/f_usbarsenal_spr_targetplatform"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:baselineAligned="false"
+                        android:entries="@array/usbarsenal_target_platform"
                         android:textSize="16sp"
-                        android:layout_weight="0.6"
-                        android:entries="@array/usbarsenal_target_platform"/>
-                </LinearLayout>
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_target"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- USB Function + Spinner -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="4dp">
 
                     <TextView
+                        android:id="@+id/f_usbarsenal_tv_usbfunc"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="USB Function"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.4"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_spr_usbfunctions"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.4" />
 
                     <Spinner
                         android:id="@+id/f_usbarsenal_spr_usbfunctions"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:entries="@array/usbarsenal_usb_states_win_lin"
                         android:textSize="16sp"
-                        android:layout_weight="0.6"
-                        android:entries="@array/usbarsenal_usb_states_win_lin"/>
-                </LinearLayout>
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_usbfunc"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- ADB + Spinner -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="4dp">
 
                     <TextView
+                        android:id="@+id/f_usbarsenal_tv_adb"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="ADB"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.4"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_spr_adb"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.4" />
 
                     <Spinner
                         android:id="@+id/f_usbarsenal_spr_adb"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:entries="@array/usbarsenal_usb_adb"
                         android:textSize="16sp"
-                        android:layout_weight="0.6"
-                        android:entries="@array/usbarsenal_usb_adb"/>
-                </LinearLayout>
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_adb"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- idVendor + EditText -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="4dp">
 
                     <TextView
+                        android:id="@+id/f_usbarsenal_tv_idvendor"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="idVendor"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.4"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_et_idvendor"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.4" />
 
                     <EditText
                         android:id="@+id/f_usbarsenal_et_idvendor"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:autofillHints="none"
-                        android:textSize="16sp"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.6"/>
-                </LinearLayout>
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_idvendor"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- idProduct + EditText -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="4dp">
 
                     <TextView
+                        android:id="@+id/f_usbarsenal_tv_idproduct"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="idProduct"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.4"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_et_idproduct"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.4" />
 
                     <EditText
                         android:id="@+id/f_usbarsenal_et_idproduct"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:autofillHints="none"
-                        android:textSize="16sp"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.6"/>
-                </LinearLayout>
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_idproduct"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- manufacturer + EditText -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="4dp">
 
                     <TextView
+                        android:id="@+id/f_usbarsenal_tv_manufacturer"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="manufacturer"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.4"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_et_manufacturer"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.4" />
 
                     <EditText
                         android:id="@+id/f_usbarsenal_et_manufacturer"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:autofillHints="none"
-                        android:textSize="16sp"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.6"/>
-                </LinearLayout>
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_manufacturer"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- product + EditText -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="4dp">
 
                     <TextView
+                        android:id="@+id/f_usbarsenal_tv_product"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="product"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.4"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_et_product"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.4" />
 
                     <EditText
                         android:id="@+id/f_usbarsenal_et_product"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:autofillHints="none"
-                        android:textSize="16sp"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.6"/>
-                </LinearLayout>
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_product"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- serialnumber + EditText -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="4dp">
 
                     <TextView
+                        android:id="@+id/f_usbarsenal_tv_serialnumber"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="serialnumber"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.4"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_et_serialnumber"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.4" />
 
                     <EditText
                         android:id="@+id/f_usbarsenal_et_serialnumber"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:autofillHints="none"
-                        android:textSize="16sp"
                         android:textColor="#e0e0e0"
-                        android:layout_weight="0.6"/>
-                </LinearLayout>
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_serialnumber"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <Button
                     android:id="@+id/f_usbarsenal_btn_setusbinterface"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:backgroundTint="#2fff00"
                     android:text="SET USB FUNCTION"
                     android:textColor="#000000"
-                    android:backgroundTint="#2fff00"
-                    style="?android:attr/buttonStyleSmall"/>
+                    style="?android:attr/buttonStyleSmall" />
 
                 <Button
                     android:id="@+id/f_usbarsenal_btn_saveusbfuncswitch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
+                    android:backgroundTint="#1a1a1a"
                     android:text="SAVE CONFIG TO DATABASE"
-                    android:textColor="#2fff00"
-                    android:backgroundTint="#1a1a1a"/>
+                    android:textColor="#2fff00" />
 
-                <LinearLayout
+                <!-- Enabled Functions row -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="4dp">
 
                     <LinearLayout
+                        android:id="@+id/f_usbarsenal_ll_enabled_funcs"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.8"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_imgbtn_reloadUSBStatus">
 
                         <TextView
                             android:layout_width="match_parent"
@@ -274,6 +345,7 @@
                             android:text="Enabled Functions:"
                             android:textColor="#2fff00"
                             android:textSize="16sp" />
+
                         <TextView
                             android:id="@+id/f_usbarsenal_tv_current_usb_state"
                             android:layout_width="match_parent"
@@ -287,17 +359,23 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:adjustViewBounds="false"
+                        android:backgroundTint="#2fff00"
                         android:baselineAlignBottom="false"
                         android:contentDescription="Reload"
                         android:cropToPadding="false"
-                        android:layout_weight="0.2"
                         android:src="@android:drawable/ic_menu_rotate"
-                        android:backgroundTint="#2fff00" />
-                </LinearLayout>
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_ll_enabled_funcs"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.15" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Image Mounter -->
+        <!-- ─── IMAGE MOUNTER ─── -->
+
         <LinearLayout
             android:id="@+id/f_usbarsenal_ll_imageMounter"
             android:layout_width="match_parent"
@@ -316,10 +394,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginBottom="4dp"
+                    android:layout_margin="4dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:text="IMAGE MOUNTER"
                     android:textColor="#2fff00"
@@ -348,7 +423,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:textColor="#e0e0e0"
                     android:text="Step 1: Place .img files in /sdcard/nh_files/" />
 
                 <TextView
@@ -372,49 +446,53 @@
 
                     <Button
                         android:id="@+id/f_usbarsenal_btn_mountImage"
-                        style="?android:attr/buttonStyleSmall"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="0.3"
-                        android:textColor="#000000"
                         android:backgroundTint="#2fff00"
-                        android:text="Mount" />
+                        android:text="Mount"
+                        android:textColor="#000000"
+                        style="?android:attr/buttonStyleSmall" />
 
                     <Button
                         android:id="@+id/f_usbarsenal_btn_unmountImage"
-                        style="?android:attr/buttonStyleSmall"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="0.3"
-                        android:textColor="#2fff00"
                         android:backgroundTint="#1a1a1a"
-                        android:text="Unmount" />
+                        android:text="Unmount"
+                        android:textColor="#2fff00"
+                        style="?android:attr/buttonStyleSmall" />
 
                     <CheckBox
                         android:id="@+id/f_usbarsenal_chkbox_ReadOrWrite"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="0.4"
-                        android:paddingTop="5dp"
                         android:paddingBottom="5dp"
-                        android:textColor="#e0e0e0"
-                        android:text="Read Only" />
+                        android:paddingTop="5dp"
+                        android:text="Read Only"
+                        android:textColor="#e0e0e0" />
                 </LinearLayout>
 
                 <Space
                     android:layout_width="match_parent"
                     android:layout_height="14dp" />
 
-                <LinearLayout
+                <!-- Mounted Image row -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
+                        android:id="@+id/f_usbarsenal_ll_mounted_state"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.8"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_imgbtn_reloadMountStatus"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
 
                         <TextView
                             android:layout_width="match_parent"
@@ -436,14 +514,18 @@
                         android:id="@+id/f_usbarsenal_imgbtn_reloadMountStatus"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.2"
                         android:adjustViewBounds="false"
+                        android:backgroundTint="#2fff00"
                         android:baselineAlignBottom="false"
                         android:contentDescription="Reload"
                         android:cropToPadding="false"
                         android:src="@android:drawable/ic_menu_rotate"
-                        android:backgroundTint="#2fff00" />
-                </LinearLayout>
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_ll_mounted_state"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.15" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <Space
                     android:layout_width="match_parent"
@@ -467,8 +549,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:textColor="#8FBC8F"
-                        android:text="(empty to reset)" />
+                        android:text="(empty to reset)"
+                        android:textColor="#8FBC8F" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -481,17 +563,18 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:autofillHints="none"
-                            android:textColor="#e0e0e0"
                             android:ems="10"
-                            android:inputType="text" />
+                            android:inputType="text"
+                            android:textColor="#e0e0e0"
+                            android:layout_weight="1" />
 
                         <Button
                             android:id="@+id/f_usbarsenal_btn_changeInquiryString"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#2fff00"
                             android:backgroundTint="#1a1a1a"
-                            android:text="Change" />
+                            android:text="Change"
+                            android:textColor="#2fff00" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -507,12 +590,13 @@
                     android:id="@+id/f_usbarsenal_tv_current_inquiry_string"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#e0e0e0"
-                    android:text="Linux File-CD/Stor gadget (kernel default)" />
+                    android:text="Linux File-CD/Stor gadget (kernel default)"
+                    android:textColor="#e0e0e0" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- USB Network Tethering -->
+        <!-- ─── USB NETWORK TETHERING ─── -->
+
         <LinearLayout
             android:id="@+id/f_usbarsenal_ll_usbnetworktethering"
             android:layout_width="match_parent"
@@ -531,10 +615,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginBottom="4dp"
+                    android:layout_margin="4dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:text="USB NETWORK TETHERING"
                     android:textColor="#2fff00"
@@ -559,155 +640,216 @@
                 android:orientation="vertical"
                 android:visibility="visible">
 
-                <LinearLayout
+                <!-- Attack Mode + Spinner -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_height="wrap_content">
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:id="@+id/f_usbarsenal_tv_attackmode"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="0.6"
                         android:text="Attack Mode:"
                         android:textColor="#e0e0e0"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_spr_networkattackmode"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.4" />
+
                     <Spinner
                         android:id="@+id/f_usbarsenal_spr_networkattackmode"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:baselineAligned="false"
-                        android:textSize="16sp"
+                        android:entries="@array/usbarsenal_usb_network_attack_mode"
                         android:layout_weight="0.6"
-                        android:entries="@array/usbarsenal_usb_network_attack_mode"/>
-                </LinearLayout>
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_attackmode"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- Upstream Interface -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_marginTop="4dp">
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:id="@+id/f_usbarsenal_tv_upstream"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.6"
                         android:text="Upstream Interface (e.g. wlan0):"
                         android:textColor="#e0e0e0"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_et_usbnetwork_upstreamiface"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.5" />
 
                     <EditText
                         android:id="@+id/f_usbarsenal_et_usbnetwork_upstreamiface"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.4"
                         android:autofillHints="none"
                         android:textColor="#e0e0e0"
-                        android:textSize="16sp" />
-                </LinearLayout>
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_upstream"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- USB network interface -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_marginTop="4dp">
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:id="@+id/f_usbarsenal_tv_usbnetiface"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.6"
                         android:text="USB network interface (e.g. rndis0):"
                         android:textColor="#e0e0e0"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_et_usbnetwork_usbfunc"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.5" />
 
                     <EditText
                         android:id="@+id/f_usbarsenal_et_usbnetwork_usbfunc"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.4"
                         android:autofillHints="none"
                         android:textColor="#e0e0e0"
-                        android:textSize="16sp" />
-                </LinearLayout>
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_usbnetiface"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- IP address for target -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_marginTop="4dp">
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:id="@+id/f_usbarsenal_tv_targetip"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.6"
                         android:text="IP address for target:"
                         android:textColor="#e0e0e0"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_et_usbnetwork_targetip"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.5" />
 
                     <EditText
                         android:id="@+id/f_usbarsenal_et_usbnetwork_targetip"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.4"
                         android:autofillHints="none"
                         android:textColor="#e0e0e0"
-                        android:textSize="16sp" />
-                </LinearLayout>
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_targetip"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- Your USB Network IP -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_marginTop="4dp">
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:id="@+id/f_usbarsenal_tv_gatewayip"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="Your USB Network IP:"
                         android:textColor="#e0e0e0"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_et_usbnetwork_gatewayip"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.5" />
 
                     <EditText
                         android:id="@+id/f_usbarsenal_et_usbnetwork_gatewayip"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:autofillHints="none"
                         android:textColor="#e0e0e0"
-                        android:textSize="16sp" />
-                </LinearLayout>
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_gatewayip"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
+                <!-- IP Subnet Mask -->
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_marginTop="4dp">
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:id="@+id/f_usbarsenal_tv_subnetmask"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="IP Subnet Mask (octet format):"
                         android:textColor="#e0e0e0"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/f_usbarsenal_et_usbnetwork_ipsubnetmask"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent="0.5" />
 
                     <EditText
                         android:id="@+id/f_usbarsenal_et_usbnetwork_ipsubnetmask"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:autofillHints="none"
                         android:textColor="#e0e0e0"
-                        android:textSize="16sp" />
-                </LinearLayout>
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/f_usbarsenal_tv_subnetmask"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <Button
                     android:id="@+id/f_usbarsenal_btn_runusbnetworktethering"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:backgroundTint="#2fff00"
                     android:text="RUN IN NETHUNTER TERMINAL"
-                    android:textColor="#000000"
-                    android:backgroundTint="#2fff00"/>
+                    android:textColor="#000000" />
 
                 <Button
                     android:id="@+id/f_usbarsenal_btn_saveusbnetworktethering"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:backgroundTint="#1a1a1a"
                     android:text="SAVE CONFIG TO DATABASE"
-                    android:textColor="#2fff00"
-                    android:backgroundTint="#1a1a1a"/>
+                    android:textColor="#2fff00" />
             </LinearLayout>
         </LinearLayout>
+
     </LinearLayout>
 </ScrollView>
