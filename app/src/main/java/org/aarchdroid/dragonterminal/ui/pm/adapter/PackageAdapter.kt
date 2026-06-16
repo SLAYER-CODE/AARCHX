@@ -13,7 +13,7 @@ import java.util.*
 class PackageAdapter(context: Context, comparator: Comparator<PackageModel>, private val listener: PackageAdapter.Listener) : SortedListAdapter<PackageModel>(context, PackageModel::class.java, comparator), FastScrollRecyclerView.SectionedAdapter {
 
     override fun getSectionName(position: Int): String {
-        return getItem(position).packageInfo.packageName?.substring(0, 1) ?: "#"
+        return getItem(position).pkg.name.substring(0, 1)
     }
 
     interface Listener {

@@ -443,6 +443,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                                 val sid = tabSessionMap.remove(session.mHandle)
                                 if (sid != null) {
                                     SessionHistory.closeSession(this@NeoTermActivity, sid)
+                                    sessionHistoryAdapter?.updateData(SessionHistory.getHistory(this@NeoTermActivity).sessions)
                                 }
                                 CommandInterceptor.unregisterSession(session.mHandle)
                             }
@@ -776,8 +777,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                         restoreSession(session)
                     },
                     onDeleteSession = { session ->
+                        Log.d("NeoTermAct", "onDeleteSession: id=${session.id}, created=${session.created}, handle=${session.hashCode()}")
                         SessionHistory.deleteSession(this@NeoTermActivity, session.id)
                         val freshData = SessionHistory.getHistory(this@NeoTermActivity)
+                        Log.d("NeoTermAct", "onDeleteSession: freshData sessions=${freshData.sessions.size}, adapter=null? ${sessionHistoryAdapter == null}")
                         sessionHistoryAdapter?.updateData(freshData.sessions)
                         updatePlaceholderVisibility()
                     }
@@ -1373,6 +1376,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             }
 
             launchBtn.setOnClickListener { addNewSession() }
+        } else {
+            toolbar.title = "Terminal"
+            toolbar.menu?.findItem(R.id.menu_item_clear_logs)?.isVisible = false
         }
     }
 

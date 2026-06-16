@@ -172,8 +172,8 @@
     <string name="no_command_extra">No command provided, did you put extras?</string>
     <string name="command_display_title_cannot_be_null">Display title cannot be null</string>
     <string name="menu_upgrade">Upgrade</string>
-    <string name="apt_update_ok">Package list successfully updated</string>
-    <string name="apt_upgrade_ok">Package successfully upgraded</string>
+    <string name="pacman_update_ok">Package list successfully updated</string>
+    <string name="pacman_upgrade_ok">Package successfully upgraded</string>
     <string name="installing_topic">Installation started. Please pay attention to the prompt that appears on the screen</string>
     <string name="session_closed">Session was closed</string>
     <string name="restore_session">Cancel</string>

@@ -230,7 +230,7 @@ class SetupActivity : AppCompatActivity(), View.OnClickListener, ResultListener 
         if (error == null) {
             setResult(RESULT_OK)
             SourceHelper.syncSource()
-            executeAptUpdate()
+            executePacmanUpdate()
 
         } else {
             AlertDialog.Builder(this)
@@ -248,20 +248,20 @@ class SetupActivity : AppCompatActivity(), View.OnClickListener, ResultListener 
         }
     }
 
-    private fun executeAptUpdate() {
-        PackageUtils.apt(this, "update", null, { exitStatus, dialog ->
+    private fun executePacmanUpdate() {
+        PackageUtils.pacman(this, arrayOf("pacman", "-Sy"), { exitStatus, dialog ->
             if (exitStatus == 0) {
                 dialog.dismiss()
                 aptUpdated = true
-                executeAptUpgrade()
+                executePacmanUpgrade()
             } else {
                 dialog.setTitle(getString(R.string.error))
             }
         })
     }
 
-    private fun executeAptUpgrade() {
-        PackageUtils.apt(this, "upgrade", arrayOf("-y"), { exitStatus, dialog ->
+    private fun executePacmanUpgrade() {
+        PackageUtils.pacman(this, arrayOf("pacman", "-Su", "--noconfirm"), { exitStatus, dialog ->
             if (exitStatus == 0) {
                 dialog.dismiss()
                 finish()

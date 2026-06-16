@@ -15,7 +15,7 @@ class PackageViewHolder(private val rootView: View, private val listener: Packag
 
     override fun performBind(item: PackageModel) {
         rootView.setOnClickListener { listener.onModelClicked(item) }
-        packageNameView.text = item.packageInfo.packageName
-        packageDescView.text = item.packageInfo.description
+        packageNameView.text = item.pkg.name
+        packageDescView.text = item.pkg.repo
     }
 }

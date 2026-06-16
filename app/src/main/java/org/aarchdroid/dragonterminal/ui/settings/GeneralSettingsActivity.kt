@@ -42,7 +42,7 @@ class GeneralSettingsActivity : BasePreferenceActivity() {
                 .setTitle(getString(R.string.shell_not_found, shellName))
                 .setMessage(R.string.shell_not_found_message)
                 .setPositiveButton(R.string.install, { _, _ ->
-                    PackageUtils.apt(this, "install", arrayOf("-y", shellName), { exitStatus, dialog ->
+                    PackageUtils.pacman(this, arrayOf("pacman", "-S", "--needed", "--noconfirm", shellName), { exitStatus, dialog ->
                         if (exitStatus == 0) {
                             dialog.dismiss()
                             postChangeShell(shellName)

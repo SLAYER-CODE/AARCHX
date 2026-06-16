@@ -1,6 +1,5 @@
 package org.aarchdroid.dragonterminal.ui.pm
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -11,24 +10,20 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import org.aarchdroid.dragonterminal.util.SortedListAdapter
 import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.backend.TerminalSession
-import org.aarchdroid.dragonterminal.component.pm.*
-import org.aarchdroid.dragonterminal.frontend.component.ComponentManager
-import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
-import org.aarchdroid.dragonterminal.frontend.config.NeoTermPath
 import org.aarchdroid.dragonterminal.frontend.floating.TerminalDialog
 import org.aarchdroid.dragonterminal.ui.pm.adapter.PackageAdapter
 import org.aarchdroid.dragonterminal.ui.pm.model.PackageModel
+import org.aarchdroid.dragonterminal.ui.pm.model.PacmanPackage
 import org.aarchdroid.dragonterminal.ui.pm.utils.StringDistance
 import org.aarchdroid.dragonterminal.utils.PackageUtils
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 /**
  * @author kiva
@@ -37,7 +32,7 @@ import org.aarchdroid.dragonterminal.utils.PackageUtils
 class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListener, SortedListAdapter.Callback {
     private val COMPARATOR = SortedListAdapter.ComparatorBuilder<PackageModel>()
             .setOrderForModel<PackageModel>(PackageModel::class.java) { a, b ->
-                a.packageInfo.packageName!!.compareTo(b.packageInfo.packageName!!)
+                a.pkg.name.compareTo(b.pkg.name)
             }
             .build()
 
@@ -61,10 +56,10 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
         adapter = PackageAdapter(this, COMPARATOR, object : PackageAdapter.Listener {
             override fun onModelClicked(model: PackageModel) {
                 AlertDialog.Builder(this@PackageManagerActivity)
-                        .setTitle(model.packageInfo.packageName)
-                        .setMessage(model.getPackageDetails(this@PackageManagerActivity))
+                        .setTitle("${model.pkg.repo}/${model.pkg.name}")
+                        .setMessage(model.getPackageDetails())
                         .setPositiveButton(R.string.install, { _, _ ->
-                            installPackage(model.packageInfo.packageName)
+                            installPackage(model.pkg.name)
                         })
                         .setNegativeButton(android.R.string.no, null)
                         .show()
@@ -80,20 +75,18 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
         refreshPackageList()
     }
 
-    private fun installPackage(packageName: String?) {
-        if (packageName != null) {
-            TerminalDialog(this@PackageManagerActivity)
-                    .execute("",
-                            arrayOf("apt", "install", "-y", packageName))
-                    .onFinish(object : TerminalDialog.SessionFinishedCallback {
-                        override fun onSessionFinished(dialog: TerminalDialog, finishedSession: TerminalSession?) {
-                            dialog.setTitle(getString(R.string.done))
-                        }
-                    })
-                    .imeEnabled(true)
-                    .show("Installing $packageName")
-            Toast.makeText(this, R.string.installing_topic, Toast.LENGTH_LONG).show()
-        }
+    private fun installPackage(packageName: String) {
+        TerminalDialog(this@PackageManagerActivity)
+                .execute("",
+                        arrayOf("pacman", "-S", "--needed", "--noconfirm", packageName))
+                .onFinish(object : TerminalDialog.SessionFinishedCallback {
+                    override fun onSessionFinished(dialog: TerminalDialog, finishedSession: TerminalSession?) {
+                        dialog.setTitle(getString(R.string.done))
+                    }
+                })
+                .imeEnabled(true)
+                .show("Installing $packageName")
+        Toast.makeText(this, R.string.installing_topic, Toast.LENGTH_LONG).show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -107,122 +100,55 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> finish()
-            R.id.action_source -> changeSource()
-            R.id.action_update_and_refresh -> executeAptUpdate()
+            R.id.action_update_and_refresh -> executePacmanUpdate()
             R.id.action_refresh -> refreshPackageList()
-            R.id.action_upgrade -> executeAptUpgrade()
+            R.id.action_upgrade -> executePacmanUpgrade()
         }
         return super.onOptionsItemSelected(item)
     }
 
-    private fun changeSource() {
-        val sourceManager = ComponentManager.getComponent<PackageComponent>().sourceManager
-        val sourceList = sourceManager.getAllSources()
-
-        AlertDialog.Builder(this)
-                .setTitle(R.string.pref_package_source)
-                .setMultiChoiceItems(sourceList.map { "${it.url} :: ${it.repo}" }.toTypedArray(),
-                        sourceList.map { it.enabled }.toBooleanArray(), { dialog, which, isChecked ->
-                    sourceList[which].enabled = isChecked
-                })
-                .setPositiveButton(android.R.string.yes, { _, _ ->
-                    changeSourceInternal(sourceManager, sourceList)
-                })
-                .setNeutralButton(R.string.new_source, { _, _ ->
-                    changeSourceToUserInput(sourceManager)
-                })
-                .setNegativeButton(android.R.string.no, null)
-                .show()
-    }
-
-    @SuppressLint("SetTextI18n")
-    private fun changeSourceToUserInput(sourceManager: SourceManager) {
-        val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_two_text, null, false)
-        view.findViewById<TextView>(R.id.dialog_edit_text_info).text = getString(R.string.input_new_source_url)
-        view.findViewById<TextView>(R.id.dialog_edit_text2_info).text = getString(R.string.input_new_source_repo)
-
-        val urlEditor = view.findViewById<EditText>(R.id.dialog_edit_text_editor)
-        val repoEditor = view.findViewById<EditText>(R.id.dialog_edit_text2_editor)
-        repoEditor.setText("stable main")
-
-        AlertDialog.Builder(this)
-                .setTitle(R.string.pref_package_source)
-                .setView(view)
-                .setNegativeButton(android.R.string.no, null)
-                .setPositiveButton(android.R.string.yes, { _, _ ->
-                    val url = urlEditor.text.toString()
-                    val repo = repoEditor.text.toString()
-                    var errored = false
-                    if (url.trim().isEmpty()) {
-                        urlEditor.error = getString(R.string.error_new_source_url)
-                        errored = true
-                    }
-                    if (repo.trim().isEmpty()) {
-                        repoEditor.error = getString(R.string.error_new_source_repo)
-                        errored = true
-                    }
-                    if (errored) {
-                        return@setPositiveButton
-                    }
-                    val source = urlEditor.text.toString()
-                    sourceManager.addSource(source, repo, true)
-                    postChangeSource(sourceManager)
-                })
-                .show()
-    }
-
-    private fun changeSourceInternal(sourceManager: SourceManager, source: List<Source>) {
-        sourceManager.updateAll(source)
-        postChangeSource(sourceManager)
-    }
-
-    private fun postChangeSource(sourceManager: SourceManager) {
-        sourceManager.applyChanges()
-        NeoPreference.store(R.string.key_package_source, sourceManager.getMainPackageSource())
-        SourceHelper.syncSource(sourceManager)
-        executeAptUpdate()
-    }
-
-    private fun executeAptUpdate() {
-        PackageUtils.apt(this, "update", null, { exitStatus, dialog ->
+    private fun executePacmanUpdate() {
+        PackageUtils.pacman(this, arrayOf("pacman", "-Sy"), { exitStatus, dialog ->
             if (exitStatus != 0) {
                 dialog.setTitle(getString(R.string.error))
-                return@apt
+                return@pacman
             }
-            Toast.makeText(this, R.string.apt_update_ok, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.pacman_update_ok, Toast.LENGTH_SHORT).show()
             dialog.dismiss()
             refreshPackageList()
         })
     }
 
-    private fun executeAptUpgrade() {
-        PackageUtils.apt(this, "update", null, { exitStatus, dialog ->
+    private fun executePacmanUpgrade() {
+        PackageUtils.pacman(this, arrayOf("pacman", "-Su", "--noconfirm"), { exitStatus, dialog ->
             if (exitStatus != 0) {
                 dialog.setTitle(getString(R.string.error))
-                return@apt
+                return@pacman
             }
+            Toast.makeText(this, R.string.pacman_upgrade_ok, Toast.LENGTH_SHORT).show()
             dialog.dismiss()
-
-            PackageUtils.apt(this, "upgrade", arrayOf("-y"), out@ { exitStatus, dialog ->
-                if (exitStatus != 0) {
-                    dialog.setTitle(getString(R.string.error))
-                    return@out
-                }
-                Toast.makeText(this, R.string.apt_upgrade_ok, Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-            })
         })
     }
 
     private fun refreshPackageList() {
         models.clear()
         Thread {
-            val pm = ComponentManager.getComponent<PackageComponent>()
-            val sourceFiles = SourceHelper.detectSourceFiles()
-
-            pm.clearPackages()
-            sourceFiles.forEach { pm.reloadPackages(it, false) }
-            pm.packages.values.mapTo(models, { PackageModel(it) })
+            try {
+                val process = Runtime.getRuntime().exec(arrayOf("pacman", "-Sl"))
+                val reader = BufferedReader(InputStreamReader(process.inputStream))
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    val parts = line!!.split(" ".toRegex(), 3)
+                    if (parts.size >= 3) {
+                        val pkg = PacmanPackage(name = parts[1], version = parts[2], repo = parts[0])
+                        models.add(PackageModel(pkg))
+                    }
+                }
+                reader.close()
+                process.waitFor()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
 
             this@PackageManagerActivity.runOnUiThread {
                 adapter.edit()
@@ -230,17 +156,16 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
                         .commit()
                 if (models.isEmpty()) {
                     Toast.makeText(this@PackageManagerActivity, R.string.package_list_empty, Toast.LENGTH_SHORT).show()
-                    changeSource()
                 }
             }
         }.start()
     }
 
     private fun sortDistance(models: List<PackageModel>, query: String,
-                             mapper: (NeoPackageInfo) -> String): List<Pair<PackageModel, Int>> {
+                             mapper: (PacmanPackage) -> String): List<Pair<PackageModel, Int>> {
         return models
                 .map({
-                    Pair(it, StringDistance.distance(mapper(it.packageInfo).toLowerCase(), query.toLowerCase()))
+                    Pair(it, StringDistance.distance(mapper(it.pkg).lowercase(), query.lowercase()))
                 })
                 .sortedWith(Comparator { l, r -> r.second.compareTo(l.second) })
                 .toList()
@@ -249,12 +174,10 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
     private fun filter(models: List<PackageModel>, query: String): List<PackageModel> {
         val filteredModelList = mutableListOf<PackageModel>()
         val prepared = models.filter {
-            it.packageInfo.packageName!!.contains(query, true)
-                    || it.packageInfo.description!!.contains(query, true)
+            it.pkg.name.contains(query, true)
         }
 
-        sortDistance(prepared, query, { it.packageName!! }).mapTo(filteredModelList, { it.first })
-        sortDistance(prepared, query, { it.description!! }).mapTo(filteredModelList, { it.first })
+        sortDistance(prepared, query, { it.name }).mapTo(filteredModelList, { it.first })
         return filteredModelList
     }
 

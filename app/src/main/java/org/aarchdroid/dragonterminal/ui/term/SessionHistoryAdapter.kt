@@ -6,6 +6,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -77,10 +78,12 @@ class SessionHistoryAdapter(
                 val todayStr = sdfDay.format(Date())
                 val isToday = day == todayStr
                 val headerBg = if (isToday) 0xFF005500.toInt() else 0xFF550000.toInt()
-                val headerText = dateFmt.format(sdfDay.parse(day)!!)
+                val parsed = sdfDay.parse(day) ?: continue
+                val headerText = dateFmt.format(parsed)
                 flatItems.add(FlatItem(VIEW_TYPE_DATE_HEADER, line = headerText, lineColor = headerBg, dayKey = day))
             }
             for (session in dayGroups[day]!!) {
+                if (flatItems.isNotEmpty()) flatItems.add(FlatItem(VIEW_TYPE_SPACER))
                 val item = buildSessionCard(session, now)
                 flatItems.add(item)
             }
@@ -252,6 +255,7 @@ class SessionHistoryAdapter(
     }
 
     fun rebuild(sessions: List<SessionRecord>) {
+        Log.d("SessionHistAdapter", "rebuild: sessions=${sessions.size}")
         flatItems.clear()
         val dateFmt = SimpleDateFormat("MMM dd, yyyy", Locale.US)
         val sdfDay = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -264,12 +268,14 @@ class SessionHistoryAdapter(
             dayGroups.getOrPut(day) { mutableListOf() }.add(session)
         }
         val sortedDays = dayGroups.keys.sortedDescending()
+        Log.d("SessionHistAdapter", "rebuild: ${sortedDays.size} days, flatItems will start with ${flatItems.size} items")
 
         for (day in sortedDays) {
             val daySessions = dayGroups[day]!!
             val isToday = day == todayStr
             val headerBg = if (isToday) 0xFF005500.toInt() else 0xFF550000.toInt()
-            val headerText = dateFmt.format(sdfDay.parse(day)!!)
+            val parsed = sdfDay.parse(day) ?: continue
+            val headerText = dateFmt.format(parsed)
             flatItems.add(FlatItem(VIEW_TYPE_DATE_HEADER, line = headerText, lineColor = headerBg, dayKey = day))
 
             val normalSessions = mutableListOf<SessionRecord>()
@@ -298,6 +304,7 @@ class SessionHistoryAdapter(
             }
         }
 
+        Log.d("SessionHistAdapter", "rebuild: final flatItems=${flatItems.size}, calling notifyDataSetChanged")
         notifyDataSetChanged()
     }
 
@@ -425,6 +432,7 @@ class SessionHistoryAdapter(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 ).apply { gravity = Gravity.START }
+                Log.d("SessionHistAdapter", "bindSessionCard: tagging Borrar session=null? ${session == null} id=${session?.id}")
                 tv.tag = session
                 tv.setOnClickListener { v ->
                     (v.tag as? SessionRecord)?.let { onDeleteSession(it) }

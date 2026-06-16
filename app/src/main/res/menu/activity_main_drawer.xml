@@ -27,7 +27,7 @@
 
                 <item
                     android:id="@+id/nav_neovim"
-                    android:icon="@drawable/console"
+                    android:icon="@drawable/ic_neovim"
                     android:title="Neovim Editor" />
 
             </group>

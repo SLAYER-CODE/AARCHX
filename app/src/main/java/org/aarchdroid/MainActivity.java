@@ -433,6 +433,8 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
     private void setupDrawer() {
         RecyclerView rv = findViewById(R.id.drawer_recycler);
         rv.setLayoutManager(new LinearLayoutManager(this));
+        rv.setItemAnimator(null);
+        rv.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         Menu menu = new PopupMenu(this, null).getMenu();
         new MenuInflater(this).inflate(R.menu.activity_main_drawer, menu);
@@ -448,10 +450,15 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
                 items.add(new DrawerItem(mi.getItemId(),
                     mi.getIcon(), mi.getTitle()));
             }
-            sections.add(new DrawerSection(cat.getTitle(), items));
+            DrawerSection section = new DrawerSection(cat.getTitle(), items);
+            sections.add(section);
+        }
+        // Collapse sections after Anonymity (index 5)
+        for (int i = 6; i < sections.size(); i++) {
+            sections.get(i).expanded = false;
         }
 
-        DrawerAdapter adapter = new DrawerAdapter(sections);
+        DrawerAdapter adapter = new DrawerAdapter(sections, rv);
         adapter.setOnItemClickListener(this);
         rv.setAdapter(adapter);
     }

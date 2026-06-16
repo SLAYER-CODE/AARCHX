@@ -343,17 +343,34 @@ object SessionHistory {
 
     fun deleteSession(context: Context, sessionId: String) {
         init(context)
-        current?.sessions?.removeAll { it.id == sessionId }
+        Log.d("SessionHistory", "deleteSession: sessionId=$sessionId, current=null? ${current == null}, db=null? ${db == null}")
+        val removed = current?.sessions?.removeAll { it.id == sessionId }
+        Log.d("SessionHistory", "deleteSession: removed from cache=$removed, remaining=${current?.sessions?.size}")
         runCatching {
-            val readDb = db?.readableDatabase ?: return@runCatching
+            val writeDb = db?.writableDatabase
+            if (writeDb == null) {
+                Log.e("SessionHistory", "deleteSession: writableDatabase is null!")
+                return@runCatching
+            }
+            val readDb = db?.readableDatabase ?: run {
+                Log.e("SessionHistory", "deleteSession: readableDatabase is null!")
+                return@runCatching
+            }
             readDb.rawQuery("SELECT id FROM terminal WHERE sessionId = ?", arrayOf(sessionId)).use { c ->
+                var terminalCount = 0
                 while (c.moveToNext()) {
                     val tid = c.getString(0)
-                    db?.writableDatabase?.delete("command", "terminalId = ?", arrayOf(tid))
+                    val cmdDeleted = writeDb.delete("command", "terminalId = ?", arrayOf(tid))
+                    Log.d("SessionHistory", "deleteSession: deleted terminal=$tid commands=$cmdDeleted")
+                    terminalCount++
                 }
+                Log.d("SessionHistory", "deleteSession: found $terminalCount terminals for sessionId=$sessionId")
             }
-            db?.writableDatabase?.delete("terminal", "sessionId = ?", arrayOf(sessionId))
-            db?.writableDatabase?.delete("session", "id = ?", arrayOf(sessionId))
+            val termDeleted = writeDb.delete("terminal", "sessionId = ?", arrayOf(sessionId))
+            val sessDeleted = writeDb.delete("session", "id = ?", arrayOf(sessionId))
+            Log.d("SessionHistory", "deleteSession: terminals_deleted=$termDeleted session_deleted=$sessDeleted")
+        }.onFailure { e ->
+            Log.e("SessionHistory", "deleteSession: DB error", e)
         }
     }
 

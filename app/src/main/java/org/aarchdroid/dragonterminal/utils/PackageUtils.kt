@@ -13,11 +13,7 @@ import java.io.File
  * @author kiva
  */
 object PackageUtils {
-    fun apt(context: Context, subCommand: String, extraArgs: Array<String>?, callback: (Int, TerminalDialog) -> Unit) {
-        val argArray =
-                if (extraArgs != null) arrayOf("", subCommand, *extraArgs)
-                else arrayOf("", subCommand)
-
+    fun pacman(context: Context, args: Array<String>, callback: (Int, TerminalDialog) -> Unit) {
         TerminalDialog(context)
                 .onFinish(object : TerminalDialog.SessionFinishedCallback {
                     override fun onSessionFinished(dialog: TerminalDialog, finishedSession: TerminalSession?) {
@@ -26,7 +22,7 @@ object PackageUtils {
                     }
                 })
                 .imeEnabled(true)
-                .execute("", argArray)
-                .show("apt $subCommand")
+                .execute("", args)
+                .show("pacman ${args.joinToString(" ")}")
     }
 }

@@ -65,6 +65,7 @@ AAR: AArchDroid/neovim-editor/build/outputs/aar/
 | Cursor blink 100% CPU | blink en `onDraw` | `Handler` + `Runnable` |
 | Defensive resize race | `buffer.resize(80,28)` en Main vs grid_resize en IO | `synchronized` + `copySnapshot` |
 | Double key dispatch | `setOnKeyListener` + `onKeyDown` | Unificar en `onKeyDown` + `sendKeyEvent` |
+| grid_line trailing clear rompía Enter+wrap | while loop en cada segmento limpiaba celdas parciales | dirty-rows-on-flush: trackear maxCol por fila, limpiar en `flush` |
 
 ## Problemas abiertos
 - **Keyboard overlay**: Se cambió de `adjustResize` a `adjustNothing` + `OnApplyWindowInsetsListener`. El listener pone `paddingBottom = imeBottom` y recalcula grid con `visibleH = height - imeBottom`. ¯barra y status line deben quedar visibles.

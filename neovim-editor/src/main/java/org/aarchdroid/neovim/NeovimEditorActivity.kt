@@ -287,6 +287,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 var segmentInfo = mutableListOf<String>()
                 for (arg in event.args) {
                     if (arg.size >= 4) {
+                        val grid = arg[0].asIntegerValue().toInt()
                         val row = arg[1].asIntegerValue().toInt()
                         val colStart = arg[2].asIntegerValue().toInt()
                         val cellsData = arg[3].asArrayValue().list()
@@ -329,17 +330,12 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 i++
                             }
                         }
-                        segmentInfo.add("r${row}c${colStart}[$segCells]")
-                        if (colStart == 0) {
-                            while (col < buffer.gridWidth) {
-                                buffer.setCell(row, col, NeovimCell(char = ' '))
-                                totalCells++
-                                col++
-                            }
-                        }
+                        segmentInfo.add("g${grid}r${row}c${colStart}[$segCells]")
                     } else if (arg.size >= 3) {
+                        val grid = arg[0].asIntegerValue().toInt()
                         val row = arg[1].asIntegerValue().toInt()
                         val text = arg[2].asStringValue().asString()
+                        segmentInfo.add("g${grid}r${row}text[${text.length}]")
                         for ((col, ch) in text.withIndex()) {
                             if (col < buffer.gridWidth) {
                                 buffer.setCell(row, col, NeovimCell(char = ch))
@@ -348,7 +344,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                         }
                     }
                 }
-                Log.d(TAG, "grid_line: $totalCells cells set: ${segmentInfo.joinToString(" ")}")
+                Log.d(TAG, "grid_line: total=$totalCells segments=${segmentInfo.joinToString(" ")}")
             }
             "grid_cursor_goto" -> {
                 var row = -1; var col = -1
@@ -369,6 +365,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             "grid_scroll" -> {
                 if (event.args.isNotEmpty()) {
                     val a = event.args[0]
+                    val grid = a[0].asIntegerValue().toInt()
                     val top = a[1].asIntegerValue().toInt()
                     val bot = a[2].asIntegerValue().toInt()
                     val left = a[3].asIntegerValue().toInt()
@@ -376,7 +373,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                     val rows = a[5].asIntegerValue().toInt()
                     val cols = if (a.size > 6) a[6].asIntegerValue().toInt() else 0
                     buffer.scroll(top, bot, left, right, rows, cols)
-                    Log.d(TAG, "grid_scroll: region(top=$top bot=$bot left=$left right=$right) count=$rows cols=$cols")
+                    Log.d(TAG, "grid_scroll: grid=$grid top=$top bot=$bot left=$left right=$right rows=$rows cols=$cols")
                 }
             }
             "grid_clear" -> {
