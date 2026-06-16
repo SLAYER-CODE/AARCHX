@@ -251,54 +251,91 @@ object SessionHistory {
         }
     }
 
-    fun getHistory(context: Context): SessionHistoryData {
+    fun getHistoryPage(context: Context, offset: Int = 0, limit: Int = 4): List<SessionRecord> {
         init(context)
-        val flagActive = prefs?.getBoolean(KEY_FLAG_ACTIVE, false) ?: false
-        val data = SessionHistoryData(
-            date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()),
-            flagActive = flagActive,
-            sessions = mutableListOf()
-        )
+        val sessionMap = mutableMapOf<String, SessionRecord>()
+        val terminalMap = mutableMapOf<String, TerminalRecord>()
+        val pages = mutableListOf<SessionRecord>()
 
         runCatching {
             val readDb = db?.readableDatabase ?: return@runCatching
-            readDb.rawQuery("SELECT * FROM session ORDER BY created DESC", null).use { sCursor ->
-                while (sCursor.moveToNext()) {
-                    val id = sCursor.getString(sCursor.getColumnIndexOrThrow("id"))
-                    val created = sCursor.getLong(sCursor.getColumnIndexOrThrow("created"))
-                    val closed = if (sCursor.isNull(sCursor.getColumnIndexOrThrow("closedNormally"))) null
-                        else sCursor.getInt(sCursor.getColumnIndexOrThrow("closedNormally")) == 1
-                    val crash = sCursor.getString(sCursor.getColumnIndexOrThrow("crashReason"))
-                    val record = SessionRecord(id = id, created = created, closedNormally = closed, crashReason = crash, terminals = mutableListOf())
-
-                    readDb.rawQuery("SELECT * FROM terminal WHERE sessionId = ? ORDER BY created ASC", arrayOf(id)).use { tCursor ->
-                        while (tCursor.moveToNext()) {
-                            val tId = tCursor.getString(tCursor.getColumnIndexOrThrow("id"))
-                            val tCreated = tCursor.getLong(tCursor.getColumnIndexOrThrow("created"))
-                            val tType = tCursor.getString(tCursor.getColumnIndexOrThrow("type"))
-                            val tLaunchSource = if (tCursor.isNull(tCursor.getColumnIndexOrThrow("launchSource"))) "" else tCursor.getString(tCursor.getColumnIndexOrThrow("launchSource"))
-                            val tExitDestiny = if (tCursor.isNull(tCursor.getColumnIndexOrThrow("exitDestiny"))) "" else tCursor.getString(tCursor.getColumnIndexOrThrow("exitDestiny"))
-                            val tIconResId = if (tCursor.isNull(tCursor.getColumnIndexOrThrow("iconResId"))) 0 else tCursor.getInt(tCursor.getColumnIndexOrThrow("iconResId"))
-                            val tRecord = TerminalRecord(id = tId, created = tCreated, type = tType,
-                                launchSource = tLaunchSource, exitDestiny = tExitDestiny,
-                                iconResId = tIconResId, commands = mutableListOf())
-
-                            readDb.rawQuery("SELECT * FROM command WHERE terminalId = ? ORDER BY ord ASC", arrayOf(tId)).use { cCursor ->
-                                while (cCursor.moveToNext()) {
-                                    val path = cCursor.getString(cCursor.getColumnIndexOrThrow("path"))
-                                    val cmd = cCursor.getString(cCursor.getColumnIndexOrThrow("cmd"))
-                                    val status = cCursor.getInt(cCursor.getColumnIndexOrThrow("status"))
-                                    tRecord.commands.add(CommandRecord(path = path, cmd = cmd, status = status))
-                                }
-                            }
-                            if (tRecord.commands.isNotEmpty()) record.terminals.add(tRecord)
-                        }
+            readDb.rawQuery("""
+                SELECT s.id s_id, s.created s_created, s.closedNormally, s.crashReason,
+                       t.id t_id, t.created t_created, t.type, t.launchSource,
+                       t.exitDestiny, t.iconResId,
+                       c.path, c.cmd, c.status, c.ord
+                FROM (
+                    SELECT * FROM session ORDER BY created DESC LIMIT ? OFFSET ?
+                ) s
+                LEFT JOIN terminal t ON t.sessionId = s.id
+                LEFT JOIN command c ON c.terminalId = t.id
+                ORDER BY s.created DESC, t.created ASC, c.ord ASC
+            """, arrayOf(limit.toString(), offset.toString())).use { cursor ->
+                while (cursor.moveToNext()) {
+                    val sId = cursor.getString(cursor.getColumnIndexOrThrow("s_id")) ?: continue
+                    val session = sessionMap.getOrPut(sId) {
+                        SessionRecord(
+                            id = sId,
+                            created = cursor.getLong(cursor.getColumnIndexOrThrow("s_created")),
+                            closedNormally = if (cursor.isNull(cursor.getColumnIndexOrThrow("closedNormally"))) null
+                                else cursor.getInt(cursor.getColumnIndexOrThrow("closedNormally")) == 1,
+                            crashReason = cursor.getString(cursor.getColumnIndexOrThrow("crashReason")),
+                            terminals = mutableListOf()
+                        ).also { pages.add(it) }
                     }
-                    if (record.terminals.isNotEmpty()) data.sessions.add(record)
+
+                    val tId = cursor.getString(cursor.getColumnIndexOrThrow("t_id")) ?: continue
+                    val tKey = "${sId}_${tId}"
+                    val terminal = terminalMap.getOrPut(tKey) {
+                        TerminalRecord(
+                            id = tId,
+                            created = cursor.getLong(cursor.getColumnIndexOrThrow("t_created")),
+                            type = cursor.getString(cursor.getColumnIndexOrThrow("type")) ?: "",
+                            launchSource = cursor.getString(cursor.getColumnIndexOrThrow("launchSource")) ?: "",
+                            exitDestiny = cursor.getString(cursor.getColumnIndexOrThrow("exitDestiny")) ?: "",
+                            iconResId = cursor.getInt(cursor.getColumnIndexOrThrow("iconResId")),
+                            commands = mutableListOf()
+                        ).also { session.terminals.add(it) }
+                    }
+
+                    val path = cursor.getString(cursor.getColumnIndexOrThrow("path"))
+                    if (path != null) {
+                        terminal.commands.add(CommandRecord(
+                            path = path,
+                            cmd = cursor.getString(cursor.getColumnIndexOrThrow("cmd")) ?: "",
+                            status = cursor.getInt(cursor.getColumnIndexOrThrow("status"))
+                        ))
+                    }
                 }
             }
         }
 
+        // Remove terminals with no commands and sessions with no terminals (same as original logic)
+        for (session in pages) {
+            session.terminals.removeAll { it.commands.isEmpty() }
+        }
+        pages.removeAll { it.terminals.isEmpty() }
+        return pages
+    }
+
+    fun getHistoryCount(context: Context): Int {
+        init(context)
+        return runCatching {
+            db?.readableDatabase?.rawQuery("SELECT COUNT(*) FROM session", null)?.use {
+                if (it.moveToFirst()) it.getInt(0) else 0
+            }
+        }.getOrNull() ?: 0
+    }
+
+    fun getHistory(context: Context): SessionHistoryData {
+        init(context)
+        val flagActive = prefs?.getBoolean(KEY_FLAG_ACTIVE, false) ?: false
+        val all = getHistoryPage(context, 0, Int.MAX_VALUE)
+        val data = SessionHistoryData(
+            date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()),
+            flagActive = flagActive,
+            sessions = all.toMutableList()
+        )
         current = data
         Log.d("SessionHistory", "getHistory -> loaded ${data.sessions.size} sessions, flagActive=$flagActive")
         return data
@@ -318,6 +355,15 @@ object SessionHistory {
             db?.writableDatabase?.delete("terminal", "sessionId = ?", arrayOf(sessionId))
             db?.writableDatabase?.delete("session", "id = ?", arrayOf(sessionId))
         }
+    }
+
+    fun hasUnclosedSessions(context: Context): Boolean {
+        init(context)
+        return runCatching {
+            db?.readableDatabase?.rawQuery("SELECT COUNT(*) FROM session WHERE closedNormally IS NULL", null)?.use {
+                it.moveToFirst() && it.getInt(0) > 0
+            }
+        }.getOrNull() ?: false
     }
 
     fun saveNow(context: Context) {

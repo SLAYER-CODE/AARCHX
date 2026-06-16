@@ -6,4 +6,7 @@
     android:gravity="center"
     android:fontFamily="monospace"
     android:textSize="9sp"
-    android:paddingVertical="6dp" />
+    android:textColor="@android:color/white"
+    android:paddingVertical="3dp"
+    android:paddingHorizontal="12dp"
+    android:layout_marginBottom="6dp" />

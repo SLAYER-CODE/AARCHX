@@ -12,10 +12,12 @@ import android.os.StrictMode;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
-import android.widget.PopupMenu;
 import android.widget.Button;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.FrameLayout;
 import android.widget.ScrollView;
@@ -33,7 +35,8 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import com.google.android.material.navigation.NavigationView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import org.aarchdroid.andraxdialogs.Alert;
 import org.aarchdroid.codehackide.MainActivityCodeHackIDE;
 import java.io.BufferedReader;
@@ -42,9 +45,14 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import org.aarchdroid.dragonterminal.bridge.Bridge;
+import org.aarchdroid.drawer.DrawerAdapter;
+import org.aarchdroid.drawer.DrawerItem;
+import org.aarchdroid.drawer.DrawerSection;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnItemClickListener {
     public static final int progressType = 0;
     private ProgressDialog progressDialog;
     private ProgressDialog unpackprogressDialog;
@@ -193,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
-        ((NavigationView) findViewById(R.id.nav_view)).setNavigationItemSelectedListener(this);
+        setupDrawer();
 
         // Hide toolbar until root/install complete
         toolbar.setVisibility(View.GONE);
@@ -360,7 +368,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return super.onOptionsItemSelected(menuItem);
     }
 
-    @Override
     public boolean onNavigationItemSelected(MenuItem menuItem) {
         int itemId = menuItem.getItemId();
         if (itemId == R.id.nav_terminal) {
@@ -390,6 +397,63 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onItemClick(DrawerItem item) {
+        int itemId = item.id;
+        if (itemId == R.id.nav_terminal) {
+            run_hack_cmd("andrax");
+        } else if (itemId == R.id.nav_codehackide) {
+            startActivity(new Intent(this, (Class<?>) MainActivityCodeHackIDE.class));
+        } else if (itemId == R.id.nav_neovim) {
+            startActivity(new Intent(this, (Class<?>) org.aarchdroid.neovim.NeovimEditorActivity.class));
+        } else if (itemId == R.id.nav_hid_keyboard) {
+            toolbar.post(() -> replaceFragment(new HIDKeyboardFragment()));
+        } else if (itemId == R.id.nav_mana) {
+            toolbar.post(() -> replaceFragment(new ManaFragment()));
+        } else if (itemId == R.id.nav_mitm) {
+            toolbar.post(() -> replaceFragment(new MITMFragment()));
+        } else if (itemId == R.id.nav_mac_changer) {
+            toolbar.post(() -> replaceFragment(new MacChangerFragment()));
+        } else if (itemId == R.id.nav_bluetooth) {
+            toolbar.post(() -> replaceFragment(new BluetoothFragment()));
+        } else if (itemId == R.id.nav_usb_arsenal) {
+            toolbar.post(() -> replaceFragment(new USBArsenalFragment()));
+        } else if (itemId == R.id.nav_gps) {
+            toolbar.post(() -> replaceFragment(new GPSFragment()));
+        } else if (itemId == R.id.nav_kali_services) {
+            toolbar.post(() -> replaceFragment(new KaliServicesFragment()));
+        } else if (itemId == R.id.nav_custom_commands) {
+            toolbar.post(() -> replaceFragment(new CustomCommandsFragment()));
+        }
+        drawerLayout.closeDrawer(GravityCompat.START);
+    }
+
+    private void setupDrawer() {
+        RecyclerView rv = findViewById(R.id.drawer_recycler);
+        rv.setLayoutManager(new LinearLayoutManager(this));
+
+        Menu menu = new PopupMenu(this, null).getMenu();
+        new MenuInflater(this).inflate(R.menu.activity_main_drawer, menu);
+
+        List<DrawerSection> sections = new ArrayList<>();
+        for (int i = 0; i < menu.size(); i++) {
+            MenuItem cat = menu.getItem(i);
+            SubMenu sub = cat.getSubMenu();
+            if (sub == null) continue;
+            List<DrawerItem> items = new ArrayList<>();
+            for (int j = 0; j < sub.size(); j++) {
+                MenuItem mi = sub.getItem(j);
+                items.add(new DrawerItem(mi.getItemId(),
+                    mi.getIcon(), mi.getTitle()));
+            }
+            sections.add(new DrawerSection(cat.getTitle(), items));
+        }
+
+        DrawerAdapter adapter = new DrawerAdapter(sections);
+        adapter.setOnItemClickListener(this);
+        rv.setAdapter(adapter);
     }
 
     private void replaceFragment(Fragment fragment) {

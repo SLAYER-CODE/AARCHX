@@ -122,6 +122,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     private var pendingAnchorSession: TerminalSession? = null
 
     private var sessionHistoryAdapter: SessionHistoryAdapter? = null
+    private var currentHistoryOffset = 0
+    private var isLoadingMore = false
     private var earlyTerminalPlaceholder: View? = null
     private val tabSessionMap = HashMap<String, String>() // TerminalSession.handle -> sessionId
 
@@ -319,7 +321,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
             R.id.menu_item_clear_logs -> {
                 SessionHistory.clearAll(this)
-                sessionHistoryAdapter?.updateData(SessionHistory.ensure(this))
+                sessionHistoryAdapter?.updateData(SessionHistory.ensure(this).sessions)
                 updatePlaceholderVisibility()
                 true
             }
@@ -455,7 +457,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 override fun onAllTabsRemoved(tabSwitcher: TabSwitcher, tabs: Array<out Tab>, animation: Animation) {
                     // Reload session history from disk after all tabs closed
                     val h = SessionHistory.getHistory(this@NeoTermActivity)
-                    sessionHistoryAdapter?.updateData(h)
+                    sessionHistoryAdapter?.updateData(h.sessions)
                     updatePlaceholderVisibility()
                 }
             })
@@ -744,19 +746,23 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     }
 
     private fun loadSessionHistoryAsync() {
+        currentHistoryOffset = 0
+        isLoadingMore = false
         Thread {
-            val history = SessionHistory.getHistory(this@NeoTermActivity)
-            if (history.flagActive) {
+            val hasCrashed = SessionHistory.hasUnclosedSessions(this@NeoTermActivity)
+            if (hasCrashed) {
+                val history = SessionHistory.getHistory(this@NeoTermActivity)
                 val crashedSessions = history.sessions.filter { it.closedNormally == null }
                 if (crashedSessions.isNotEmpty()) {
                     val crashTime = SimpleDateFormat("h:mm a", Locale.US).format(Date())
                     for (s in crashedSessions) {
-                        SessionHistory.closeSession(this, s.id, "Aplicacion terminada inesperadamente a las $crashTime")
+                        SessionHistory.closeSession(this@NeoTermActivity, s.id, "Aplicacion terminada inesperadamente a las $crashTime")
                     }
-                    history.flagActive = false
-                    SessionHistory.saveNow(this)
+                    SessionHistory.saveNow(this@NeoTermActivity)
                 }
             }
+            val page0 = SessionHistory.getHistoryPage(this@NeoTermActivity, 0, 4)
+            currentHistoryOffset = page0.size
             runOnUiThread {
                 val historyList = findViewById<RecyclerView>(R.id.sessionHistoryList)
                 historyList.layoutManager = LinearLayoutManager(this@NeoTermActivity)
@@ -764,19 +770,38 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 historyList.setPadding(6, 0, 0, 0)
                 historyList.clipToPadding = false
                 val adapter = SessionHistoryAdapter(
-                    data = history,
+                    sessions = page0,
+                    hasMore = page0.size == 4,
                     onRestoreSession = { session ->
                         restoreSession(session)
                     },
                     onDeleteSession = { session ->
                         SessionHistory.deleteSession(this@NeoTermActivity, session.id)
                         val freshData = SessionHistory.getHistory(this@NeoTermActivity)
-                        sessionHistoryAdapter?.updateData(freshData)
+                        sessionHistoryAdapter?.updateData(freshData.sessions)
                         updatePlaceholderVisibility()
                     }
                 )
                 sessionHistoryAdapter = adapter
                 historyList.adapter = adapter
+                historyList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        if (isLoadingMore || !adapter.hasMore) return
+                        val lm = recyclerView.layoutManager as LinearLayoutManager
+                        if (lm.findLastVisibleItemPosition() >= lm.itemCount - 2) {
+                            isLoadingMore = true
+                            Thread {
+                                val page = SessionHistory.getHistoryPage(this@NeoTermActivity, currentHistoryOffset, 4)
+                                currentHistoryOffset += page.size
+                                runOnUiThread {
+                                    adapter.hasMore = page.size == 4
+                                    adapter.appendSessions(page)
+                                    isLoadingMore = false
+                                }
+                            }.apply { name = "SessionHistoryPager" }.start()
+                        }
+                    }
+                })
                 updatePlaceholderVisibility()
             }
         }.apply { name = "SessionHistoryLoader" }.start()
@@ -982,7 +1007,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         // Close the history placeholder after restore
         sessionHistoryAdapter?.let { adapter ->
             val freshData = SessionHistory.getHistory(this)
-            adapter.updateData(freshData)
+            adapter.updateData(freshData.sessions)
         }
     }
 
@@ -1331,11 +1356,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 emptyContainer.visibility = View.VISIBLE
                 historyList.visibility = View.GONE
             } else {
-                val freshData = SessionHistory.getHistory(this@NeoTermActivity)
-                val hasLogs = freshData.sessions.isNotEmpty()
+                val count = SessionHistory.getHistoryCount(this@NeoTermActivity)
+                val hasLogs = count > 0
 
-                sessionHistoryAdapter?.updateData(freshData)
-                toolbar.title = if (hasLogs) "(${freshData.sessions.size}) Logs" else "Terminal"
+                toolbar.title = if (hasLogs) "($count) Logs" else "Terminal"
                 toolbar.menu?.findItem(R.id.menu_item_clear_logs)?.isVisible = hasLogs
 
                 if (hasLogs) {

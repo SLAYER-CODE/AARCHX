@@ -8,16 +8,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         layout="@layout/app_bar_main"/>
-    <com.google.android.material.navigation.NavigationView
-        android:theme="@style/AppTheme"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/drawer_recycler"
         android:layout_gravity="start"
-        android:id="@+id/nav_view"
         android:background="#000000"
         android:fitsSystemWindows="true"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        app:headerLayout="@layout/nav_header_main"
-        app:itemBackground="@color/blackfull"
-        app:itemIconTint="@color/colorAccent"
-        app:menu="@menu/activity_main_drawer"/>
+        android:clipToPadding="false" />
 </androidx.drawerlayout.widget.DrawerLayout>

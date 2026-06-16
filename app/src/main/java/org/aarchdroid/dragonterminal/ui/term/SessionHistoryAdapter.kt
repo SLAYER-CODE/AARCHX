@@ -15,14 +15,14 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import org.aarchdroid.R
-import org.aarchdroid.dragonterminal.data.SessionHistoryData
 import org.aarchdroid.dragonterminal.data.SessionRecord
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class SessionHistoryAdapter(
-    private var data: SessionHistoryData,
+    sessions: List<SessionRecord> = emptyList(),
+    var hasMore: Boolean = false,
     private val onRestoreSession: (SessionRecord) -> Unit,
     private val onDeleteSession: (SessionRecord) -> Unit = {}
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -45,16 +45,48 @@ class SessionHistoryAdapter(
         val line: String = "",
         val lineColor: Int = 0xFF888888.toInt(),
         val lines: List<LineInfo> = emptyList(),
-        val iconResId: Int = 0
+        val iconResId: Int = 0,
+        val dayKey: String = ""
     )
 
     private val flatItems = mutableListOf<FlatItem>()
 
-    init { rebuild() }
+    init { rebuild(sessions) }
 
-    fun updateData(newData: SessionHistoryData) {
-        data = newData
-        rebuild()
+    fun updateData(sessions: List<SessionRecord>) {
+        rebuild(sessions)
+    }
+
+    fun appendSessions(newSessions: List<SessionRecord>) {
+        if (newSessions.isEmpty()) return
+        val sdfDay = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val dayGroups = mutableMapOf<String, MutableList<SessionRecord>>()
+        for (session in newSessions) {
+            val day = sdfDay.format(Date(session.created))
+            dayGroups.getOrPut(day) { mutableListOf() }.add(session)
+        }
+        val sortedDays = dayGroups.keys.sortedDescending()
+        val now = System.currentTimeMillis()
+        val insertStart = flatItems.size
+
+        for (day in sortedDays) {
+            // Check if we already have a header for this day
+            val hasHeader = flatItems.any { it.dayKey == day }
+            if (!hasHeader) {
+                val dateFmt = SimpleDateFormat("MMM dd, yyyy", Locale.US)
+                val todayStr = sdfDay.format(Date())
+                val isToday = day == todayStr
+                val headerBg = if (isToday) 0xFF005500.toInt() else 0xFF550000.toInt()
+                val headerText = dateFmt.format(sdfDay.parse(day)!!)
+                flatItems.add(FlatItem(VIEW_TYPE_DATE_HEADER, line = headerText, lineColor = headerBg, dayKey = day))
+            }
+            for (session in dayGroups[day]!!) {
+                val item = buildSessionCard(session, now)
+                flatItems.add(item)
+            }
+        }
+
+        notifyItemRangeInserted(insertStart, flatItems.size - insertStart)
     }
 
     private fun resolveIconId(iconResId: Int, launchSource: String): Int {
@@ -143,133 +175,127 @@ class SessionHistoryAdapter(
         }
     }
 
-    fun rebuild() {
+    private fun buildSessionCard(session: SessionRecord, now: Long): FlatItem {
+        val timeFmt = SimpleDateFormat("h:mm a", Locale.US)
+        val visibleTerms = session.terminals.filter { it.commands.isNotEmpty() }
+        val elapsed = now - session.created
+        val statusLabel: String = when {
+            elapsed < 600000 -> "Ahora"
+            elapsed < 7200000 -> "Reciente"
+            else -> "Antiguo"
+        }
+        val sessionColor = when (statusLabel) {
+            "Ahora" -> 0xFF00FF00.toInt()
+            "Reciente" -> 0xFFFF8800.toInt()
+            else -> 0xFFFF4444.toInt()
+        }
+        val timeStr = timeFmt.format(Date(session.created))
+        val sessionIconResId = resolveIconId(visibleTerms.first().iconResId, visibleTerms.first().launchSource)
+        val lines = mutableListOf<LineInfo>()
+        val defaultColor = 0xFF888888.toInt()
+        val hdrSegments = mutableListOf<Pair<String, Int>>()
+        hdrSegments.add(" \u250C[" to defaultColor)
+        if (statusLabel.isNotEmpty()) {
+            hdrSegments.add(statusLabel to sessionColor)
+            hdrSegments.add("] " to defaultColor)
+        }
+        hdrSegments.add(timeStr to defaultColor)
+        val hdrText = hdrSegments.joinToString("") { it.first }
+        lines.add(LineInfo(hdrText, 0, segments = hdrSegments))
+        for (tIdx in visibleTerms.indices) {
+            buildTerminalLines(visibleTerms[tIdx], tIdx == visibleTerms.lastIndex, lines)
+        }
+        lines.add(LineInfo("   Borrar", 0xFFCC4444.toInt()))
+        lines.add(LineInfo("   Lanzar", 0xFF00FF00.toInt()))
+        return FlatItem(VIEW_TYPE_SESSION_CARD, session = session, lines = lines, iconResId = sessionIconResId)
+    }
+
+    private fun buildCrashGroupCard(sessions: List<SessionRecord>, now: Long): FlatItem {
+        val timeFmt = SimpleDateFormat("h:mm a", Locale.US)
+        val allTerms = sessions.flatMap { it.terminals.filter { t -> t.commands.isNotEmpty() } }
+        val reason = sessions.firstOrNull()?.crashReason ?: "unknown"
+        val sessionIconResId = resolveIconId(
+            allTerms.firstOrNull()?.iconResId ?: 0, allTerms.firstOrNull()?.launchSource ?: ""
+        )
+        val lines = mutableListOf<LineInfo>()
+        val crashElapsed = now - sessions.minOf { it.created }
+        val crashStatusLabel: String = when {
+            crashElapsed < 600000 -> "Ahora"
+            crashElapsed < 7200000 -> "Reciente"
+            else -> "Antiguo"
+        }
+        val crashStatusColor = when (crashStatusLabel) {
+            "Ahora" -> 0xFF00FF00.toInt()
+            "Reciente" -> 0xFFFF8800.toInt()
+            else -> 0xFFFF4444.toInt()
+        }
+        val firstTime = timeFmt.format(Date(sessions.minOf { it.created }))
+        val crashSegments = listOf(
+            " \u250C[Crash]" to 0xFFFF0044.toInt(),
+            " [$firstTime]" to 0xFFFF8800.toInt(),
+            " $crashStatusLabel" to crashStatusColor
+        )
+        val crashHdrText = crashSegments.joinToString("") { it.first }
+        lines.add(LineInfo(crashHdrText, 0, segments = crashSegments))
+        lines.add(LineInfo("\u2502  \u2514\u2500 $reason", 0xFFFF0044.toInt()))
+        for (tIdx in allTerms.indices) {
+            buildTerminalLines(allTerms[tIdx], tIdx == allTerms.lastIndex, lines)
+        }
+        lines.add(LineInfo("   Borrar", 0xFFCC4444.toInt()))
+        lines.add(LineInfo("   Lanzar", 0xFF00FF00.toInt()))
+        val synthSession = SessionRecord(
+            id = "crash_${reason.hashCode()}_${System.currentTimeMillis()}",
+            created = sessions.minOf { it.created },
+            terminals = allTerms.toMutableList()
+        )
+        return FlatItem(VIEW_TYPE_SESSION_CARD, session = synthSession, lines = lines, iconResId = sessionIconResId)
+    }
+
+    fun rebuild(sessions: List<SessionRecord>) {
         flatItems.clear()
         val dateFmt = SimpleDateFormat("MMM dd, yyyy", Locale.US)
-        val timeFmt = SimpleDateFormat("h:mm a", Locale.US)
+        val sdfDay = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val todayStr = sdfDay.format(Date())
         val now = System.currentTimeMillis()
-        val nowDate = Date()
 
-        val headerStr = "------ [${dateFmt.format(nowDate)}] [${timeFmt.format(nowDate)}] -------"
-        flatItems.add(FlatItem(VIEW_TYPE_DATE_HEADER, line = headerStr, lineColor = 0xFFAAFF00.toInt()))
-
-        // Split normal vs crash sessions, group crash by reason
-        val normalSessions = mutableListOf<SessionRecord>()
-        val crashByReason = mutableMapOf<String, MutableList<SessionRecord>>()
-
-        for (session in data.sessions) {
-            if (session.closedNormally == false || session.closedNormally == null) {
-                val key = session.crashReason ?: "unknown"
-                crashByReason.getOrPut(key) { mutableListOf() }.add(session)
-            } else {
-                normalSessions.add(session)
-            }
+        val dayGroups = mutableMapOf<String, MutableList<SessionRecord>>()
+        for (session in sessions) {
+            val day = sdfDay.format(Date(session.created))
+            dayGroups.getOrPut(day) { mutableListOf() }.add(session)
         }
+        val sortedDays = dayGroups.keys.sortedDescending()
 
-        // Render normal sessions — each its own CardView with own Lanzar
-        for (session in normalSessions) {
-            val visibleTerms = session.terminals.filter { it.commands.isNotEmpty() }
-            if (visibleTerms.isEmpty()) continue
+        for (day in sortedDays) {
+            val daySessions = dayGroups[day]!!
+            val isToday = day == todayStr
+            val headerBg = if (isToday) 0xFF005500.toInt() else 0xFF550000.toInt()
+            val headerText = dateFmt.format(sdfDay.parse(day)!!)
+            flatItems.add(FlatItem(VIEW_TYPE_DATE_HEADER, line = headerText, lineColor = headerBg, dayKey = day))
 
-            val elapsed = now - session.created
-            val statusLabel: String = when {
-                elapsed < 600000 -> "Ahora"
-                elapsed < 7200000 -> "Reciente"
-                else -> "Antiguo"
-            }
-            val sessionColor = when (statusLabel) {
-                "Ahora" -> 0xFF00FF00.toInt()
-                "Reciente" -> 0xFFFF8800.toInt()
-                else -> 0xFFFF4444.toInt()
-            }
-            val timeStr = timeFmt.format(Date(session.created))
-            val sessionIconResId = resolveIconId(visibleTerms.first().iconResId, visibleTerms.first().launchSource)
-
-            val lines = mutableListOf<LineInfo>()
-            val defaultColor = 0xFF888888.toInt()
-            val hdrSegments = mutableListOf<Pair<String, Int>>()
-            hdrSegments.add(" \u250C[" to defaultColor)
-            if (statusLabel.isNotEmpty()) {
-                hdrSegments.add(statusLabel to sessionColor)
-                hdrSegments.add("] " to defaultColor)
-            }
-            hdrSegments.add(timeStr to defaultColor)
-            val hdrText = hdrSegments.joinToString("") { it.first }
-            lines.add(LineInfo(hdrText, 0, segments = hdrSegments))
-
-            for (tIdx in visibleTerms.indices) {
-                buildTerminalLines(visibleTerms[tIdx], tIdx == visibleTerms.lastIndex, lines)
+            val normalSessions = mutableListOf<SessionRecord>()
+            val crashByReason = mutableMapOf<String, MutableList<SessionRecord>>()
+            for (session in daySessions) {
+                if (session.closedNormally == false || session.closedNormally == null) {
+                    val key = session.crashReason ?: "unknown"
+                    crashByReason.getOrPut(key) { mutableListOf() }.add(session)
+                } else {
+                    normalSessions.add(session)
+                }
             }
 
-            lines.add(LineInfo("   Borrar", 0xFFCC4444.toInt()))
-            lines.add(LineInfo("   Lanzar", 0xFF00FF00.toInt()))
-
-            if (flatItems.size > 1) {
-                flatItems.add(FlatItem(VIEW_TYPE_SPACER))
-            }
-            flatItems.add(FlatItem(
-                VIEW_TYPE_SESSION_CARD, session = session,
-                lines = lines, iconResId = sessionIconResId
-            ))
-        }
-
-        // Render each crash group — one CardView per reason, one Lanzar per group
-        for ((reason, sessions) in crashByReason) {
-            val allTerms = sessions.flatMap { it.terminals.filter { t -> t.commands.isNotEmpty() } }
-            if (allTerms.isEmpty()) continue
-
-            val sessionIconResId = resolveIconId(
-                allTerms.firstOrNull()?.iconResId ?: 0,
-                allTerms.firstOrNull()?.launchSource ?: ""
-            )
-
-            val lines = mutableListOf<LineInfo>()
-
-            // Crash header with status
-            val crashElapsed = now - sessions.minOf { it.created }
-            val crashStatusLabel: String = when {
-                crashElapsed < 600000 -> "Ahora"
-                crashElapsed < 7200000 -> "Reciente"
-                else -> "Antiguo"
-            }
-            val crashStatusColor = when (crashStatusLabel) {
-                "Ahora" -> 0xFF00FF00.toInt()
-                "Reciente" -> 0xFFFF8800.toInt()
-                else -> 0xFFFF4444.toInt()
-            }
-            val firstTime = timeFmt.format(Date(sessions.minOf { it.created }))
-            val crashSegments = listOf(
-                " \u250C[Crash]" to 0xFFFF0044.toInt(),
-                " [$firstTime]" to 0xFFFF8800.toInt(),
-                " $crashStatusLabel" to crashStatusColor
-            )
-            val crashHdrText = crashSegments.joinToString("") { it.first }
-            lines.add(LineInfo(crashHdrText, 0, segments = crashSegments))
-            lines.add(LineInfo("\u2502  \u2514\u2500 $reason", 0xFFFF0044.toInt()))
-
-            // All terminals from all sessions in this crash group
-            for (tIdx in allTerms.indices) {
-                buildTerminalLines(allTerms[tIdx], tIdx == allTerms.lastIndex, lines)
+            for (session in normalSessions) {
+                val visibleTerms = session.terminals.filter { it.commands.isNotEmpty() }
+                if (visibleTerms.isEmpty()) continue
+                if (flatItems.size > 1) flatItems.add(FlatItem(VIEW_TYPE_SPACER))
+                flatItems.add(buildSessionCard(session, now))
             }
 
-            // One Lanzar button for the whole group
-            lines.add(LineInfo("   Borrar", 0xFFCC4444.toInt()))
-            lines.add(LineInfo("   Lanzar", 0xFF00FF00.toInt()))
-
-            // Synthetic SessionRecord with all terminals for restore
-            val synthSession = SessionRecord(
-                id = "crash_${reason.hashCode()}_${System.currentTimeMillis()}",
-                created = sessions.minOf { it.created },
-                terminals = allTerms.toMutableList()
-            )
-
-            if (flatItems.size > 1) {
-                flatItems.add(FlatItem(VIEW_TYPE_SPACER))
+            for ((_, crashSessions) in crashByReason) {
+                val allTerms = crashSessions.flatMap { it.terminals.filter { t -> t.commands.isNotEmpty() } }
+                if (allTerms.isEmpty()) continue
+                if (flatItems.size > 1) flatItems.add(FlatItem(VIEW_TYPE_SPACER))
+                flatItems.add(buildCrashGroupCard(crashSessions, now))
             }
-            flatItems.add(FlatItem(
-                VIEW_TYPE_SESSION_CARD, session = synthSession,
-                lines = lines, iconResId = sessionIconResId
-            ))
         }
 
         notifyDataSetChanged()
@@ -310,7 +336,8 @@ class SessionHistoryAdapter(
         when (holder) {
             is DateHeaderHolder -> {
                 holder.text.text = item.line
-                holder.text.setTextColor(item.lineColor)
+                holder.text.setBackgroundColor(item.lineColor)
+                holder.text.setTextColor(android.graphics.Color.WHITE)
             }
             is SessionCardHolder -> bindSessionCard(holder, item)
             is SpacerHolder -> {}

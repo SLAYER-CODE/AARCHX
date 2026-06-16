@@ -330,6 +330,13 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                             }
                         }
                         segmentInfo.add("r${row}c${colStart}[$segCells]")
+                        if (colStart == 0) {
+                            while (col < buffer.gridWidth) {
+                                buffer.setCell(row, col, NeovimCell(char = ' '))
+                                totalCells++
+                                col++
+                            }
+                        }
                     } else if (arg.size >= 3) {
                         val row = arg[1].asIntegerValue().toInt()
                         val text = arg[2].asStringValue().asString()
