@@ -15,7 +15,8 @@ class TermSessionCallback : TerminalSession.SessionChangedCallback {
     var bellController: BellController? = null
 
     override fun onTextChanged(changedSession: TerminalSession?) {
-        termSessionData?.termView?.onScreenUpdated()
+        val view = termSessionData?.termView ?: return
+        view.post { view.onScreenUpdated() }
     }
 
     override fun onTitleChanged(changedSession: TerminalSession?) {
@@ -50,7 +51,7 @@ class TermSessionCallback : TerminalSession.SessionChangedCallback {
     override fun onColorsChanged(session: TerminalSession?) {
         val termView = termSessionData?.termView
         if (session != null && termView != null) {
-            termView.onScreenUpdated()
+            termView.post { termView.onScreenUpdated() }
         }
     }
 }

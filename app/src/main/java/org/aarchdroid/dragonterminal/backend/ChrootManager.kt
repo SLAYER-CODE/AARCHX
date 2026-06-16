@@ -1,5 +1,6 @@
 package org.aarchdroid.dragonterminal.backend
 
+import android.os.SystemClock
 import java.io.File
 import java.io.IOException
 
@@ -7,6 +8,10 @@ object ChrootManager {
 
     private const val CHROOT_BASE = "/data/local/aarchdroid"
     private const val CHROOT_PROC = "$CHROOT_BASE/proc"
+    private const val MOUNT_CACHE_TTL_MS = 500L
+
+    private var lastMountCheckTime = 0L
+    private var lastMountResult = false
 
     private val SETUP_COMMANDS: String by lazy {
         buildString {
@@ -23,12 +28,17 @@ object ChrootManager {
     }
 
     fun isMounted(): Boolean {
-        return try {
-            val mounts = File("/proc/mounts").readText()
-            CHROOT_PROC in mounts
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastMountCheckTime < MOUNT_CACHE_TTL_MS) {
+            return lastMountResult
+        }
+        lastMountCheckTime = now
+        lastMountResult = try {
+            CHROOT_PROC in File("/proc/mounts").readText()
         } catch (e: Exception) {
             false
         }
+        return lastMountResult
     }
 
     fun ensureMounted(): Boolean {

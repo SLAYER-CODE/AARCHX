@@ -48,4 +48,5 @@
     </item>
 
     <item android:id="@+id/menu_item_recovery" android:title="Recovery" app:showAsAction="never" />
+    <item android:id="@+id/menu_item_packages" android:title="Gestor" app:showAsAction="never" />
 </menu>

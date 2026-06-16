@@ -51,6 +51,7 @@ import org.aarchdroid.dragonterminal.floatui.FloatService
 import org.aarchdroid.dragonterminal.services.NeoTermService
 import org.aarchdroid.dragonterminal.ui.settings.SettingActivity
 import org.aarchdroid.dragonterminal.ui.term.tab.NeoTab
+import org.aarchdroid.dragonterminal.ui.pm.PackageManagerActivity
 import org.aarchdroid.dragonterminal.ui.term.tab.NeoTabDecorator
 import org.aarchdroid.dragonterminal.ui.term.tab.TermTab
 import org.aarchdroid.dragonterminal.ui.term.tab.XSessionTab
@@ -299,6 +300,11 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 SessionHistory.clearAll(this)
                 sessionHistoryAdapter?.updateData(SessionHistory.ensure(this))
                 updatePlaceholderVisibility()
+                true
+            }
+
+            R.id.menu_item_packages -> {
+                startActivity(Intent(this, PackageManagerActivity::class.java))
                 true
             }
 

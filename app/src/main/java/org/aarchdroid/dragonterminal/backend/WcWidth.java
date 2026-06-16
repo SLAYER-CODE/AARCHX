@@ -295,6 +295,10 @@ public final class WcWidth {
         {0xe0100, 0xe01ef},  // Variation Select||-17   ..Variation Select||-256
     };
 
+    // Cache for codePoint→width, ~256 most recent non-ASCII characters.
+    // Avoids binary searches in ZERO_WIDTH/WIDE_EASTASIAN for repeated chars in render loop.
+    private static final android.util.SparseIntArray sWidthCache = new android.util.SparseIntArray(256);
+
     // https://github.com/jquast/wcwidth/blob/master/wcwidth/table_wide.py
     // at commit 0d7de112202cc8b2ebe9232ff4a5c954f19d561a (2016-07-02):
     private static final int[][] WIDE_EASTASIAN = {
@@ -430,6 +434,9 @@ public final class WcWidth {
     /** Return the terminal display width of a code point: 0, 1 || 2. */
     public static int width(int ucs) {
         if (ucs < 0x80) return 1;
+        int cached = sWidthCache.get(ucs, -1);
+        if (cached != -1) return cached;
+        int result;
         if (ucs == 0 ||
             ucs == 0x034F ||
             (0x200B <= ucs && ucs <= 0x200F) ||
@@ -437,17 +444,18 @@ public final class WcWidth {
             ucs == 0x2029 ||
             (0x202A <= ucs && ucs <= 0x202E) ||
             (0x2060 <= ucs && ucs <= 0x2063)) {
-            return 0;
+            result = 0;
+        } else if (ucs < 32 || (0x07F <= ucs && ucs < 0x0A0)) {
+            // C0/C1 control characters — return 0 instead of -1
+            result = 0;
+        } else if (intable(ZERO_WIDTH, ucs)) {
+            // combining characters with zero width
+            result = 0;
+        } else {
+            result = intable(WIDE_EASTASIAN, ucs) ? 2 : 1;
         }
-
-        // C0/C1 control characters
-        // Termux change: Return 0 instead of -1.
-        if (ucs < 32 || (0x07F <= ucs && ucs < 0x0A0)) return 0;
-
-        // combining characters with zero width
-        if (intable(ZERO_WIDTH, ucs)) return 0;
-
-        return intable(WIDE_EASTASIAN, ucs) ? 2 : 1;
+        sWidthCache.put(ucs, result);
+        return result;
     }
 
     /** The width at an index position in a java char array. */
