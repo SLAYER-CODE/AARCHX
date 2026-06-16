@@ -78,6 +78,27 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         const val KEY_NO_RESTORE = "no_restore"
         const val REQUEST_SETUP = 22313
         const val ACTION_ANCHOR = "aarchdroid.terminal.action.anchor"
+
+        private data class ToolItem(val name: String, val icon: Int, val activityClass: String)
+        private val TOOLS = listOf(
+            ToolItem("Information Gathering", R.drawable.information_gathering, "org.aarchdroid.Dco_Information_Gathering"),
+            ToolItem("Scanning", R.drawable.scanning, "org.aarchdroid.Dco_Scanning"),
+            ToolItem("Packet Crafting", R.drawable.packet_crafting, "org.aarchdroid.Dco_Packet_Crafting"),
+            ToolItem("Network Hacking", R.drawable.networkhacking, "org.aarchdroid.Dco_network_hacking"),
+            ToolItem("WebSite Hacking", R.drawable.websitehacking, "org.aarchdroid.Dco_website_hacking"),
+            ToolItem("Password Hacking", R.drawable.passwordhacking, "org.aarchdroid.Dco_Password_Hacking"),
+            ToolItem("Wireless Hacking", R.drawable.wirelesshacking, "org.aarchdroid.Dco_Wireless_Hacking"),
+            ToolItem("Exploitation", R.drawable.exploit, "org.aarchdroid.Dco_exploitation"),
+            ToolItem("Stress Testing", R.drawable.stress_testing, "org.aarchdroid.Dco_stress_testing"),
+            ToolItem("Phishing", R.drawable.phishing, "org.aarchdroid.Dco_phishing"),
+            ToolItem("VoIP/3G/4G", R.drawable.voiphopper, "org.aarchdroid.Dco_voip_3g_4g"),
+            ToolItem("ICS/SCADA/IIoT/IoT", R.drawable.ics, "org.aarchdroid.Dco_ics_scada_iot"),
+            ToolItem("Mainframes", R.drawable.mainframe, "org.aarchdroid.Dco_Mainframe"),
+            ToolItem("Bug Bounty", R.drawable.bugbounty, "org.aarchdroid.Dco_bug_bounty"),
+            ToolItem("C2/RAT", R.drawable.c2, "org.aarchdroid.Dco_c2_rat"),
+            ToolItem("MacOS/iPhone", R.drawable.mobilenethacking, "org.aarchdroid.Dco_macos_iphone")
+        )
+        private val activityClassCache = HashMap<String, Class<*>>()
     }
 
     private lateinit var errorDialog: Dialog
@@ -313,41 +334,22 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     }
 
     private fun showToolsPopup(anchor: View) {
-        data class ToolItem(val name: String, val icon: Int, val activityClass: String)
-
-        val tools = listOf(
-            ToolItem("Information Gathering", R.drawable.information_gathering, "org.aarchdroid.Dco_Information_Gathering"),
-            ToolItem("Scanning", R.drawable.scanning, "org.aarchdroid.Dco_Scanning"),
-            ToolItem("Packet Crafting", R.drawable.packet_crafting, "org.aarchdroid.Dco_Packet_Crafting"),
-            ToolItem("Network Hacking", R.drawable.networkhacking, "org.aarchdroid.Dco_network_hacking"),
-            ToolItem("WebSite Hacking", R.drawable.websitehacking, "org.aarchdroid.Dco_website_hacking"),
-            ToolItem("Password Hacking", R.drawable.passwordhacking, "org.aarchdroid.Dco_Password_Hacking"),
-            ToolItem("Wireless Hacking", R.drawable.wirelesshacking, "org.aarchdroid.Dco_Wireless_Hacking"),
-            ToolItem("Exploitation", R.drawable.exploit, "org.aarchdroid.Dco_exploitation"),
-            ToolItem("Stress Testing", R.drawable.stress_testing, "org.aarchdroid.Dco_stress_testing"),
-            ToolItem("Phishing", R.drawable.phishing, "org.aarchdroid.Dco_phishing"),
-            ToolItem("VoIP/3G/4G", R.drawable.voiphopper, "org.aarchdroid.Dco_voip_3g_4g"),
-            ToolItem("ICS/SCADA/IIoT/IoT", R.drawable.ics, "org.aarchdroid.Dco_ics_scada_iot"),
-            ToolItem("Mainframes", R.drawable.mainframe, "org.aarchdroid.Dco_Mainframe"),
-            ToolItem("Bug Bounty", R.drawable.bugbounty, "org.aarchdroid.Dco_bug_bounty"),
-            ToolItem("C2/RAT", R.drawable.c2, "org.aarchdroid.Dco_c2_rat"),
-            ToolItem("MacOS/iPhone", R.drawable.mobilenethacking, "org.aarchdroid.Dco_macos_iphone")
-        )
-
         val wrapped = androidx.appcompat.view.ContextThemeWrapper(this, R.style.Theme_CompactGreenPopup)
         val popup = PopupMenu(wrapped, anchor, Gravity.CENTER_HORIZONTAL, 0, R.style.Widget_GreenBorder_PopupMenu)
         val menu = popup.menu
 
-        tools.forEachIndexed { index, tool ->
+        TOOLS.forEachIndexed { index: Int, tool ->
             menu.add(0, index, 0, tool.name).setIcon(tool.icon)
         }
 
         popup.setForceShowIcon(true)
         popup.setOnMenuItemClickListener { item ->
+            val tool = TOOLS[item.itemId]
             try {
-                startActivity(Intent(this, Class.forName(tools[item.itemId].activityClass)))
+                val clazz = activityClassCache.getOrPut(tool.activityClass) { Class.forName(tool.activityClass) }
+                startActivity(Intent(this, clazz))
             } catch (e: Exception) {
-                Log.e("AArchDroid", "showToolsPopup: cannot start " + tools[item.itemId].name + " — " + e.message)
+                Log.e("AArchDroid", "showToolsPopup: cannot start " + tool.name + " — " + e.message)
             }
             true
         }
