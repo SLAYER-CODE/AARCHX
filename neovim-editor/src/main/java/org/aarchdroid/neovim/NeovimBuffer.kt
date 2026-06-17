@@ -3,7 +3,7 @@ package org.aarchdroid.neovim
 data class NeovimCell(
     val char: Char = ' ',
     val foreground: Int = NeovimColor.WHITE,
-    val background: Int = 0xFF1E1E1E.toInt(),
+    val background: Int = 0xFF000000.toInt(),
     val bold: Boolean = false,
     val italic: Boolean = false,
     val underline: Boolean = false,
@@ -79,6 +79,7 @@ class NeovimBuffer {
     var mode = NeovimMode()
     var windows: MutableMap<Int, NeovimWindow> = mutableMapOf()
     var currentGrid: Int = 1
+    var defaultCell: NeovimCell = NeovimCell()
 
     private val lock = Any()
     private val defaultColors = mutableMapOf<Int, NeovimCell>()
@@ -93,7 +94,7 @@ class NeovimBuffer {
             gridHeight = height
             cells.clear()
             for (r in 0 until height) {
-                val row = MutableList(width) { NeovimCell() }
+                val row = MutableList(width) { defaultCell }
                 cells.add(row)
             }
         }
@@ -120,7 +121,7 @@ class NeovimBuffer {
         }
     }
 
-    fun clear(foreground: Int = NeovimColor.WHITE, background: Int = 0xFF1E1E1E.toInt()) {
+    fun clear(foreground: Int = NeovimColor.WHITE, background: Int = 0xFF000000.toInt()) {
         synchronized(lock) {
             for (r in 0 until cells.size.coerceAtMost(gridHeight)) {
                 val row = cells[r]
@@ -147,7 +148,7 @@ class NeovimBuffer {
                 }
                 for (r in safeTop until (safeTop + count).coerceAtMost(safeBottom)) {
                     for (c in safeLeft..safeRight) {
-                        cells[r][c] = NeovimCell()
+                        cells[r][c] = defaultCell
                     }
                 }
             } else if (rows < 0) {
@@ -160,7 +161,7 @@ class NeovimBuffer {
                 }
                 for (r in (safeBottom - absCount).coerceAtLeast(safeTop) until safeBottom) {
                     for (c in safeLeft..safeRight) {
-                        cells[r][c] = NeovimCell()
+                        cells[r][c] = defaultCell
                     }
                 }
             }
@@ -172,7 +173,7 @@ class NeovimBuffer {
                         cells[r][c] = cells[r][c - count]
                     }
                     for (c in safeLeft until (safeLeft + count).coerceAtMost(safeRight)) {
-                        cells[r][c] = NeovimCell()
+                        cells[r][c] = defaultCell
                     }
                 }
             } else if (cols < 0) {
@@ -183,7 +184,7 @@ class NeovimBuffer {
                         cells[r][c] = cells[r][c + absCount]
                     }
                     for (c in (safeRight - absCount).coerceAtLeast(safeLeft)..safeRight) {
-                        cells[r][c] = NeovimCell()
+                        cells[r][c] = defaultCell
                     }
                 }
             }
@@ -204,7 +205,7 @@ class NeovimBuffer {
                     if (r < cells.size && c < cells[r].size) {
                         row.add(cells[r][c])
                     } else {
-                        row.add(NeovimCell())
+                        row.add(defaultCell)
                     }
                 }
                 snap.cells.add(row)

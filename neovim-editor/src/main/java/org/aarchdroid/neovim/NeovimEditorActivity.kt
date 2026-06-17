@@ -51,7 +51,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     private var prevCursorCol = 0
     private val hlAttrs = mutableMapOf<Int, HighlightAttrs>()
     private var defaultFg: Int = NeovimColor.WHITE
-    private var defaultBg: Int = 0xFF1E1E1E.toInt()
+    private var defaultBg: Int = 0xFF000000.toInt()
+    private val rowLineMaxCol = mutableMapOf<Int, Int>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +60,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
 
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(false)
         supportActionBar?.title = "Neovim"
 
         posView = TextView(this).apply {
@@ -77,6 +78,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         toolbar.addView(posView)
 
         editorView = findViewById(R.id.editor_view)
+        editorView.setDefaultColors(defaultFg, defaultBg)
+        buffer.defaultCell = NeovimCell(foreground = defaultFg, background = defaultBg)
 
         findViewById<View>(R.id.key_esc).setOnClickListener {
             sendInput("<Esc>")
@@ -241,6 +244,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     }
 
     override fun onRedraw(updates: List<NeovimClient.RedrawEvent>) {
+        rowLineMaxCol.clear()
         val names = updates.map { "${it.name}(${it.args.size})" }
         Log.d(TAG, "onRedraw events=${updates.size}: $names")
         try {
@@ -251,12 +255,13 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             Log.e(TAG, "Redraw error", e)
             return
         }
-        // Detectar BS/delete rápido: cursor movido a la izquierda en misma fila
-        // + hubo grid_line en esa fila → limpiar celdas intermedias que nvim
-        // no envió por consolidación de redibujos
+        // Detectar BS/delete rápido: cursor movido a la izquierda/misma fila o hacia arriba
+        // (texto que deja de wrap) → limpiar celdas que nvim no reenvió
         val curRow = buffer.cursor.row
         val curCol = buffer.cursor.col
-        if (curRow == prevCursorRow && curCol < prevCursorCol) {
+        val movedLeft = curRow == prevCursorRow && curCol < prevCursorCol
+        val movedUp = curRow < prevCursorRow
+        if (movedLeft || movedUp) {
             var hasGridLine = false
             for (update in updates) {
                 if (update.name == "grid_line") {
@@ -270,14 +275,41 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 if (hasGridLine) break
             }
             if (hasGridLine) {
-                val clearFrom = curCol
-                val clearTo = prevCursorCol - 1
-                Log.d(TAG, "BS remnants: row=$curRow cols=$clearFrom..$clearTo (prev=$prevCursorCol cur=$curCol)")
-                for (c in clearFrom..clearTo) {
-                    buffer.setCell(curRow, c, NeovimCell(char = ' '))
+                if (movedLeft) {
+                    val clearFrom = curCol
+                    val clearTo = prevCursorCol - 1
+                    Log.d(TAG, "BS remnants: row=$curRow cols=$clearFrom..$clearTo (prev=$prevCursorCol cur=$curCol)")
+                    for (c in clearFrom..clearTo) {
+                        buffer.setCell(curRow, c, NeovimCell(char = ' ', foreground = defaultFg, background = defaultBg))
+                    }
+                    // Clear trailing cells beyond what grid_line covered
+                    val maxCol = rowLineMaxCol[curRow] ?: clearTo + 1
+                    if (maxCol < buffer.gridWidth) {
+                        Log.d(TAG, "BS remnants: trailing clear row=$curRow from=$maxCol to=${buffer.gridWidth - 1}")
+                        for (c in maxCol until buffer.gridWidth) {
+                            buffer.setCell(curRow, c, NeovimCell(char = ' ', foreground = defaultFg, background = defaultBg))
+                        }
+                    }
+                }
+                if (movedUp) {
+                    // Texto dejó de wrap: limpiar filas intermedias entre cursor actual y anterior
+                    Log.d(TAG, "BS remnants: unwrap row=$curRow..$prevCursorRow (prevRow=$prevCursorRow curRow=$curRow)")
+                    // trailing clear en la fila del cursor también
+                    val cursorMaxCol = rowLineMaxCol[curRow] ?: 0
+                    if (cursorMaxCol < buffer.gridWidth) {
+                        for (c in cursorMaxCol until buffer.gridWidth) {
+                            buffer.setCell(curRow, c, NeovimCell(char = ' ', foreground = defaultFg, background = defaultBg))
+                        }
+                    }
+                    for (r in curRow + 1..prevCursorRow) {
+                        val maxCol = rowLineMaxCol[r] ?: 0
+                        for (c in maxCol until buffer.gridWidth) {
+                            buffer.setCell(r, c, NeovimCell(char = ' ', foreground = defaultFg, background = defaultBg))
+                        }
+                    }
                 }
             } else {
-                Log.d(TAG, "BS remnants: no gridLine for row=$curRow, skipping")
+                Log.d(TAG, "BS remnants: no gridLine for affected row, skipping")
             }
         } else {
             Log.d(TAG, "BS remnants: no left move (prev=$prevCursorRow,$prevCursorCol cur=$curRow,$curCol)")
@@ -341,7 +373,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 val text = cellVal.asStringValue().asString()
                                 for (ch in text) {
                                     if (col < buffer.gridWidth) {
-                                        buffer.setCell(row, col, NeovimCell(char = ch))
+                                        buffer.setCell(row, col, NeovimCell(char = ch, foreground = defaultFg, background = defaultBg))
                                         totalCells++
                                         segCells++
                                         chars.append(ch)
@@ -385,6 +417,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                         val display = chars.toString().replace(' ', '·')
                         val capped = if (display.length > 40) display.take(40) + "…" else display
                         segmentInfo.add("g${grid}r${row}c${colStart}[$segCells:\"$capped\"]")
+                        if (col > (rowLineMaxCol[row] ?: 0)) rowLineMaxCol[row] = col
                     } else if (arg.size >= 3) {
                         val grid = arg[0].asIntegerValue().toInt()
                         val row = arg[1].asIntegerValue().toInt()
@@ -394,10 +427,11 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                         segmentInfo.add("g${grid}r${row}text[${text.length}:\"$capped\"]")
                         for ((col, ch) in text.withIndex()) {
                             if (col < buffer.gridWidth) {
-                                buffer.setCell(row, col, NeovimCell(char = ch))
+                                buffer.setCell(row, col, NeovimCell(char = ch, foreground = defaultFg, background = defaultBg))
                                 totalCells++
                             }
                         }
+                        if (text.length > (rowLineMaxCol[row] ?: 0)) rowLineMaxCol[row] = text.length
                     }
                 }
                 Log.d(TAG, "grid_line: total=$totalCells segments=${segmentInfo.joinToString(" ")}")
@@ -419,15 +453,28 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
             }
             "grid_scroll" -> {
-                if (event.args.isNotEmpty() && event.args[0].size >= 6) {
+                var grid = -1; var top = -1; var bot = -1; var left = -1; var right = -1; var rows = 0; var cols = 0
+                if (event.args.size >= 6 && event.args[0].size == 1) {
+                    // Positional: [[grid], [top], [bot], [left], [right], [rows], [cols]?]
+                    grid = event.args[0][0].asIntegerValue().toInt()
+                    top = event.args[1][0].asIntegerValue().toInt()
+                    bot = event.args[2][0].asIntegerValue().toInt()
+                    left = event.args[3][0].asIntegerValue().toInt()
+                    right = event.args[4][0].asIntegerValue().toInt()
+                    rows = event.args[5][0].asIntegerValue().toInt()
+                    if (event.args.size > 6) cols = event.args[6][0].asIntegerValue().toInt()
+                } else if (event.args.isNotEmpty() && event.args[0].size >= 6) {
+                    // Array: [[grid, top, bot, left, right, rows, cols?]]
                     val a = event.args[0]
-                    val grid = a[0].asIntegerValue().toInt()
-                    val top = a[1].asIntegerValue().toInt()
-                    val bot = a[2].asIntegerValue().toInt()
-                    val left = a[3].asIntegerValue().toInt()
-                    val right = a[4].asIntegerValue().toInt()
-                    val rows = a[5].asIntegerValue().toInt()
-                    val cols = if (a.size > 6) a[6].asIntegerValue().toInt() else 0
+                    grid = a[0].asIntegerValue().toInt()
+                    top = a[1].asIntegerValue().toInt()
+                    bot = a[2].asIntegerValue().toInt()
+                    left = a[3].asIntegerValue().toInt()
+                    right = a[4].asIntegerValue().toInt()
+                    rows = a[5].asIntegerValue().toInt()
+                    if (a.size > 6) cols = a[6].asIntegerValue().toInt()
+                }
+                if (top >= 0) {
                     buffer.scroll(top, bot, left, right, rows, cols)
                     Log.d(TAG, "grid_scroll: grid=$grid top=$top bot=$bot left=$left right=$right rows=$rows cols=$cols")
                 } else {
@@ -435,7 +482,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
             }
             "grid_clear" -> {
-                buffer.clear()
+                buffer.clear(defaultFg, defaultBg)
             }
             "flush" -> {
                 // Signal to render
@@ -513,6 +560,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                     val bg = event.args[0][1].asIntegerValue().toInt()
                     defaultFg = NeovimColor.from24Bit(fg)
                     defaultBg = NeovimColor.from24Bit(bg)
+                    buffer.defaultCell = NeovimCell(foreground = defaultFg, background = defaultBg)
+                    editorView.setDefaultColors(defaultFg, defaultBg)
                 }
             }
         }

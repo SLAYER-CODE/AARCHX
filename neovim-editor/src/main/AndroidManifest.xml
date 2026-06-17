@@ -5,8 +5,12 @@
         <activity
             android:name=".NeovimEditorActivity"
             android:exported="true"
-            android:icon="@drawable/ic_neovim"
+            android:icon="@mipmap/ic_neovim"
+            android:roundIcon="@mipmap/ic_neovim"
             android:label="Neovim"
+            android:launchMode="singleTask"
+            android:taskAffinity=".NeovimEditorActivity"
+            android:excludeFromRecents="false"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout"
             android:theme="@style/NeovimTheme"
             android:windowSoftInputMode="adjustResize|stateHidden">

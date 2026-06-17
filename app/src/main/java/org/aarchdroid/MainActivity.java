@@ -59,6 +59,7 @@ import org.aarchdroid.drawer.DrawerItem;
 import org.aarchdroid.drawer.DrawerSection;
 
 public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnItemClickListener {
+    private static final String TAG = "MainActivity";
     public static final int progressType = 0;
     private ProgressDialog progressDialog;
     private ProgressDialog unpackprogressDialog;
@@ -551,129 +552,76 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
                 processingTools.remove(nk);
                 return;
             }
-            createPendingMarker(nk);
-            boolean wrapperOk = createInstallWrapper(nk, installCmd);
-            if (wrapperOk) {
-                run_hack_cmd("sh /data/data/org.aarchdroid/files/install-wrappers/" + nk + ".sh");
-            } else {
-                run_hack_cmd(installCmd);
-            }
+            run_hack_cmd(buildInstallInline(nk, installCmd));
         } else {
             android.util.Log.d("MainActivity", "No install command for " + nk);
             processingTools.remove(nk);
         }
     }
 
-    private void createPendingMarker(String toolKey) {
-        try {
-            File dir = new File(getFilesDir(), "install-state");
-            dir.mkdirs();
-            new File(dir, toolKey + ".pending").createNewFile();
-        } catch (Exception e) {
-            android.util.Log.e("MainActivity", "Failed to create pending marker", e);
+    private String buildInstallInline(String toolKey, String installCmd) {
+        String appDir = "/data/data/" + getPackageName() + "/";
+        String stateDir = appDir + "files/install-state";
+        String dbPath = appDir + "databases/tools.db";
+
+        if (installCmd.startsWith("pacman ")) {
+            installCmd = installCmd.replaceFirst("^pacman ", "pacman --color always --disable-download-timeout ");
         }
-    }
 
-    private boolean createInstallWrapper(String toolKey, String installCmd) {
-        try {
-            File wrappersDir = new File(getFilesDir(), "install-wrappers");
-            wrappersDir.mkdirs();
-            File script = new File(wrappersDir, toolKey + ".sh");
+        String pidFile = stateDir + "/" + toolKey + ".pid";
+        String logFile = stateDir + "/" + toolKey + ".log";
+        String exitFile = stateDir + "/" + toolKey + ".exit";
 
-            String dbPath = "/data/data/org.aarchdroid/databases/tools.db";
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("#!/bin/sh\n");
-            sb.append("TOOLKEY='").append(toolKey).append("'\n");
-            sb.append("DB='").append(dbPath).append("'\n");
-            sb.append("STATE_DIR=/data/data/org.aarchdroid/files/install-state\n");
-            sb.append("PID_FILE=$STATE_DIR/$TOOLKEY.pid\n");
-            sb.append("INSTALL_LOG=$STATE_DIR/$TOOLKEY.log\n");
-            sb.append("\n");
-            sb.append("mkdir -p $STATE_DIR 2>/dev/null || true\n");
-            sb.append("echo \"$$\" > $PID_FILE\n");
-            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG $INSTALL_LOG.exit' EXIT\n");
-            sb.append("rm -f $STATE_DIR/$TOOLKEY.pending\n");
-            sb.append("\n");
-            sb.append("retry_sqlite() {\n");
-            sb.append("  local n=0\n");
-            sb.append("  while [ $n -lt 10 ]; do\n");
-            sb.append("    sqlite3 \"$DB\" \"$1\" 2>/dev/null && return 0\n");
-            sb.append("    n=$((n+1))\n");
-            sb.append("    sleep 0.2 2>/dev/null || usleep 200000 2>/dev/null || :\n");
-            sb.append("  done\n");
-            sb.append("  sqlite3 \"$DB\" \"$1\"\n");
-            sb.append("}\n");
-            sb.append("\n");
-            sb.append("_run() {\n");
-            sb.append("  (\n");
-            sb.append("    $1\n");
-            sb.append("    echo $? > \"$INSTALL_LOG.exit\"\n");
-            sb.append("  ) 2>&1 | tee \"$INSTALL_LOG\"\n");
-            sb.append("  read EC < \"$INSTALL_LOG.exit\" 2>/dev/null || EC=1\n");
-            sb.append("  rm -f \"$INSTALL_LOG.exit\"\n");
-            sb.append("}\n");
-            String cmd = installCmd;
-            if (cmd.startsWith("pacman ")) {
-                cmd = cmd.replaceFirst("^pacman ", "pacman --color always --disable-download-timeout ");
-            }
-            sb.append("echo \"\"\n");
-            sb.append("echo -e \"\\033[1;34m[AArchDroid]\\033[0m \\033[1;33mInstalando\\033[0m: $TOOLKEY\"\n");
-            sb.append("echo \"\"\n");
-            sb.append("INSTALL_CMD='").append(installCmd.replace("'", "'\\''")).append("'\n");
-            sb.append("_run \"$INSTALL_CMD\"\n");
-            sb.append("EXIT_CODE=$EC\n");
-            sb.append("if [ $EXIT_CODE -ne 0 ] && echo \"$INSTALL_CMD\" | grep -qE '^pacman --color always '; then\n");
-            sb.append("  echo \"\"\n");
-            sb.append("  echo -e \"\\033[1;33m  -\\033[0m Sincronizando bases de datos...\"\n");
-            sb.append("  _run \"pacman --color always --disable-download-timeout -Sy\"\n");
-            sb.append("  if [ $EC -eq 0 ]; then\n");
-            sb.append("    echo \"\"\n");
-            sb.append("    echo -e \"\\033[1;33m  -\\033[0m Reintentando instalacion...\"\n");
-            sb.append("    _run \"$INSTALL_CMD\"\n");
-            sb.append("    EXIT_CODE=$EC\n");
-            sb.append("  else\n");
-            sb.append("    echo -e \"\\033[1;31m  -\\033[0m Error al sincronizar repositorios (verifica tu conexion)\"\n");
-            sb.append("  fi\n");
-            sb.append("fi\n");
-            sb.append("\n");
-            sb.append("echo \"\"\n");
-            sb.append("echo \"==========================================\"\n");
-            sb.append("if [ $EXIT_CODE -eq 0 ]; then\n");
-            sb.append("  echo -e \"\\033[1;32m  [AArchDroid] Instalacion completada: Exitoso\\033[0m\"\n");
-            sb.append("else\n");
-            sb.append("  echo -e \"\\033[1;31m  [AArchDroid] Instalacion completada: Fallido\\033[0m\"\n");
-            sb.append("fi\n");
-            sb.append("echo \"==========================================\"\n");
-            sb.append("\n");
-            sb.append("if [ $EXIT_CODE -eq 0 ]; then\n");
-            sb.append("    BINARY=$(command -v $TOOLKEY 2>/dev/null || echo \"\")\n");
-            sb.append("    if [ -z \"$BINARY\" ]; then\n");
-            sb.append("        for d in /usr/bin /bin /data/data/com.termux/files/usr/bin /data/data/org.aarchdroid/files/usr/bin; do\n");
-            sb.append("            [ -f \"$d/$TOOLKEY\" ] && BINARY=\"$d/$TOOLKEY\" && break\n");
-            sb.append("        done\n");
-            sb.append("    fi\n");
-            sb.append("    SIZE=0\n");
-            sb.append("    [ -n \"$BINARY\" ] && SIZE=$(stat -c%s \"$BINARY\" 2>/dev/null || echo 0)\n");
-            sb.append("    NOW=$(date +%s)\n");
-            sb.append("    retry_sqlite \"UPDATE tools SET status='installed', installPath='$BINARY', actualSizeBytes=$SIZE, installedAt=$NOW, errorLog=NULL WHERE toolKey='$TOOLKEY'\"\n");
-            sb.append("    CATEGORY=$(sqlite3 \"$DB\" \"SELECT category FROM tools WHERE toolKey='$TOOLKEY'\")\n");
-            sb.append("    retry_sqlite \"UPDATE categories SET installedTools=(SELECT COUNT(*) FROM tools WHERE category='$CATEGORY' AND status='installed'), installedSizeMb=(SELECT COALESCE(SUM(actualSizeBytes)/(1024*1024),0) FROM tools WHERE category='$CATEGORY' AND status='installed') WHERE name='$CATEGORY'\"\n");
-            sb.append("else\n");
-            sb.append("    ERROR=$(tail -5 $INSTALL_LOG 2>/dev/null | tr '\\n' ' ' | sed \"s/'/''/g\")\n");
-            sb.append("    retry_sqlite \"UPDATE tools SET status='failed', errorLog='$ERROR' WHERE toolKey='$TOOLKEY'\"\n");
-            sb.append("fi\n");
-            sb.append("rm -f $INSTALL_LOG\n");
-
-            FileOutputStream fos = new FileOutputStream(script);
-            fos.write(sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            fos.close();
-            script.setExecutable(true, false);
-            return true;
-        } catch (Exception e) {
-            android.util.Log.e("MainActivity", "Failed to create install wrapper", e);
-            return false;
+        StringBuilder sb = new StringBuilder();
+        sb.append("mkdir -p '").append(stateDir).append("' && ");
+        sb.append("echo $$ > '").append(pidFile).append("' && ");
+        sb.append("trap '");
+        sb.append("rm -f \"").append(pidFile).append("\" \"").append(logFile).append("\"; ");
+        sb.append("s=$(sqlite3 \"").append(dbPath).append("\" \"SELECT status FROM tools WHERE toolKey='").append(toolKey).append("'\" 2>/dev/null); ");
+        sb.append("if [ \"$s\" = \"installing\" ]; then ");
+        sb.append("sqlite3 \"").append(dbPath).append("\" \"UPDATE tools SET status='failed',errorLog='Interrumpido' WHERE toolKey='").append(toolKey).append("'\"; ");
+        sb.append("fi' EXIT; ");
+        sb.append("rm -f '").append(stateDir).append("/").append(toolKey).append(".pending'; ");
+        sb.append("echo; echo -e \"\\033[1;34m[AArchDroid]\\033[0m \\033[1;33mInstalando\\033[0m: ").append(toolKey).append("\"; echo; ");
+        sb.append("(").append(installCmd).append("; echo $? > '").append(exitFile).append("') 2>&1 | tee '").append(logFile).append("'; ");
+        sb.append("read EC < '").append(exitFile).append("' 2>/dev/null || EC=1; ");
+        sb.append("rm -f '").append(exitFile).append("'; ");
+        if (installCmd.startsWith("pacman")) {
+            sb.append("if [ $EC -ne 0 ]; then ");
+            sb.append("echo -e \"\\033[1;33m  -\\033[0m Sync repos...\"; ");
+            sb.append("(pacman --color always --disable-download-timeout -Sy; echo $? > '").append(exitFile).append("') 2>&1 | tee -a '").append(logFile).append("'; ");
+            sb.append("read EC2 < '").append(exitFile).append("' 2>/dev/null || EC2=1; ");
+            sb.append("rm -f '").append(exitFile).append("'; ");
+            sb.append("if [ $EC2 -eq 0 ]; then ");
+            sb.append("(").append(installCmd).append("; echo $? > '").append(exitFile).append("') 2>&1 | tee -a '").append(logFile).append("'; ");
+            sb.append("read EC < '").append(exitFile).append("' 2>/dev/null || EC=1; ");
+            sb.append("rm -f '").append(exitFile).append("'; ");
+            sb.append("else echo -e \"\\033[1;31m  -\\033[0m Sync failed\"; fi; fi; ");
         }
+        sb.append("echo; echo ========================================; ");
+        sb.append("if [ $EC -eq 0 ]; then ");
+        sb.append("echo -e \"\\033[1;32m  [AArchDroid] OK\\033[0m\"; ");
+        sb.append("sqlite3 \"").append(dbPath).append("\" \"UPDATE tools SET status='installed',errorLog=NULL WHERE toolKey='").append(toolKey).append("'\"; ");
+        sb.append("CATEGORY=$(sqlite3 \"").append(dbPath).append("\" \"SELECT category FROM tools WHERE toolKey='").append(toolKey).append("'\"); ");
+        sb.append("sqlite3 \"").append(dbPath).append("\" \"UPDATE categories SET installedTools=(SELECT COUNT(*) FROM tools WHERE category='");
+        sb.append("\"$CATEGORY\"");
+        sb.append("' AND status='installed'), installedSizeMb=(SELECT COALESCE(SUM(actualSizeBytes)/(1024*1024),0) FROM tools WHERE category='");
+        sb.append("\"$CATEGORY\"");
+        sb.append("' AND status='installed') WHERE name='");
+        sb.append("\"$CATEGORY\"");
+        sb.append("'\"; ");
+        sb.append("else ");
+        sb.append("echo -e \"\\033[1;31m  [AArchDroid] FAILED\\033[0m\"; ");
+        sb.append("ERROR=$(tail -5 '").append(logFile).append("' 2>/dev/null | tr '\\n' ' ' | sed \"s/'/''/g\"); ");
+        sb.append("sqlite3 \"").append(dbPath).append("\" \"UPDATE tools SET status='failed',errorLog='$ERROR' WHERE toolKey='").append(toolKey).append("'\"; ");
+        sb.append("fi; ");
+        sb.append("rm -f '").append(pidFile).append("' '").append(logFile).append("'");
+
+        String raw = sb.toString();
+        String escaped = raw.replace("\\", "\\\\")
+                            .replace("\"", "\\\"")
+                            .replace("$", "\\$");
+        return "sh -c \"" + escaped + "\"";
     }
 
     public void run_hack_cmd(String str) {

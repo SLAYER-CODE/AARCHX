@@ -9,18 +9,18 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FF1E1E1E">
+        android:background="#FF000000">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="#FF1E1E1E"
+            android:background="#FF000000"
             android:focusableInTouchMode="false"
             android:focusable="false"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Dark"
             app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:titleTextColor="#FFCCCCCC" />
+            app:titleTextColor="#FFFFFFFF" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

@@ -397,11 +397,30 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                                 }
                             }
                         }, 0)
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            val tab = tabSwitcher.selectedTab
+                            if (tab is TermTab) {
+                                tab.termData.termView?.let { view ->
+                                    view.requestFocus()
+                                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                                    imm.showSoftInput(view, 0)
+                                }
+                            }
+                        }, 250)
                     }
 
                     override fun onSelectionChanged(tabSwitcher: TabSwitcher, selectedTabIndex: Int, selectedTab: Tab?) {
                         if (selectedTab is TermTab && selectedTab.termData.termSession != null) {
                             NeoPreference.storeCurrentSession(selectedTab.termData.termSession!!)
+                            if (!tabSwitcher.isSwitcherShown) {
+                                selectedTab.termData.termView?.let { view ->
+                                    Handler(Looper.getMainLooper()).postDelayed({
+                                        view.requestFocus()
+                                        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                                        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                                    }, 300)
+                                }
+                            }
                         }
                     }
 

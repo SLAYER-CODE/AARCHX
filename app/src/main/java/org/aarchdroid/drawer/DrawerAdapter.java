@@ -190,7 +190,7 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
                 if (item.icon != null) {
                     vh.icon.setImageDrawable(item.icon.mutate());
-                    vh.icon.setColorFilter(color, PorterDuff.Mode.SRC_IN);
+                    vh.icon.setColorFilter(tColor, PorterDuff.Mode.SRC_IN);
                 }
                 vh.title.setTextColor(tColor);
 

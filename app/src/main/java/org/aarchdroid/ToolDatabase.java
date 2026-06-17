@@ -188,6 +188,25 @@ public class ToolDatabase {
         }
     }
 
+    public void markInstalled(String toolKey) {
+        String nk = normalizeKey(toolKey);
+        ToolInfo t = getTool(nk);
+        if (t == null) return;
+        t.status = "installed";
+        t.errorLog = null;
+        db.updateByWhere(ToolInfo.class, "toolKey = '" + nk + "'", t);
+        incrementCategoryInstalled(t.category, t.actualSizeBytes > 0 ? t.actualSizeBytes : t.estimatedSizeBytes);
+    }
+
+    public void markFailed(String toolKey, String errorLog) {
+        String nk = normalizeKey(toolKey);
+        ToolInfo t = getTool(nk);
+        if (t == null) return;
+        t.status = "failed";
+        t.errorLog = errorLog != null && errorLog.length() > 2000 ? errorLog.substring(0, 2000) : errorLog;
+        db.updateByWhere(ToolInfo.class, "toolKey = '" + nk + "'", t);
+    }
+
     public void markUninstalled(String toolKey) {
         String nk = normalizeKey(toolKey);
         ToolInfo t = getTool(nk);

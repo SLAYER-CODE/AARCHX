@@ -398,7 +398,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         // Status bar
         val sbHeight = (cellHeight + 4f).coerceAtLeast(20f)
         val sbY = height.toFloat() - sbHeight
-        statusBgPaint.color = 0xFF2A2A2A.toInt()
+        statusBgPaint.color = 0xFF000000.toInt()
         canvas.drawRect(0f, sbY, width.toFloat(), height.toFloat(), statusBgPaint)
 
         val modeLabel: String = when {
@@ -410,14 +410,21 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         }
         val pos = "${buffer.cursor.row + 1}:${buffer.cursor.col + 1}"
         val statusText = "$modeLabel  $fileName  Ln $pos"
-        statusTextPaint.color = 0xFFCCCCCC.toInt()
+        statusTextPaint.color = 0xFF00FF00.toInt()
         val fm = statusTextPaint.fontMetrics
         val baseline = sbY + (sbHeight - fm.ascent - fm.descent) / 2f
         canvas.drawText(statusText, 6f, baseline, statusTextPaint)
     }
 
+    private var defaultBg: Int = 0xFF000000.toInt()
+
+    fun setDefaultColors(fg: Int, bg: Int) {
+        defaultBg = bg
+        postInvalidate()
+    }
+
     private fun drawBackground(canvas: Canvas) {
-        bgPaint.color = 0xFF1E1E1E.toInt()
+        bgPaint.color = defaultBg
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgPaint)
     }
 

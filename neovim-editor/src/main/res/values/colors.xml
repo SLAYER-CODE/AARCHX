@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="neovim_background">#FF1E1E1E</color>
+    <color name="neovim_background">#FF000000</color>
     <color name="neovim_surface">#FF2D2D2D</color>
     <color name="neovim_primary">#FF00FF00</color>
     <color name="neovim_text">#FFCCCCCC</color>
