@@ -102,5 +102,6 @@ dependencies {
     implementation project(':chrome-tabs')
     implementation project(':NeoLang')
     implementation project(':NeoTermBridge')
-
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
 }

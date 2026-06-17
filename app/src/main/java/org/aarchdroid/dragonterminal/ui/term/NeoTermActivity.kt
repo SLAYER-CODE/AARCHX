@@ -19,13 +19,25 @@ import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import android.graphics.Color
+import android.graphics.PorterDuff
 import android.view.*
 import android.view.inputmethod.InputMethodManager
+import android.graphics.drawable.ColorDrawable
+import android.util.TypedValue
+import android.widget.AbsListView
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageButton
-import android.widget.PopupMenu
+import android.widget.ListView
+import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
 
@@ -136,15 +148,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 " flags=" + (intent?.flags?.toString() ?: "null") +
                 " component=" + (intent?.component?.className ?: "null"))
 
-        Log.d("AArchDroid", "NeoTermActivity: queue root check in background")
-        Thread {
-            val ok = isRooted(this@NeoTermActivity)
-            rootAvailable = ok
-            if (!ok) {
-                runOnUiThread { showNoRootDialog() }
+        lifecycleScope.launch(Dispatchers.IO) {
+            rootAvailable = isRooted(this@NeoTermActivity)
+            if (!rootAvailable) {
+                withContext(Dispatchers.Main) { showNoRootDialog() }
             }
             changehostname("AARCHX")
-        }.start()
+        }
 
         NeoPermission.initAppPermission(this, NeoPermission.REQUEST_APP_PERMISSION)
         NeoPermission.initPostNotificationsPermission(this)
@@ -337,27 +347,74 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     }
 
     private fun showToolsPopup(anchor: View) {
-        val wrapped = androidx.appcompat.view.ContextThemeWrapper(this, R.style.Theme_CompactGreenPopup)
-        val popup = PopupMenu(wrapped, anchor, Gravity.CENTER_HORIZONTAL, 0, R.style.Widget_GreenBorder_PopupMenu)
-        val menu = popup.menu
+        val context = ContextThemeWrapper(this, R.style.Theme_CompactGreenPopup)
+        val dm = resources.displayMetrics
+        val px12 = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, dm).toInt()
+        val px16 = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16f, dm).toInt()
 
-        TOOLS.forEachIndexed { index: Int, tool ->
-            menu.add(0, index, 0, tool.name).setIcon(tool.icon)
-        }
+        var popup: PopupWindow? = null
 
-        popup.setForceShowIcon(true)
-        popup.setOnMenuItemClickListener { item ->
-            val tool = TOOLS[item.itemId]
-            try {
-                val clazz = activityClassCache.getOrPut(tool.activityClass) { Class.forName(tool.activityClass) }
-                startActivity(Intent(this, clazz))
-            } catch (e: Exception) {
-                Log.e("AArchDroid", "showToolsPopup: cannot start " + tool.name + " — " + e.message)
+        val listView = ListView(context).apply {
+            background = ContextCompat.getDrawable(context, R.drawable.popup_menu_green_border)
+            adapter = object : BaseAdapter() {
+                override fun getCount() = TOOLS.size
+                override fun getItem(p: Int) = TOOLS[p]
+                override fun getItemId(p: Int) = p.toLong()
+                override fun getView(p: Int, v: View?, parent: ViewGroup): View {
+                    val tool = TOOLS[p]
+                    val icon = ContextCompat.getDrawable(context, tool.icon)?.mutate()
+                    icon?.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP)
+                    val iconSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24f, dm).toInt()
+                    icon?.setBounds(0, 0, iconSize, iconSize)
+                    val tv = (v as? TextView) ?: TextView(context).apply {
+                        setPadding(px16, px12, px16, px12)
+                        compoundDrawablePadding = px12
+                        setTextColor(Color.WHITE)
+                        textSize = 14f
+                    }
+                    tv.layoutParams = AbsListView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                    tv.setCompoundDrawablesRelative(icon, null, null, null)
+                    tv.text = tool.name
+                    return tv
+                }
             }
-            true
+            onItemClickListener = AdapterView.OnItemClickListener { _, _, p, _ ->
+                val tool = TOOLS[p]
+                try {
+                    val clazz = activityClassCache.getOrPut(tool.activityClass) { Class.forName(tool.activityClass) }
+                    startActivity(Intent(this@NeoTermActivity, clazz))
+                } catch (e: Exception) {
+                    Log.e("AArchDroid", "showToolsPopup: cannot start ${tool.name} — ${e.message}")
+                }
+                popup?.dismiss()
+            }
+            divider = null
+            dividerHeight = 0
         }
 
-        popup.show()
+        listView.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val contentWidth = listView.measuredWidth
+
+        popup = PopupWindow(listView, contentWidth, WindowManager.LayoutParams.WRAP_CONTENT, false).apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            isOutsideTouchable = true
+        }
+
+        popup.showAsDropDown(anchor, anchor.width, 0)
+
+        val tab = tabSwitcher.selectedTab
+        if (tab is TermTab) {
+            tab.termData.termView?.let { view ->
+                Handler(Looper.getMainLooper()).postDelayed({
+                    view.requestFocus()
+                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                }, 100)
+            }
+        }
     }
 
     override fun onPause() {
@@ -462,12 +519,20 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                                 // Normal close: kill session and close history
                                 if (session != null) {
                                     CommandInterceptor.getContext(session.mHandle)?.let { ctx ->
-                                        SessionHistory.updateTerminalDestiny(this@NeoTermActivity, ctx.terminalId, "cerrada")
+                                        lifecycleScope.launch {
+                                            withContext(Dispatchers.IO) {
+                                                SessionHistory.updateTerminalDestiny(this@NeoTermActivity, ctx.terminalId, "cerrada")
+                                            }
+                                        }
                                     }
                                     val sid = tabSessionMap.remove(session.mHandle)
                                     if (sid != null) {
-                                        SessionHistory.closeSession(this@NeoTermActivity, sid)
-                                        sessionHistoryAdapter?.updateData(SessionHistory.getHistory(this@NeoTermActivity).sessions)
+                                        lifecycleScope.launch {
+                                            withContext(Dispatchers.IO) {
+                                                SessionHistory.closeSession(this@NeoTermActivity, sid)
+                                            }
+                                            sessionHistoryAdapter?.updateData(SessionHistory.getHistory(this@NeoTermActivity).sessions)
+                                        }
                                     }
                                     CommandInterceptor.unregisterSession(session.mHandle)
                                 }
@@ -522,15 +587,19 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 .unregisterOnSharedPreferenceChangeListener(this)
         tabSwitcherListener?.let { tabSwitcher.removeListener(it) }
 
-        // Close all remaining session history records
-        tabSessionMap.forEach { (handle, sid) ->
-            CommandInterceptor.getContext(handle)?.let { ctx ->
-                SessionHistory.updateTerminalDestiny(this, ctx.terminalId, "cerrada")
+        // Close all remaining session history records on IO
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                tabSessionMap.forEach { (handle, sid) ->
+                    CommandInterceptor.getContext(handle)?.let { ctx ->
+                        SessionHistory.updateTerminalDestiny(this@NeoTermActivity, ctx.terminalId, "cerrada")
+                    }
+                    SessionHistory.closeSession(this@NeoTermActivity, sid)
+                }
             }
-            SessionHistory.closeSession(this, sid)
+            SessionHistory.saveNow(this@NeoTermActivity)
         }
         tabSessionMap.clear()
-        SessionHistory.saveNow(this)
 
         if (termService != null) {
             termService = null
@@ -635,7 +704,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             update_colors()
             updatePlaceholderVisibility()
             get_motherfucker_battery()
-            Thread { checkinstallterm() }.start()
+            lifecycleScope.launch(Dispatchers.IO) { checkinstallterm() }
 
             if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
                 Log.d("AArchDroid", "NeoTermActivity: notifications disabled — continuing anyway")
@@ -778,7 +847,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     private fun loadSessionHistoryAsync() {
         currentHistoryOffset = 0
         isLoadingMore = false
-        Thread {
+        lifecycleScope.launch(Dispatchers.IO) {
             val hasCrashed = SessionHistory.hasUnclosedSessions(this@NeoTermActivity)
             if (hasCrashed) {
                 val history = SessionHistory.getHistory(this@NeoTermActivity)
@@ -793,7 +862,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             }
             val page0 = SessionHistory.getHistoryPage(this@NeoTermActivity, 0, 4)
             currentHistoryOffset = page0.size
-            runOnUiThread {
+            val scope = this@NeoTermActivity.lifecycleScope
+            withContext(Dispatchers.Main) {
                 val historyList = findViewById<RecyclerView>(R.id.sessionHistoryList)
                 historyList.layoutManager = LinearLayoutManager(this@NeoTermActivity)
                 historyList.setHasFixedSize(true)
@@ -822,21 +892,21 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                         val lm = recyclerView.layoutManager as LinearLayoutManager
                         if (lm.findLastVisibleItemPosition() >= lm.itemCount - 2) {
                             isLoadingMore = true
-                            Thread {
+                            scope.launch(Dispatchers.IO) {
                                 val page = SessionHistory.getHistoryPage(this@NeoTermActivity, currentHistoryOffset, 4)
                                 currentHistoryOffset += page.size
-                                runOnUiThread {
+                                withContext(Dispatchers.Main) {
                                     adapter.hasMore = page.size == 4
                                     adapter.appendSessions(page)
                                     isLoadingMore = false
                                 }
-                            }.apply { name = "SessionHistoryPager" }.start()
+                            }
                         }
                     }
                 })
                 updatePlaceholderVisibility()
             }
-        }.apply { name = "SessionHistoryLoader" }.start()
+        }
     }
 
     override fun recreate() {
@@ -937,12 +1007,18 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         Log.d("AArchDroid", "NeoTermActivity: session created — name=" + session.mSessionName +
                 " handle=" + session.mHandle)
 
-        // Create a new session history record for this tab
-        val sessionId = SessionHistory.startSession(this).id
-        CommandInterceptor.registerSession(session.mHandle, sessionId, "terminal")
-        val term = SessionHistory.startTerminal(this, sessionId, "terminal", "terminal")
-        CommandInterceptor.setTerminalId(session.mHandle, term.id)
-        tabSessionMap[session.mHandle] = sessionId
+        // Create session history records on IO thread
+        lifecycleScope.launch {
+            val sid = withContext(Dispatchers.IO) {
+                SessionHistory.startSession(this@NeoTermActivity).id
+            }
+            CommandInterceptor.registerSession(session.mHandle, sid, "terminal")
+            tabSessionMap[session.mHandle] = sid
+            val term = withContext(Dispatchers.IO) {
+                SessionHistory.startTerminal(this@NeoTermActivity, sid, "terminal", "terminal")
+            }
+            CommandInterceptor.setTerminalId(session.mHandle, term.id)
+        }
 
         val tab = createTab(session.mSessionName) as TermTab
         tab.termData.initializeSessionWith(session, sessionCallback, viewClient)

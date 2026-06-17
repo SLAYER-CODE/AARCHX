@@ -139,27 +139,29 @@ class NeovimBuffer {
             val safeLeft = left.coerceIn(0, gridWidth - 1)
             val safeRight = right.coerceIn(safeLeft, gridWidth - 1)
             if (rows > 0) {
-                // scroll down: content moves DOWN, copy from above, clear top
+                // rows>0: move rectangle UP (happens when scrolling down in file)
+                // Content shifts UP, new space at bottom
                 val count = rows.coerceAtMost(safeBottom - safeTop)
-                for (r in safeBottom - 1 downTo safeTop + count) {
+                for (r in safeTop until safeBottom - count) {
                     for (c in safeLeft..safeRight) {
-                        cells[r][c] = cells[r - count][c]
+                        cells[r][c] = cells[r + count][c]
                     }
                 }
-                for (r in safeTop until (safeTop + count).coerceAtMost(safeBottom)) {
+                for (r in (safeBottom - count).coerceAtLeast(safeTop) until safeBottom) {
                     for (c in safeLeft..safeRight) {
                         cells[r][c] = defaultCell
                     }
                 }
             } else if (rows < 0) {
-                // scroll up: content moves UP, copy from below, clear bottom
+                // rows<0: move rectangle DOWN (happens when scrolling up in file)
+                // Content shifts DOWN, new space at top
                 val absCount = (-rows).coerceAtMost(safeBottom - safeTop)
-                for (r in safeTop until safeBottom - absCount) {
+                for (r in safeBottom - 1 downTo safeTop + absCount) {
                     for (c in safeLeft..safeRight) {
-                        cells[r][c] = cells[r + absCount][c]
+                        cells[r][c] = cells[r - absCount][c]
                     }
                 }
-                for (r in (safeBottom - absCount).coerceAtLeast(safeTop) until safeBottom) {
+                for (r in safeTop until (safeTop + absCount).coerceAtMost(safeBottom)) {
                     for (c in safeLeft..safeRight) {
                         cells[r][c] = defaultCell
                     }

@@ -44,18 +44,22 @@ class NeovimLauncher(private val context: Context) {
                     launchDirect(nvimPath)
                 }
 
-                // Check for nvim by TCP port (process may have detached)
-                for (i in 1..3) {
-                    Thread.sleep(800)
-                    if (checkPortOpen(HOST, PORT)) {
+                // Fast poll: check every 200ms with 200ms connect timeout
+                // Total max: 30 attempts × 200ms = 6s (same as before but finer granularity)
+                var attempts = 0
+                val maxAttempts = 30
+                while (attempts < maxAttempts) {
+                    Thread.sleep(200)
+                    if (checkPortOpen(HOST, PORT, 200)) {
                         launched = LaunchedProcess(proc, HOST, PORT)
-                        Log.d(TAG, "nvim launched from $nvimPath (attempt $i)")
+                        Log.d(TAG, "nvim launched from $nvimPath (attempt ${attempts + 1})")
                         return@withContext true
                     }
+                    attempts++
                 }
 
                 // Port still not open — kill any stale process and retry once
-                Log.e(TAG, "nvim not responding on $HOST:$PORT after 3 attempts, retrying...")
+                Log.e(TAG, "nvim not responding on $HOST:$PORT after $maxAttempts attempts, retrying...")
                 killExistingOnPort()
                 Thread.sleep(500)
 
@@ -65,11 +69,15 @@ class NeovimLauncher(private val context: Context) {
                     launchDirect(nvimPath)
                 }
 
-                Thread.sleep(1500)
-                if (checkPortOpen(HOST, PORT)) {
-                    launched = LaunchedProcess(proc2, HOST, PORT)
-                    Log.d(TAG, "nvim launched on retry")
-                    return@withContext true
+                attempts = 0
+                while (attempts < 15) { // 15 × 200ms = 3s for retry
+                    Thread.sleep(200)
+                    if (checkPortOpen(HOST, PORT, 200)) {
+                        launched = LaunchedProcess(proc2, HOST, PORT)
+                        Log.d(TAG, "nvim launched on retry (attempt ${attempts + 1})")
+                        return@withContext true
+                    }
+                    attempts++
                 }
 
                 Log.e(TAG, "nvim failed to launch after retry")

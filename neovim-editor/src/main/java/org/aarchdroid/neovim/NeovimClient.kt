@@ -131,7 +131,8 @@ class NeovimClient(
         val options = mapOf(
             "rgb" to true,
             "ext_linegrid" to true,
-            "ext_multigrid" to false
+            "ext_multigrid" to false,
+            "ext_messages" to true
         )
         request("nvim_ui_attach", width, height, options)
     }
@@ -322,12 +323,12 @@ class NeovimClient(
                             }
                             RedrawEvent(name, evtArgs)
                         }
-                        // Log raw structure for first 5 redraw batches
-                        if (logRawEvents && redrawCounter < 5) {
+                        // Log raw structure for first 30 redraw batches
+                        if (logRawEvents && redrawCounter < 30) {
                             redrawCounter++
                             val eventNames = updates.map { it.name }
                             Log.d("NeovimClient", "redraw #$redrawCounter events=$eventNames")
-                            for (ev in updates.take(3)) {
+                            for (ev in updates) {
                                 val argTypes = ev.args.flatten().map { v ->
                                     when {
                                         v.isArrayValue -> "Array(${v.asArrayValue().list().size})"
@@ -340,6 +341,19 @@ class NeovimClient(
                                     }
                                 }
                                 Log.d("NeovimClient", "  ${ev.name} args=${ev.args.size} types=$argTypes")
+                                if (ev.name == "grid_scroll" || ev.name == "win_viewport") {
+                                    val rawInfo = ev.args.mapIndexed { idx, arg ->
+                                        "arg$idx[${arg.joinToString(",") { v ->
+                                            when {
+                                                v.isIntegerValue -> "${v.asIntegerValue().toInt()}"
+                                                v.isArrayValue -> "Arr(${v.asArrayValue().list().size})"
+                                                v.isStringValue -> v.asStringValue().asString()
+                                                else -> v.toString()
+                                            }
+                                        }}]"
+                                    }.joinToString(" ")
+                                    Log.d("NeovimClient", "    ${ev.name}: $rawInfo")
+                                }
                                 if (ev.name == "grid_line" && ev.args.isNotEmpty()) {
                                     val firstLine = ev.args[0]
                                     if (firstLine.size >= 4) {

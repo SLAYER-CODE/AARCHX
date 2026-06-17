@@ -1,12 +1,17 @@
 package org.aarchdroid.dragonterminal.data
 
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 
 object CommandInterceptor {
     @Volatile
     var suppressLogging = false
 
+    private val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val sessionContexts = HashMap<String, SessionContext>()
 
     data class SessionContext(
@@ -53,15 +58,15 @@ object CommandInterceptor {
         }
         Log.d("AArchDroid", "CommandInterceptor: cmd='$cmd' dir='${ctx.currentDir}'")
 
-        // Save to session history (skip if suppressed, e.g. during restore, or if disabled in settings)
+        // Save to session history on IO (skip if suppressed or disabled)
         if (!suppressLogging && !org.aarchdroid.dragonterminal.frontend.config.NeoPreference.isLoggingDisabled()) {
-            SessionHistory.logCommand(
-                org.aarchdroid.AArchDroidApp.get(),
-                ctx.sessionId,
-                ctx.terminalId,
-                ctx.currentDir,
-                cmd
-            )
+            val app = org.aarchdroid.AArchDroidApp.get()
+            val sId = ctx.sessionId
+            val tId = ctx.terminalId
+            val dir = ctx.currentDir
+            ioScope.launch {
+                SessionHistory.logCommand(app, sId, tId, dir, cmd)
+            }
         }
     }
 

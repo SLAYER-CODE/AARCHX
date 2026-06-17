@@ -30,6 +30,9 @@ object ChrootManager {
             append("mknod $CHROOT_BASE/dev/tty c 5 0 2>/dev/null; ")
             append("mknod $CHROOT_BASE/dev/ptmx c 5 2 2>/dev/null; ")
             append("chmod 666 $CHROOT_BASE/dev/null $CHROOT_BASE/dev/zero $CHROOT_BASE/dev/random $CHROOT_BASE/dev/urandom $CHROOT_BASE/dev/tty $CHROOT_BASE/dev/ptmx 2>/dev/null; ")
+            append("mknod $CHROOT_BASE/dev/net/tun c 10 200 2>/dev/null; ")
+            append("mknod $CHROOT_BASE/dev/ppp c 108 0 2>/dev/null; ")
+            append("chmod 600 $CHROOT_BASE/dev/net/tun $CHROOT_BASE/dev/ppp 2>/dev/null; ")
             append("ln -sf /proc/self/fd $CHROOT_BASE/dev/fd 2>/dev/null; ")
             append("ln -sf /proc/self/fd/0 $CHROOT_BASE/dev/stdin 2>/dev/null; ")
             append("ln -sf /proc/self/fd/1 $CHROOT_BASE/dev/stdout 2>/dev/null; ")
@@ -56,6 +59,7 @@ object ChrootManager {
     }
 
     fun ensureMounted(): Boolean {
+        if (isMounted()) return true
         return runSetup()
     }
 

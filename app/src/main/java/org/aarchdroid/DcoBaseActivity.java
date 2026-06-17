@@ -19,6 +19,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.aarchdroid.dragonterminal.bridge.Bridge;
 import java.io.DataOutputStream;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.List;
@@ -88,6 +90,7 @@ public class DcoBaseActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        processExitFiles();
         refreshStatusesAsync();
         if (!layoutSet) {
             layoutSet = true;
@@ -205,6 +208,10 @@ public class DcoBaseActivity extends Activity {
                 processingTools.remove(toolKey);
                 return;
             }
+            new File(getFilesDir(), "install-state").mkdirs();
+            try {
+                new File(getFilesDir(), "install-state/" + toolKey + ".pending").createNewFile();
+            } catch (Exception ignored) {}
             String inline = buildInstallInline(toolKey, installCmd);
             run_hack_cmd(inline, 0, toolKey);
         } else {
@@ -222,13 +229,11 @@ public class DcoBaseActivity extends Activity {
         }
         String cmd = ToolDatabase.getInstance().getUninstallCommand(toolKey);
         if (cmd != null) {
+            ToolDatabase.getInstance().setStatus(toolKey, "uninstalling");
+            new File(getFilesDir(), "install-state").mkdirs();
             try {
-                ToolDatabase.getInstance().setStatus(toolKey, "installing");
-            } catch (Exception e) {
-                Log.e(TAG, "setStatus failed", e);
-                processingTools.remove(toolKey);
-                return;
-            }
+                new File(getFilesDir(), "install-state/" + toolKey + ".pending").createNewFile();
+            } catch (Exception ignored) {}
             String inline = buildUninstallInline(toolKey, cmd);
             run_hack_cmd(inline, 0, toolKey);
         } else {
@@ -258,60 +263,34 @@ public class DcoBaseActivity extends Activity {
     private String buildInstallInline(String toolKey, String installCmd) {
         String appDir = "/data/data/" + getPackageName() + "/";
         String stateDir = appDir + "files/install-state";
-        String dbPath = appDir + "databases/tools.db";
+        String logFile = stateDir + "/" + toolKey + ".log";
+        String exitFile = stateDir + "/" + toolKey + ".exit";
 
         if (installCmd.startsWith("pacman ")) {
             installCmd = installCmd.replaceFirst("^pacman ", "pacman --color always --disable-download-timeout ");
         }
 
-        String pidFile = stateDir + "/" + toolKey + ".pid";
-        String logFile = stateDir + "/" + toolKey + ".log";
-        String exitFile = stateDir + "/" + toolKey + ".exit";
-
         StringBuilder sb = new StringBuilder();
-        sb.append("mkdir -p '").append(stateDir).append("' && ");
-        sb.append("echo $$ > '").append(pidFile).append("' && ");
-        sb.append("trap '");
-        sb.append("rm -f \"").append(pidFile).append("\" \"").append(logFile).append("\"; ");
-        sb.append("s=$(sqlite3 \"").append(dbPath).append("\" \"SELECT status FROM tools WHERE toolKey='").append(toolKey).append("'\" 2>/dev/null); ");
-        sb.append("if [ \"$s\" = \"installing\" ]; then ");
-        sb.append("sqlite3 \"").append(dbPath).append("\" \"UPDATE tools SET status='failed',errorLog='Interrumpido' WHERE toolKey='").append(toolKey).append("'\"; ");
-        sb.append("fi' EXIT; ");
-        sb.append("rm -f '").append(stateDir).append("/").append(toolKey).append(".pending'; ");
+        sb.append("export PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin:$PATH && mkdir -p '").append(stateDir).append("' && ");
         sb.append("echo; echo -e \"\\033[1;34m[AArchDroid]\\033[0m \\033[1;33mInstalando\\033[0m: ").append(toolKey).append("\"; echo; ");
         sb.append("(").append(installCmd).append("; echo $? > '").append(exitFile).append("') 2>&1 | tee '").append(logFile).append("'; ");
-        sb.append("read EC < '").append(exitFile).append("' 2>/dev/null || EC=1; ");
-        sb.append("rm -f '").append(exitFile).append("'; ");
+        sb.append("EC=$(cat '").append(exitFile).append("' 2>/dev/null); ");
         if (installCmd.startsWith("pacman")) {
-            sb.append("if [ $EC -ne 0 ]; then ");
+            sb.append("if [ \"$EC\" != \"0\" ]; then ");
             sb.append("echo -e \"\\033[1;33m  -\\033[0m Sync repos...\"; ");
             sb.append("(pacman --color always --disable-download-timeout -Sy; echo $? > '").append(exitFile).append("') 2>&1 | tee -a '").append(logFile).append("'; ");
-            sb.append("read EC2 < '").append(exitFile).append("' 2>/dev/null || EC2=1; ");
-            sb.append("rm -f '").append(exitFile).append("'; ");
-            sb.append("if [ $EC2 -eq 0 ]; then ");
+            sb.append("EC2=$(cat '").append(exitFile).append("' 2>/dev/null); ");
+            sb.append("if [ \"$EC2\" = \"0\" ]; then ");
             sb.append("(").append(installCmd).append("; echo $? > '").append(exitFile).append("') 2>&1 | tee -a '").append(logFile).append("'; ");
-            sb.append("read EC < '").append(exitFile).append("' 2>/dev/null || EC=1; ");
-            sb.append("rm -f '").append(exitFile).append("'; ");
+            sb.append("EC=$(cat '").append(exitFile).append("' 2>/dev/null); ");
             sb.append("else echo -e \"\\033[1;31m  -\\033[0m Sync failed\"; fi; fi; ");
         }
         sb.append("echo; echo ========================================; ");
-        sb.append("if [ $EC -eq 0 ]; then ");
+        sb.append("if [ \"$EC\" = \"0\" ]; then ");
         sb.append("echo -e \"\\033[1;32m  [AArchDroid] OK\\033[0m\"; ");
-        sb.append("sqlite3 \"").append(dbPath).append("\" \"UPDATE tools SET status='installed',errorLog=NULL WHERE toolKey='").append(toolKey).append("'\"; ");
-        sb.append("CATEGORY=$(sqlite3 \"").append(dbPath).append("\" \"SELECT category FROM tools WHERE toolKey='").append(toolKey).append("'\"); ");
-        sb.append("sqlite3 \"").append(dbPath).append("\" \"UPDATE categories SET installedTools=(SELECT COUNT(*) FROM tools WHERE category='");
-        sb.append("\"$CATEGORY\"");
-        sb.append("' AND status='installed'), installedSizeMb=(SELECT COALESCE(SUM(actualSizeBytes)/(1024*1024),0) FROM tools WHERE category='");
-        sb.append("\"$CATEGORY\"");
-        sb.append("' AND status='installed') WHERE name='");
-        sb.append("\"$CATEGORY\"");
-        sb.append("'\"; ");
         sb.append("else ");
-        sb.append("echo -e \"\\033[1;31m  [AArchDroid] FAILED\\033[0m\"; ");
-        sb.append("ERROR=$(tail -5 '").append(logFile).append("' 2>/dev/null | tr '\\n' ' ' | sed \"s/'/''/g\"); ");
-        sb.append("sqlite3 \"").append(dbPath).append("\" \"UPDATE tools SET status='failed',errorLog='$ERROR' WHERE toolKey='").append(toolKey).append("'\"; ");
-        sb.append("fi; ");
-        sb.append("rm -f '").append(pidFile).append("' '").append(logFile).append("'");
+        sb.append("echo -e \"\\033[1;31m  [AArchDroid] FAILED (exit $EC)\\033[0m\"; ");
+        sb.append("fi");
 
         String raw = sb.toString();
         String escaped = raw.replace("\\", "\\\\")
@@ -323,9 +302,6 @@ public class DcoBaseActivity extends Activity {
     private String buildUninstallInline(String toolKey, String uninstallCmd) {
         String appDir = "/data/data/" + getPackageName() + "/";
         String stateDir = appDir + "files/install-state";
-        String dbPath = appDir + "databases/tools.db";
-
-        String pidFile = stateDir + "/" + toolKey + ".pid";
         String logFile = stateDir + "/" + toolKey + ".log";
         String exitFile = stateDir + "/" + toolKey + ".exit";
 
@@ -333,36 +309,105 @@ public class DcoBaseActivity extends Activity {
             uninstallCmd = uninstallCmd.replaceFirst("^pacman ", "pacman --color always --disable-download-timeout ");
         }
 
+        String uninstallMarker = stateDir + "/" + toolKey + ".uninstall";
         StringBuilder sb = new StringBuilder();
-        sb.append("mkdir -p '").append(stateDir).append("' && ");
-        sb.append("echo $$ > '").append(pidFile).append("' && ");
-        sb.append("trap '");
-        sb.append("rm -f \"").append(pidFile).append("\" \"").append(logFile).append("\"; ");
-        sb.append("s=$(sqlite3 \"").append(dbPath).append("\" \"SELECT status FROM tools WHERE toolKey='").append(toolKey).append("'\" 2>/dev/null); ");
-        sb.append("if [ \"$s\" = \"installing\" ]; then ");
-        sb.append("sqlite3 \"").append(dbPath).append("\" \"UPDATE tools SET status='not_installed',errorLog=NULL WHERE toolKey='").append(toolKey).append("'\"; ");
-        sb.append("fi' EXIT; ");
-        sb.append("rm -f '").append(stateDir).append("/").append(toolKey).append(".pending'; ");
+        sb.append("export PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin:$PATH && mkdir -p '").append(stateDir).append("' && ");
         sb.append("echo; echo -e \"\\033[1;34m[AArchDroid]\\033[0m \\033[1;33mDesinstalando\\033[0m: ").append(toolKey).append("\"; echo; ");
         sb.append("(").append(uninstallCmd).append("; echo $? > '").append(exitFile).append("') 2>&1 | tee '").append(logFile).append("'; ");
-        sb.append("read EC < '").append(exitFile).append("' 2>/dev/null || EC=1; ");
-        sb.append("rm -f '").append(exitFile).append("'; ");
+        sb.append("EC=$(cat '").append(exitFile).append("' 2>/dev/null); ");
+        // If pacman failed with "target not found", pkg is already gone → treat as success
+        sb.append("if [ \"$EC\" != \"0\" ] && ! pacman -Q '").append(toolKey).append("' 2>/dev/null; then EC=0; echo \"$EC\" > '").append(exitFile).append("'; fi; ");
+        sb.append(": > '").append(uninstallMarker).append("' && ");
         sb.append("echo; echo ========================================; ");
-        sb.append("if [ $EC -eq 0 ]; then ");
+        sb.append("if [ \"$EC\" = \"0\" ]; then ");
         sb.append("echo -e \"\\033[1;32m  [AArchDroid] Uninstall OK\\033[0m\"; ");
-        sb.append("sqlite3 \"").append(dbPath).append("\" \"UPDATE tools SET status='not_installed',errorLog=NULL WHERE toolKey='").append(toolKey).append("'\"; ");
         sb.append("else ");
-        sb.append("echo -e \"\\033[1;31m  [AArchDroid] Uninstall FAILED\\033[0m\"; ");
-        sb.append("ERROR=$(tail -5 '").append(logFile).append("' 2>/dev/null | tr '\\n' ' ' | sed \"s/'/''/g\"); ");
-        sb.append("sqlite3 \"").append(dbPath).append("\" \"UPDATE tools SET status='failed',errorLog='$ERROR' WHERE toolKey='").append(toolKey).append("'\"; ");
-        sb.append("fi; ");
-        sb.append("rm -f '").append(pidFile).append("' '").append(logFile).append("'");
+        sb.append("echo -e \"\\033[1;31m  [AArchDroid] Uninstall FAILED (exit $EC)\\033[0m\"; ");
+        sb.append("fi");
 
         String raw = sb.toString();
         String escaped = raw.replace("\\", "\\\\")
                             .replace("\"", "\\\"")
                             .replace("$", "\\$");
         return "sh -c \"" + escaped + "\"";
+    }
+
+    private void processExitFiles() {
+        try {
+            File stateDir = new File(getFilesDir(), "install-state");
+            if (!stateDir.exists()) return;
+            File[] files = stateDir.listFiles();
+            if (files == null) return;
+            boolean changed = false;
+            for (File f : files) {
+                String name = f.getName();
+                if (!name.endsWith(".exit")) continue;
+                String toolKey = name.substring(0, name.length() - 5);
+                try {
+                    String content = new String(new FileInputStream(f).readAllBytes()).trim();
+                    int exitCode = Integer.parseInt(content);
+                    boolean isUninstall = new File(stateDir, toolKey + ".uninstall").exists();
+                    if (isUninstall) {
+                        if (exitCode == 0) {
+                            ToolDatabase.getInstance().markUninstalled(toolKey);
+                        } else {
+                            ToolDatabase.getInstance().markInstalled(toolKey);
+                        }
+                        new File(stateDir, toolKey + ".uninstall").delete();
+                    } else {
+                        if (exitCode == 0) {
+                            ToolDatabase.getInstance().markInstalled(toolKey);
+                        } else {
+                            File logFile = new File(stateDir, toolKey + ".log");
+                            String error = "";
+                            if (logFile.exists()) {
+                                byte[] logBytes = new FileInputStream(logFile).readAllBytes();
+                                error = new String(logBytes);
+                                if (error.length() > 1000)
+                                    error = error.substring(error.length() - 1000);
+                            }
+                            ToolDatabase.getInstance().markFailed(toolKey, error);
+                        }
+                    }
+                    f.delete();
+                    new File(stateDir, toolKey + ".log").delete();
+                    changed = true;
+                } catch (Exception e) {
+                    Log.e(TAG, "processExitFiles: error for " + toolKey, e);
+                }
+            }
+            if (changed) {
+                processStaleInstalls(stateDir);
+                refreshStatusesAsync();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "processExitFiles error", e);
+        }
+    }
+
+    private void processStaleInstalls(File stateDir) {
+        try {
+            ToolDatabase db = ToolDatabase.getInstance();
+            String category = getCurrentCategory();
+            if (category.isEmpty()) return;
+            Map<String, String> statuses = db.getStatusMap(category);
+            for (Map.Entry<String, String> e : statuses.entrySet()) {
+                String st = e.getValue();
+                if (!"installing".equals(st) && !"uninstalling".equals(st)) continue;
+                String toolKey = e.getKey();
+                File pendingFile = new File(stateDir, toolKey + ".pending");
+                File exitFile = new File(stateDir, toolKey + ".exit");
+                if (exitFile.exists()) continue;
+                if (pendingFile.exists()) continue;
+                if ("installing".equals(st)) {
+                    db.markFailed(toolKey, "Installation aborted or state lost");
+                } else {
+                    db.markInstalled(toolKey);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "processStaleInstalls error", e);
+        }
     }
 
     public void run_hack_cmd(String cmd) {

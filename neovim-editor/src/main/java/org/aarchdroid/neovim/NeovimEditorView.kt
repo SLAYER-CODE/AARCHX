@@ -41,6 +41,12 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     private var cursorVisible = true
     private var lastCursorToggle = 0L
 
+    private var touchDownX = 0f
+    private var touchDownY = 0f
+    private var touchLastY = 0f
+    private var touchAccumScroll = 0f
+    private var isTouchDragging = false
+
     var onInput: ((String) -> Unit)? = null
     var onResize: ((Int, Int) -> Unit)? = null
     var onModeChange: ((String) -> Unit)? = null
@@ -69,8 +75,9 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     fun getGridSize(): Pair<Int, Int> {
         val cw = maxOf(cellWidth, 1f)
         val ch = maxOf(cellHeight, 1f)
+        val statusHeight = (cellHeight + 4f).toInt().coerceAtLeast(20)
         val cols = (width / cw).toInt().coerceAtLeast(20)
-        val rows = (height / ch).toInt().coerceAtLeast(8)
+        val rows = ((height - statusHeight) / ch).toInt().coerceAtLeast(8)
         return Pair(cols, rows)
     }
 
@@ -89,19 +96,48 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     }
 
     init {
+        setBackgroundColor(0xFF000000.toInt())
         focusable = ViewGroup.FOCUSABLE
         isFocusableInTouchMode = true
 
         setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                Log.v("NeovimEditorView", "ACTION_DOWN x=${event.x} y=${event.y}")
-                requestFocus()
-                showKeyboard("touch")
-                if (!isReady) return@setOnTouchListener true
-                val col = ((event.x - gridOffsetX) / cellWidth).toInt()
-                val row = ((event.y - gridOffsetY) / cellHeight).toInt()
-                if (col in 0 until buffer.gridWidth && row in 0 until buffer.gridHeight) {
-                    onInput?.invoke("<LeftMouse><${col + 1},${row + 1}>")
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    touchDownX = event.x
+                    touchDownY = event.y
+                    touchLastY = event.y
+                    touchAccumScroll = 0f
+                    isTouchDragging = false
+                    Log.v("NeovimEditorView", "ACTION_DOWN x=${event.x} y=${event.y}")
+                    requestFocus()
+                    showKeyboard("touch")
+                    if (!isReady) return@setOnTouchListener true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    if (!isReady || cellHeight <= 0f) return@setOnTouchListener true
+                    val dy = event.y - touchLastY
+                    touchLastY = event.y
+                    touchAccumScroll += dy
+                    while (touchAccumScroll >= cellHeight) {
+                        onInput?.invoke("<ScrollWheelUp>")
+                        touchAccumScroll -= cellHeight
+                        isTouchDragging = true
+                    }
+                    while (touchAccumScroll <= -cellHeight) {
+                        onInput?.invoke("<ScrollWheelDown>")
+                        touchAccumScroll += cellHeight
+                        isTouchDragging = true
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    Log.v("NeovimEditorView", "ACTION_UP dragging=$isTouchDragging")
+                    if (!isTouchDragging && isReady) {
+                        val col = ((touchDownX - gridOffsetX) / cellWidth).toInt()
+                        val row = ((touchDownY - gridOffsetY) / cellHeight).toInt()
+                        if (col in 0 until buffer.gridWidth && row in 0 until buffer.gridHeight) {
+                            onInput?.invoke("<LeftMouse><${col + 1},${row + 1}>")
+                        }
+                    }
                 }
             }
             true

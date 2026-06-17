@@ -11,9 +11,7 @@ import android.preference.PreferenceManager
 import android.net.wifi.WifiManager
 import android.os.Binder
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -49,14 +47,6 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     private var mWakeLock: PowerManager.WakeLock? = null
     private var mWifiLock: WifiManager.WifiLock? = null
 
-    private val installStateHandler = Handler(Looper.getMainLooper())
-    private val installStateRunnable = object : Runnable {
-        override fun run() {
-            cleanupInstallState()
-            installStateHandler.postDelayed(this, 10000)
-        }
-    }
-
     override fun onCreate() {
         super.onCreate()
         Log.d("AArchDroid", "NeoTermService: onCreate() — service starting")
@@ -64,9 +54,6 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         tryStartForeground()
         PreferenceManager.getDefaultSharedPreferences(this)
             .registerOnSharedPreferenceChangeListener(this)
-        cleanupInstallState()
-        installStateHandler.post(installStateRunnable)
-
         // Pre-create a terminal session so su -c starts early
         preCreateSession()
     }
@@ -150,7 +137,6 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     }
 
     override fun onDestroy() {
-        installStateHandler.removeCallbacks(installStateRunnable)
         stopForeground(true)
 
         val sessionsToFinish = synchronized(mTerminalSessions) {
@@ -343,64 +329,6 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
             mWifiLock = null
         }
         updateNotification()
-    }
-
-    private val installStateDir: File
-        get() = File(filesDir, "install-state")
-
-    private fun cleanupInstallState() {
-        try {
-            val dir = installStateDir
-            if (!dir.exists()) return
-            val files = dir.listFiles() ?: return
-            for (file in files) {
-                try {
-                    val name = file.name
-                    when {
-                        name.endsWith(".pending") -> handlePendingMarker(file, name)
-                        name.endsWith(".pid") -> handlePidMarker(file, name)
-                    }
-                } catch (e: Exception) {
-                    Log.e("AArchDroid", "Error processing install marker: ${file.name}", e)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("AArchDroid", "cleanupInstallState error", e)
-        }
-    }
-
-    private fun handlePendingMarker(file: File, name: String) {
-        val toolKey = name.substringBeforeLast(".pending")
-        Log.d("AArchDroid", "Service: stale pending marker for $toolKey — resetting to not_installed")
-        try {
-            org.aarchdroid.ToolDatabase.getInstance().setStatus(toolKey, "not_installed")
-        } catch (e: Exception) {
-            Log.e("AArchDroid", "handlePendingMarker: DB error for $toolKey", e)
-        }
-        file.delete()
-    }
-
-    private fun handlePidMarker(file: File, name: String) {
-        val toolKey = name.substringBeforeLast(".pid")
-        val pidStr = try { file.readText().trim() } catch (e: Exception) { return }
-        val pid = pidStr.toIntOrNull() ?: run { file.delete(); return }
-
-        if (!File("/proc/$pid").exists()) {
-            // Wrapper process is dead
-            Log.d("AArchDroid", "Service: wrapper process dead for $toolKey (pid=$pid)")
-            try {
-                val db = org.aarchdroid.ToolDatabase.getInstance()
-                val status = db.getStatus(toolKey)
-                if (status == "installing") {
-                    Log.d("AArchDroid", "Service: marking $toolKey as failed (wrapper died without updating DB)")
-                    db.setStatus(toolKey, "failed")
-                }
-            } catch (e: Exception) {
-                Log.e("AArchDroid", "handlePidMarker: DB error for $toolKey", e)
-            }
-            file.delete()
-        }
-        // If /proc/$pid exists, wrapper is still running — leave it
     }
 
     companion object {

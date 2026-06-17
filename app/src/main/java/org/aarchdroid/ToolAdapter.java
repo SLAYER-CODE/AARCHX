@@ -50,11 +50,14 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         String nkey = ToolDatabase.normalizeKey(t.key);
         String status = statusCache.getOrDefault(nkey, "not_installed");
         boolean installed = "installed".equals(status);
+        boolean uninstalling = "uninstalling".equals(status);
         boolean isSystem = installed && "local".equals(t.source);
+        boolean clickable = installed || "local".equals(t.source);
         h.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (installed || "local".equals(t.source)) {
+                if (uninstalling) return;
+                if (clickable) {
                     if (listener != null) listener.onToolClick(t);
                 } else {
                     if (listener != null) listener.onInstallClick(t.key);
@@ -88,7 +91,8 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         h.installBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (installed || "local".equals(t.source)) {
+                if (uninstalling) return;
+                if (clickable) {
                     if (listener != null) listener.onLaunchTool(t.key);
                 } else {
                     if (listener != null) listener.onInstallClick(t.key);
@@ -134,27 +138,47 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         int iconRes;
         int tint;
         int textColor;
+        int descColor;
         int statusBg;
 
         if (isSystem) {
             iconRes = R.drawable.ic_check;
             tint = 0xFF00FFFF;
             textColor = 0xFF00FF00;
+            descColor = 0xFF00FF00;
             statusBg = 0xFF00FFFF;
+        } else if ("uninstalling".equals(status)) {
+            iconRes = R.drawable.ic_close_tab_18dp;
+            tint = 0xFFFF0000;
+            textColor = 0xFFFF0000;
+            descColor = 0xFFFF0000;
+            statusBg = 0xFFFF0000;
+            h.description.setText("uninstalling…");
         } else if ("installed".equals(status)) {
+            iconRes = R.drawable.ic_check;
+            tint = 0xFF00FF00;
+            textColor = 0xFF00FF00;
+            descColor = 0xFF00FF00;
+            statusBg = 0xFF00FF00;
+        } else if ("installing".equals(status)) {
             iconRes = R.drawable.ic_install;
             tint = 0xFFFF8C00;
             textColor = 0xFFFF8C00;
+            descColor = 0xFFFF8C00;
             statusBg = 0xFFFF8C00;
+            h.description.setText("installing…");
         } else if ("failed".equals(status)) {
             iconRes = R.drawable.ic_install;
-            tint = 0xFFFF0000;
+            tint = 0xFF006400;
             textColor = 0xFFFF0000;
+            descColor = 0xFF006400;
             statusBg = 0xFFFF0000;
+            h.description.setText("failed");
         } else {
             iconRes = R.drawable.ic_install;
             tint = 0xFF006400;
-            textColor = 0xFF888888;
+            textColor = 0xFF00FF00;
+            descColor = 0xFF006400;
             statusBg = 0xFF006400;
         }
 
@@ -162,10 +186,11 @@ public class ToolAdapter extends RecyclerView.Adapter<ToolAdapter.ViewHolder> {
         h.installBtn.setColorFilter(tint);
         h.statusBar.setBackgroundColor(statusBg);
         h.title.setTextColor(textColor);
-        h.description.setTextColor(textColor);
-        boolean installed = "installed".equals(status);
-        h.uninstallBadge.setVisibility(!isSystem && installed ? View.VISIBLE : View.GONE);
-        h.badgeSize.setVisibility(installed ? View.VISIBLE : View.GONE);
+        h.description.setTextColor(descColor);
+        boolean showUninstall = "installed".equals(status) || "uninstalling".equals(status);
+        h.uninstallBadge.setVisibility(!isSystem && showUninstall ? View.VISIBLE : View.GONE);
+        boolean showSize = "installed".equals(status) || "uninstalling".equals(status);
+        h.badgeSize.setVisibility(showSize ? View.VISIBLE : View.GONE);
         h.badgeRow.setVisibility(View.VISIBLE);
     }
 

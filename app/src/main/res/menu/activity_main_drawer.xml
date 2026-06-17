@@ -27,7 +27,7 @@
 
                 <item
                     android:id="@+id/nav_neovim"
-                    android:icon="@drawable/ic_neovim"
+                    android:icon="@drawable/ic_neovim_new"
                     android:title="Neovim Editor" />
 
             </group>
@@ -146,7 +146,7 @@
                     />
                 <item
                     android:id="@+id/nav_torbrowser"
-                    android:icon="@drawable/torbrowser"
+                    android:icon="@drawable/torbrowser_new"
                     android:title="TorBrowser"
                     />
 

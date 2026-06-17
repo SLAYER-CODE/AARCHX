@@ -17,6 +17,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import org.msgpack.value.Value
 import org.msgpack.value.ValueFactory
 
 import org.aarchdroid.dragonterminal.bridge.Bridge
@@ -130,30 +131,20 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 return@launch
             }
 
-            delay(100)
-            client.apiInfo()
-            delay(50)
+            // Get actual view size (launcher took ~1s, view is already laid out)
+            val (initCols, initRows) = withContext(Dispatchers.Main) { editorView.getGridSize() }
+
+            // Pipeline: send all setup commands immediately (msgpack pipelining)
             client.command("set laststatus=0 noshowmode noshowcmd noruler")
-            client.uiAttach(80, 28)
+            client.uiAttach(initCols, initRows)
             client.command("startinsert")
-            delay(200)
-            buffer.resize(80, 28)
-            // Force insert mode cursor shape even if mode_change redraw hasn't arrived yet
-            buffer.applyModeChange("i")
+
             // Discard keystrokes typed before connection was ready (would be sent in normal mode)
             while (inputQueue.tryReceive().isSuccess) { }
             // Signal consumer: socket + uiAttach are ready
             connected.set(true)
             withContext(Dispatchers.Main) {
-                // Push initial snapshot so cursor is beam from frame 1
-                editorView.updateBuffer(buffer.copySnapshot())
                 editorView.isReady = true
-            }
-
-            // Sync terminal size with view (onSizeChanged may have fired before connect)
-            val (viewCols, viewRows) = withContext(Dispatchers.Main) { editorView.getGridSize() }
-            if (viewCols != 80 || viewRows != 28) {
-                client.request("nvim_ui_try_resize", viewCols, viewRows)
             }
 
             withContext(Dispatchers.Main) {
@@ -247,13 +238,12 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         rowLineMaxCol.clear()
         val names = updates.map { "${it.name}(${it.args.size})" }
         Log.d(TAG, "onRedraw events=${updates.size}: $names")
-        try {
-            for (update in updates) {
+        for (update in updates) {
+            try {
                 processRedrawEvent(update)
+            } catch (e: Exception) {
+                Log.e(TAG, "Redraw error processing ${update.name}", e)
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Redraw error", e)
-            return
         }
         // Detectar BS/delete rápido: cursor movido a la izquierda/misma fila o hacia arriba
         // (texto que deja de wrap) → limpiar celdas que nvim no reenvió
@@ -478,7 +468,44 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                     buffer.scroll(top, bot, left, right, rows, cols)
                     Log.d(TAG, "grid_scroll: grid=$grid top=$top bot=$bot left=$left right=$right rows=$rows cols=$cols")
                 } else {
-                    Log.w(TAG, "grid_scroll: unexpected args=${event.args}")
+                    // Log RAW args structure
+                    val dump = event.args.joinToString(" | ") { arg ->
+                        arg.joinToString(",") { v ->
+                            when { v.isIntegerValue -> "Int(${v.asIntegerValue().toInt()})"
+                                   v.isStringValue -> "Str(${v.asStringValue().asString()})"
+                                   v.isArrayValue -> "Arr(${v.asArrayValue().list().size})"
+                                   else -> v.toString()
+                            }
+                        }
+                    }
+                    Log.w(TAG, "grid_scroll: UNPARSED args.size=${event.args.size} args[0].size=${event.args[0].size}: $dump")
+                }
+            }
+            "win_viewport" -> {
+                fun Value.toDoubleVal(): Double {
+                    return if (isFloatValue) asFloatValue().toDouble() else asIntegerValue().toDouble()
+                }
+                if (event.args.size >= 5 && event.args[0].size == 1) {
+                    // Positional: [[grid], [win], [top], [bot], [cur_line], [cur_col]?]
+                    val grid = event.args[0][0].asIntegerValue().toInt()
+                    val win = event.args[1][0].asIntegerValue().toInt()
+                    val topLine = event.args[2][0].toDoubleVal()
+                    val botLine = event.args[3][0].toDoubleVal()
+                    val curLine = event.args[4][0].toDoubleVal()
+                    val curCol = if (event.args.size > 5) event.args[5][0].toDoubleVal() else 0.0
+                    val scrollDelta = if (event.args.size > 6) event.args[6][0].toDoubleVal() else null
+                    Log.d(TAG, "win_viewport: grid=$grid win=$win top=$topLine bot=$botLine cur=($curLine,$curCol) delta=$scrollDelta")
+                } else if (event.args.isNotEmpty() && event.args[0].size >= 5) {
+                    // Array: [[grid, win, top, bot, cur_line, cur_col?, line_count?, scroll_delta?]]
+                    val a = event.args[0]
+                    val grid = a[0].asIntegerValue().toInt()
+                    val win = a[1].asIntegerValue().toInt()
+                    val topLine = a[2].toDoubleVal()
+                    val botLine = a[3].toDoubleVal()
+                    val curLine = a[4].toDoubleVal()
+                    val curCol = if (a.size > 5) a[5].toDoubleVal() else 0.0
+                    val scrollDelta = if (a.size > 7) a[7].toDoubleVal() else null
+                    Log.d(TAG, "win_viewport: grid=$grid win=$win top=$topLine bot=$botLine cur=($curLine,$curCol) delta=$scrollDelta")
                 }
             }
             "grid_clear" -> {
@@ -697,19 +724,13 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         if (launched) {
             val ok = client.connect()
             if (ok) {
-                delay(100)
+                val (initCols, initRows) = withContext(Dispatchers.Main) { editorView.getGridSize() }
                 client.command("set laststatus=0 noshowmode noshowcmd noruler")
-                client.uiAttach(80, 28)
+                client.uiAttach(initCols, initRows)
                 client.command("startinsert")
-                delay(200)
-                buffer.resize(80, 28)
                 while (inputQueue.tryReceive().isSuccess) { }
                 connected.set(true)
                 withContext(Dispatchers.Main) { editorView.isReady = true }
-                val (viewCols, viewRows) = withContext(Dispatchers.Main) { editorView.getGridSize() }
-                if (viewCols != 80 || viewRows != 28) {
-                    client.request("nvim_ui_try_resize", viewCols, viewRows)
-                }
                 withContext(Dispatchers.Main) {
                     supportActionBar?.title = currentFileName
                     editorView.fileName = currentFileName
