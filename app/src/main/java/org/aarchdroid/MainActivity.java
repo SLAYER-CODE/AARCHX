@@ -46,7 +46,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.aarchdroid.ToolDatabase;
+import org.aarchdroid.ToolInfo;
 import org.aarchdroid.dragonterminal.bridge.Bridge;
 import org.aarchdroid.drawer.DrawerAdapter;
 import org.aarchdroid.drawer.DrawerItem;
@@ -74,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
     private DrawerLayout drawerLayout;
     private boolean isFragmentOpen;
     private View gridContainer;
+    private final Set<String> processingTools = new HashSet<>();
 
     ActivityResultLauncher<Intent> install_dialog_result = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
         static final /* synthetic */ boolean $assertionsDisabled = false;
@@ -310,6 +317,13 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
     @Override
     protected void onResume() {
         super.onResume();
+        refreshDrawerStatuses();
+    }
+
+    private void refreshDrawerStatuses() {
+        RecyclerView rv = findViewById(R.id.drawer_recycler);
+        if (rv == null || rv.getAdapter() == null) return;
+        ((DrawerAdapter) rv.getAdapter()).refreshStatuses(this);
     }
 
     @Override
@@ -401,6 +415,16 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
 
     @Override
     public void onItemClick(DrawerItem item) {
+        if (item.toolKey != null) {
+            String status = ToolDatabase.getInstance().getStatus(item.toolKey);
+            if ("installed".equals(status)) {
+                run_hack_cmd(item.toolKey);
+            } else {
+                drawerInstallTool(item.toolKey);
+            }
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return;
+        }
         int itemId = item.id;
         if (itemId == R.id.nav_terminal) {
             run_hack_cmd("andrax");
@@ -444,11 +468,24 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
             MenuItem cat = menu.getItem(i);
             SubMenu sub = cat.getSubMenu();
             if (sub == null) continue;
+            boolean isCollapsed = i >= 6;
             List<DrawerItem> items = new ArrayList<>();
             for (int j = 0; j < sub.size(); j++) {
                 MenuItem mi = sub.getItem(j);
-                items.add(new DrawerItem(mi.getItemId(),
-                    mi.getIcon(), mi.getTitle()));
+                DrawerItem di = new DrawerItem(mi.getItemId(),
+                    mi.getIcon(), mi.getTitle());
+                if (isCollapsed) {
+                    String entryName = getResources().getResourceEntryName(mi.getItemId());
+                    if (entryName.startsWith("nav_")) {
+                        String tk = entryName.substring(4);
+                        ToolInfo info = ToolDatabase.getInstance().getTool(tk);
+                        if (info != null) {
+                            di.toolKey = tk;
+                            di.source = info.source;
+                        }
+                    }
+                }
+                items.add(di);
             }
             DrawerSection section = new DrawerSection(cat.getTitle(), items);
             sections.add(section);
@@ -458,7 +495,33 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
             sections.get(i).expanded = false;
         }
 
+        // Load DB statuses for collapsed sections
+        Map<String, String> statuses = new HashMap<>();
+        Map<String, Long> sizes = new HashMap<>();
+        for (int i = 6; i < sections.size(); i++) {
+            for (DrawerItem di : sections.get(i).items) {
+                if (di.toolKey != null) {
+                    String status = ToolDatabase.getInstance().getStatus(di.toolKey);
+                    // Clean stale installing state
+                    if ("installing".equals(status)) {
+                        File pidFile = new File(getFilesDir(),
+                            "install-state/" + di.toolKey + ".pid");
+                        if (!pidFile.exists()) {
+                            ToolDatabase.getInstance().markUninstalled(di.toolKey);
+                            status = "not_installed";
+                        }
+                    }
+                    statuses.put(di.toolKey, status);
+                    ToolInfo info = ToolDatabase.getInstance().getTool(di.toolKey);
+                    if (info != null && info.actualSizeBytes > 0) {
+                        sizes.put(di.toolKey, info.actualSizeBytes);
+                    }
+                }
+            }
+        }
+
         DrawerAdapter adapter = new DrawerAdapter(sections, rv);
+        adapter.updateStatuses(statuses, sizes);
         adapter.setOnItemClickListener(this);
         rv.setAdapter(adapter);
     }
@@ -473,6 +536,144 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back_green);
         isFragmentOpen = true;
         invalidateOptionsMenu();
+    }
+
+    private void drawerInstallTool(String toolKey) {
+        String nk = ToolDatabase.normalizeKey(toolKey);
+        if (!processingTools.add(nk)) return;
+        String installCmd = ToolDatabase.getInstance().getInstallCommand(nk);
+        android.util.Log.d("MainActivity", "drawerInstallTool(" + nk + ") cmd=" + installCmd);
+        if (installCmd != null) {
+            try {
+                ToolDatabase.getInstance().markInstalling(nk, installCmd);
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "markInstalling failed", e);
+                processingTools.remove(nk);
+                return;
+            }
+            createPendingMarker(nk);
+            boolean wrapperOk = createInstallWrapper(nk, installCmd);
+            if (wrapperOk) {
+                run_hack_cmd("sh /data/data/org.aarchdroid/files/install-wrappers/" + nk + ".sh");
+            } else {
+                run_hack_cmd(installCmd);
+            }
+        } else {
+            android.util.Log.d("MainActivity", "No install command for " + nk);
+            processingTools.remove(nk);
+        }
+    }
+
+    private void createPendingMarker(String toolKey) {
+        try {
+            File dir = new File(getFilesDir(), "install-state");
+            dir.mkdirs();
+            new File(dir, toolKey + ".pending").createNewFile();
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Failed to create pending marker", e);
+        }
+    }
+
+    private boolean createInstallWrapper(String toolKey, String installCmd) {
+        try {
+            File wrappersDir = new File(getFilesDir(), "install-wrappers");
+            wrappersDir.mkdirs();
+            File script = new File(wrappersDir, toolKey + ".sh");
+
+            String dbPath = "/data/data/org.aarchdroid/databases/tools.db";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("#!/bin/sh\n");
+            sb.append("TOOLKEY='").append(toolKey).append("'\n");
+            sb.append("DB='").append(dbPath).append("'\n");
+            sb.append("STATE_DIR=/data/data/org.aarchdroid/files/install-state\n");
+            sb.append("PID_FILE=$STATE_DIR/$TOOLKEY.pid\n");
+            sb.append("INSTALL_LOG=$STATE_DIR/$TOOLKEY.log\n");
+            sb.append("\n");
+            sb.append("mkdir -p $STATE_DIR 2>/dev/null || true\n");
+            sb.append("echo \"$$\" > $PID_FILE\n");
+            sb.append("trap 'rm -f $PID_FILE $INSTALL_LOG $INSTALL_LOG.exit' EXIT\n");
+            sb.append("rm -f $STATE_DIR/$TOOLKEY.pending\n");
+            sb.append("\n");
+            sb.append("retry_sqlite() {\n");
+            sb.append("  local n=0\n");
+            sb.append("  while [ $n -lt 10 ]; do\n");
+            sb.append("    sqlite3 \"$DB\" \"$1\" 2>/dev/null && return 0\n");
+            sb.append("    n=$((n+1))\n");
+            sb.append("    sleep 0.2 2>/dev/null || usleep 200000 2>/dev/null || :\n");
+            sb.append("  done\n");
+            sb.append("  sqlite3 \"$DB\" \"$1\"\n");
+            sb.append("}\n");
+            sb.append("\n");
+            sb.append("_run() {\n");
+            sb.append("  (\n");
+            sb.append("    $1\n");
+            sb.append("    echo $? > \"$INSTALL_LOG.exit\"\n");
+            sb.append("  ) 2>&1 | tee \"$INSTALL_LOG\"\n");
+            sb.append("  read EC < \"$INSTALL_LOG.exit\" 2>/dev/null || EC=1\n");
+            sb.append("  rm -f \"$INSTALL_LOG.exit\"\n");
+            sb.append("}\n");
+            String cmd = installCmd;
+            if (cmd.startsWith("pacman ")) {
+                cmd = cmd.replaceFirst("^pacman ", "pacman --color always --disable-download-timeout ");
+            }
+            sb.append("echo \"\"\n");
+            sb.append("echo -e \"\\033[1;34m[AArchDroid]\\033[0m \\033[1;33mInstalando\\033[0m: $TOOLKEY\"\n");
+            sb.append("echo \"\"\n");
+            sb.append("INSTALL_CMD='").append(installCmd.replace("'", "'\\''")).append("'\n");
+            sb.append("_run \"$INSTALL_CMD\"\n");
+            sb.append("EXIT_CODE=$EC\n");
+            sb.append("if [ $EXIT_CODE -ne 0 ] && echo \"$INSTALL_CMD\" | grep -qE '^pacman --color always '; then\n");
+            sb.append("  echo \"\"\n");
+            sb.append("  echo -e \"\\033[1;33m  -\\033[0m Sincronizando bases de datos...\"\n");
+            sb.append("  _run \"pacman --color always --disable-download-timeout -Sy\"\n");
+            sb.append("  if [ $EC -eq 0 ]; then\n");
+            sb.append("    echo \"\"\n");
+            sb.append("    echo -e \"\\033[1;33m  -\\033[0m Reintentando instalacion...\"\n");
+            sb.append("    _run \"$INSTALL_CMD\"\n");
+            sb.append("    EXIT_CODE=$EC\n");
+            sb.append("  else\n");
+            sb.append("    echo -e \"\\033[1;31m  -\\033[0m Error al sincronizar repositorios (verifica tu conexion)\"\n");
+            sb.append("  fi\n");
+            sb.append("fi\n");
+            sb.append("\n");
+            sb.append("echo \"\"\n");
+            sb.append("echo \"==========================================\"\n");
+            sb.append("if [ $EXIT_CODE -eq 0 ]; then\n");
+            sb.append("  echo -e \"\\033[1;32m  [AArchDroid] Instalacion completada: Exitoso\\033[0m\"\n");
+            sb.append("else\n");
+            sb.append("  echo -e \"\\033[1;31m  [AArchDroid] Instalacion completada: Fallido\\033[0m\"\n");
+            sb.append("fi\n");
+            sb.append("echo \"==========================================\"\n");
+            sb.append("\n");
+            sb.append("if [ $EXIT_CODE -eq 0 ]; then\n");
+            sb.append("    BINARY=$(command -v $TOOLKEY 2>/dev/null || echo \"\")\n");
+            sb.append("    if [ -z \"$BINARY\" ]; then\n");
+            sb.append("        for d in /usr/bin /bin /data/data/com.termux/files/usr/bin /data/data/org.aarchdroid/files/usr/bin; do\n");
+            sb.append("            [ -f \"$d/$TOOLKEY\" ] && BINARY=\"$d/$TOOLKEY\" && break\n");
+            sb.append("        done\n");
+            sb.append("    fi\n");
+            sb.append("    SIZE=0\n");
+            sb.append("    [ -n \"$BINARY\" ] && SIZE=$(stat -c%s \"$BINARY\" 2>/dev/null || echo 0)\n");
+            sb.append("    NOW=$(date +%s)\n");
+            sb.append("    retry_sqlite \"UPDATE tools SET status='installed', installPath='$BINARY', actualSizeBytes=$SIZE, installedAt=$NOW, errorLog=NULL WHERE toolKey='$TOOLKEY'\"\n");
+            sb.append("    CATEGORY=$(sqlite3 \"$DB\" \"SELECT category FROM tools WHERE toolKey='$TOOLKEY'\")\n");
+            sb.append("    retry_sqlite \"UPDATE categories SET installedTools=(SELECT COUNT(*) FROM tools WHERE category='$CATEGORY' AND status='installed'), installedSizeMb=(SELECT COALESCE(SUM(actualSizeBytes)/(1024*1024),0) FROM tools WHERE category='$CATEGORY' AND status='installed') WHERE name='$CATEGORY'\"\n");
+            sb.append("else\n");
+            sb.append("    ERROR=$(tail -5 $INSTALL_LOG 2>/dev/null | tr '\\n' ' ' | sed \"s/'/''/g\")\n");
+            sb.append("    retry_sqlite \"UPDATE tools SET status='failed', errorLog='$ERROR' WHERE toolKey='$TOOLKEY'\"\n");
+            sb.append("fi\n");
+            sb.append("rm -f $INSTALL_LOG\n");
+
+            FileOutputStream fos = new FileOutputStream(script);
+            fos.write(sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            fos.close();
+            script.setExecutable(true, false);
+            return true;
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Failed to create install wrapper", e);
+            return false;
+        }
     }
 
     public void run_hack_cmd(String str) {

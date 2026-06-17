@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.aarchdroid.R;
 
 import java.util.List;
+import java.util.Map;
 
 public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -24,9 +25,19 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private static final int TYPE_CATEGORY = 1;
     private static final int TYPE_ITEM = 2;
 
+    private static final int NOT_INSTALLED = 0xFF08FF00;
+    private static final int INSTALLED = 0xFFFF8C00;
+    private static final int INSTALLING = 0xFFFFEB3B;
+    private static final int FAILED = 0xFFFF4444;
+    private static final int LOCAL = 0xFF00FFFF;
+    private static final int TEXT_DEFAULT = 0xFFfefefe;
+    private static final int TEXT_GRAY = 0xFF888888;
+
     private final List<DrawerSection> sections;
     private final RecyclerView recyclerView;
     private OnItemClickListener listener;
+    private Map<String, String> statusCache = new java.util.HashMap<>();
+    private Map<String, Long> sizeCache = new java.util.HashMap<>();
 
     public DrawerAdapter(List<DrawerSection> sections, RecyclerView recyclerView) {
         this.sections = sections;
@@ -37,11 +48,44 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         this.listener = listener;
     }
 
+    public void updateStatuses(Map<String, String> statuses, Map<String, Long> sizes) {
+        this.statusCache = statuses;
+        this.sizeCache = sizes;
+    }
+
+    public void refreshStatuses(android.content.Context context) {
+        org.aarchdroid.ToolDatabase db = org.aarchdroid.ToolDatabase.getInstance();
+        Map<String, String> st = new java.util.HashMap<>();
+        Map<String, Long> sz = new java.util.HashMap<>();
+        for (DrawerSection sec : sections) {
+            for (DrawerItem di : sec.items) {
+                if (di.toolKey == null) continue;
+                String s = db.getStatus(di.toolKey);
+                if ("installing".equals(s)) {
+                    java.io.File pidFile = new java.io.File(
+                        context.getFilesDir(), "install-state/" + di.toolKey + ".pid");
+                    if (!pidFile.exists()) {
+                        db.markUninstalled(di.toolKey);
+                        s = "not_installed";
+                    }
+                }
+                st.put(di.toolKey, s);
+                org.aarchdroid.ToolInfo info = db.getTool(di.toolKey);
+                if (info != null && info.actualSizeBytes > 0) {
+                    sz.put(di.toolKey, info.actualSizeBytes);
+                }
+            }
+        }
+        this.statusCache = st;
+        this.sizeCache = sz;
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getItemCount() {
-        int count = 1; // header
+        int count = 1;
         for (DrawerSection sec : sections) {
-            count++; // category header
+            count++;
             if (sec.expanded) count += sec.items.size();
         }
         return count;
@@ -63,7 +107,7 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     }
 
     private Object resolve(int position) {
-        if (position == 0) return null; // header
+        if (position == 0) return null;
         int pos = 1;
         for (DrawerSection sec : sections) {
             if (pos == position) return sec;
@@ -74,6 +118,32 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 pos += sec.items.size();
             }
         }
+        return null;
+    }
+
+    private int statusColor(String status) {
+        if ("installed".equals(status)) return INSTALLED;
+        if ("installing".equals(status)) return INSTALLING;
+        if ("failed".equals(status)) return FAILED;
+        return NOT_INSTALLED;
+    }
+
+    private int textColor(String status) {
+        if ("installed".equals(status)) return INSTALLED;
+        if ("installing".equals(status)) return INSTALLING;
+        if ("failed".equals(status)) return FAILED;
+        return TEXT_GRAY;
+    }
+
+    private String badgeText(String status, long sizeBytes) {
+        if ("installing".equals(status)) return "INSTALLING...";
+        if ("failed".equals(status)) return "FAILED";
+        if ("installed".equals(status) && sizeBytes > 0) {
+            if (sizeBytes >= 1024 * 1024) return (sizeBytes / (1024 * 1024)) + "MB";
+            if (sizeBytes >= 1024) return (sizeBytes / 1024) + "KB";
+            return sizeBytes + "B";
+        }
+        if ("installed".equals(status)) return "INSTALLED";
         return null;
     }
 
@@ -110,10 +180,38 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             DrawerItem item = (DrawerItem) obj;
             ItemViewHolder vh = (ItemViewHolder) holder;
             vh.title.setText(item.title);
-            if (item.icon != null) {
-                vh.icon.setImageDrawable(item.icon.mutate());
-                vh.icon.setColorFilter(0xFF08FF00, PorterDuff.Mode.SRC_IN);
+
+            if (item.toolKey != null) {
+                String status = statusCache != null ? statusCache.get(item.toolKey) : null;
+                if (status == null) status = "not_installed";
+                boolean localSource = "local".equals(item.source);
+                int color = localSource ? LOCAL : statusColor(status);
+                int tColor = localSource ? LOCAL : textColor(status);
+
+                if (item.icon != null) {
+                    vh.icon.setImageDrawable(item.icon.mutate());
+                    vh.icon.setColorFilter(color, PorterDuff.Mode.SRC_IN);
+                }
+                vh.title.setTextColor(tColor);
+
+                long size = sizeCache != null ? sizeCache.getOrDefault(item.toolKey, 0L) : 0;
+                String badge = badgeText(status, size);
+                if (badge != null) {
+                    vh.badge.setText(badge);
+                    vh.badge.setTextColor(color);
+                    vh.badge.setVisibility(View.VISIBLE);
+                } else {
+                    vh.badge.setVisibility(View.GONE);
+                }
+            } else {
+                if (item.icon != null) {
+                    vh.icon.setImageDrawable(item.icon.mutate());
+                    vh.icon.setColorFilter(NOT_INSTALLED, PorterDuff.Mode.SRC_IN);
+                }
+                vh.title.setTextColor(TEXT_DEFAULT);
+                vh.badge.setVisibility(View.GONE);
             }
+
             vh.itemView.setOnClickListener(v -> {
                 if (listener != null) listener.onItemClick(item);
             });
@@ -137,10 +235,12 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     static class ItemViewHolder extends RecyclerView.ViewHolder {
         ImageView icon;
         TextView title;
+        TextView badge;
         ItemViewHolder(View v) {
             super(v);
             icon = v.findViewById(R.id.icon);
             title = v.findViewById(R.id.title);
+            badge = v.findViewById(R.id.badge);
         }
     }
 }

@@ -16,7 +16,6 @@ import android.widget.Toast
 import org.aarchdroid.dragonterminal.util.SortedListAdapter
 import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.backend.TerminalSession
-import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.floating.TerminalDialog
 import org.aarchdroid.dragonterminal.ui.pm.adapter.PackageAdapter
 import org.aarchdroid.dragonterminal.ui.pm.model.PackageModel
@@ -85,10 +84,9 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
     }
 
     private fun installPackage(packageName: String) {
-        val shell = NeoPreference.getLoginShellPath()
         TerminalDialog(this@PackageManagerActivity)
-                .execute(shell,
-                        arrayOf("-c", "pacman -S --needed --noconfirm $packageName"))
+                .execute("su", arrayOf("-M", "-c",
+                        "env PACMAN_DISABLE_SANDBOX=1 chroot /data/local/aarchdroid /usr/bin/pacman -S --needed --noconfirm $packageName"))
                 .onFinish(object : TerminalDialog.SessionFinishedCallback {
                     override fun onSessionFinished(dialog: TerminalDialog, finishedSession: TerminalSession?) {
                         dialog.setTitle(getString(R.string.done))

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="NeovimTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:colorBackground">@color/neovim_background</item>
+        <item name="colorPrimary">@color/neovim_surface</item>
+        <item name="colorPrimaryDark">@color/neovim_black</item>
+        <item name="colorAccent">@color/neovim_primary</item>
+        <item name="android:windowBackground">@color/neovim_background</item>
+        <item name="android:textColor">@color/neovim_text</item>
+        <item name="android:navigationBarColor">@color/neovim_black</item>
+        <item name="android:statusBarColor">@color/neovim_black</item>
+    </style>
+</resources>

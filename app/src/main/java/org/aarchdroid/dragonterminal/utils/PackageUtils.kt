@@ -2,20 +2,11 @@ package org.aarchdroid.dragonterminal.utils
 
 import android.content.Context
 import org.aarchdroid.dragonterminal.backend.TerminalSession
-import org.aarchdroid.dragonterminal.component.pm.PackageComponent
-import org.aarchdroid.dragonterminal.component.pm.SourceManager
-import org.aarchdroid.dragonterminal.frontend.component.ComponentManager
-import org.aarchdroid.dragonterminal.frontend.config.NeoTermPath
 import org.aarchdroid.dragonterminal.frontend.floating.TerminalDialog
-import java.io.File
 
-/**
- * @author kiva
- */
 object PackageUtils {
     fun pacman(context: Context, args: Array<String>, callback: (Int, TerminalDialog) -> Unit) {
         val command = args.joinToString(" ")
-        val shell = org.aarchdroid.dragonterminal.frontend.config.NeoPreference.getLoginShellPath()
         TerminalDialog(context)
                 .onFinish(object : TerminalDialog.SessionFinishedCallback {
                     override fun onSessionFinished(dialog: TerminalDialog, finishedSession: TerminalSession?) {
@@ -24,7 +15,8 @@ object PackageUtils {
                     }
                 })
                 .imeEnabled(true)
-                .execute(shell, arrayOf("-c", command))
+                .execute("su", arrayOf("-M", "-c",
+                        "env PACMAN_DISABLE_SANDBOX=1 chroot /data/local/aarchdroid /usr/bin/$command"))
                 .show(command)
     }
 }

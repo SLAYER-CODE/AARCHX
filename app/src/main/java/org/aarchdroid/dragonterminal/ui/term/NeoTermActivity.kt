@@ -126,6 +126,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     private var isLoadingMore = false
     private var earlyTerminalPlaceholder: View? = null
     private val tabSessionMap = HashMap<String, String>() // TerminalSession.handle -> sessionId
+    private var tabSwitcherListener: TabSwitcherListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -374,96 +375,99 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
             PreferenceManager.getDefaultSharedPreferences(this)
                     .registerOnSharedPreferenceChangeListener(this)
-            tabSwitcher.addListener(object : TabSwitcherListener {
-                override fun onSwitcherShown(tabSwitcher: TabSwitcher) {
-                    toolbar.setBackgroundResource(android.R.color.black)
-                }
-
-                override fun onSwitcherHidden(tabSwitcher: TabSwitcher) {
-                    toolbar.setBackgroundResource(R.color.black_fuck)
-                    val hiddenTab = tabSwitcher.selectedTab
-                    if (hiddenTab is TermTab) {
-                        hiddenTab.termData.extraKeysView?.visibility = View.VISIBLE
+            if (tabSwitcherListener == null) {
+                tabSwitcherListener = object : TabSwitcherListener {
+                    override fun onSwitcherShown(tabSwitcher: TabSwitcher) {
+                        toolbar.setBackgroundResource(android.R.color.black)
                     }
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        val tab = tabSwitcher.selectedTab
-                        if (tab is TermTab) {
-                            tab.termData.termView?.let { view ->
-                                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                                imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
-                            }
+
+                    override fun onSwitcherHidden(tabSwitcher: TabSwitcher) {
+                        toolbar.setBackgroundResource(R.color.black_fuck)
+                        val hiddenTab = tabSwitcher.selectedTab
+                        if (hiddenTab is TermTab) {
+                            hiddenTab.termData.extraKeysView?.visibility = View.VISIBLE
                         }
-                    }, 0)
-                }
-
-                override fun onSelectionChanged(tabSwitcher: TabSwitcher, selectedTabIndex: Int, selectedTab: Tab?) {
-                    if (selectedTab is TermTab && selectedTab.termData.termSession != null) {
-                        NeoPreference.storeCurrentSession(selectedTab.termData.termSession!!)
-                    }
-                }
-
-                override fun onTabAdded(tabSwitcher: TabSwitcher, index: Int, tab: Tab, animation: Animation) {
-                    update_colors()
-                    updatePlaceholderVisibility()
-                }
-
-                override fun onTabRemoved(tabSwitcher: TabSwitcher, index: Int, tab: Tab, animation: Animation) {
-                    Log.d("NeoTermAct", "onTabRemoved idx=$index type=${tab::class.simpleName}")
-                    if (tab is TermTab) {
-                        val session = tab.termData.termSession
-                        val isTransfer = session != null && session.mHandle == this@NeoTermActivity.transferringHandle
-                        Log.d("NeoTermAct", "onTabRemoved session=${session?.mHandle} isTransfer=$isTransfer transferringHandle=${this@NeoTermActivity.transferringHandle}")
-                        if (isTransfer) {
-                            // Transfer to float: don't kill session, don't close history
-                            this@NeoTermActivity.transferringHandle = null
-                            val taken = termService?.takeSession(session!!.mHandle)
-                            Log.d("NeoTermAct", "takeSession returned: ${taken != null}")
-                            // Mark exit destiny as float
-                            CommandInterceptor.getContext(session!!.mHandle)?.let { ctx ->
-                                SessionHistory.updateTerminalDestiny(this@NeoTermActivity, ctx.terminalId, "flotante")
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            val tab = tabSwitcher.selectedTab
+                            if (tab is TermTab) {
+                                tab.termData.termView?.let { view ->
+                                    view.requestFocus()
+                                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                                    imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                                }
                             }
-                            AArchDroidApp.transferredSession = taken
-                            if (taken != null) {
-                                val intent = Intent(this@NeoTermActivity, FloatService::class.java)
-                                    .setAction(FloatService.ACTION_TAKEOVER)
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                Log.d("NeoTermAct", "starting FloatService with ACTION_TAKEOVER")
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    startForegroundService(intent)
+                        }, 0)
+                    }
+
+                    override fun onSelectionChanged(tabSwitcher: TabSwitcher, selectedTabIndex: Int, selectedTab: Tab?) {
+                        if (selectedTab is TermTab && selectedTab.termData.termSession != null) {
+                            NeoPreference.storeCurrentSession(selectedTab.termData.termSession!!)
+                        }
+                    }
+
+                    override fun onTabAdded(tabSwitcher: TabSwitcher, index: Int, tab: Tab, animation: Animation) {
+                        update_colors()
+                        updatePlaceholderVisibility()
+                    }
+
+                    override fun onTabRemoved(tabSwitcher: TabSwitcher, index: Int, tab: Tab, animation: Animation) {
+                        Log.d("NeoTermAct", "onTabRemoved idx=$index type=${tab::class.simpleName}")
+                        if (tab is TermTab) {
+                            val session = tab.termData.termSession
+                            val isTransfer = session != null && session.mHandle == this@NeoTermActivity.transferringHandle
+                            Log.d("NeoTermAct", "onTabRemoved session=${session?.mHandle} isTransfer=$isTransfer transferringHandle=${this@NeoTermActivity.transferringHandle}")
+                            if (isTransfer) {
+                                // Transfer to float: don't kill session, don't close history
+                                this@NeoTermActivity.transferringHandle = null
+                                val taken = termService?.takeSession(session!!.mHandle)
+                                Log.d("NeoTermAct", "takeSession returned: ${taken != null}")
+                                // Mark exit destiny as float
+                                CommandInterceptor.getContext(session!!.mHandle)?.let { ctx ->
+                                    SessionHistory.updateTerminalDestiny(this@NeoTermActivity, ctx.terminalId, "flotante")
+                                }
+                                AArchDroidApp.transferredSession = taken
+                                if (taken != null) {
+                                    val intent = Intent(this@NeoTermActivity, FloatService::class.java)
+                                        .setAction(FloatService.ACTION_TAKEOVER)
+                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    Log.d("NeoTermAct", "starting FloatService with ACTION_TAKEOVER")
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        startForegroundService(intent)
+                                    } else {
+                                        startService(intent)
+                                    }
                                 } else {
-                                    startService(intent)
+                                    Log.w("NeoTermAct", "takeSession returned null!")
                                 }
                             } else {
-                                Log.w("NeoTermAct", "takeSession returned null!")
-                            }
-                        } else {
-                            // Normal close: kill session and close history
-                            if (session != null) {
-                                CommandInterceptor.getContext(session.mHandle)?.let { ctx ->
-                                    SessionHistory.updateTerminalDestiny(this@NeoTermActivity, ctx.terminalId, "cerrada")
+                                // Normal close: kill session and close history
+                                if (session != null) {
+                                    CommandInterceptor.getContext(session.mHandle)?.let { ctx ->
+                                        SessionHistory.updateTerminalDestiny(this@NeoTermActivity, ctx.terminalId, "cerrada")
+                                    }
+                                    val sid = tabSessionMap.remove(session.mHandle)
+                                    if (sid != null) {
+                                        SessionHistory.closeSession(this@NeoTermActivity, sid)
+                                        sessionHistoryAdapter?.updateData(SessionHistory.getHistory(this@NeoTermActivity).sessions)
+                                    }
+                                    CommandInterceptor.unregisterSession(session.mHandle)
                                 }
-                                val sid = tabSessionMap.remove(session.mHandle)
-                                if (sid != null) {
-                                    SessionHistory.closeSession(this@NeoTermActivity, sid)
-                                    sessionHistoryAdapter?.updateData(SessionHistory.getHistory(this@NeoTermActivity).sessions)
-                                }
-                                CommandInterceptor.unregisterSession(session.mHandle)
+                                SessionRemover.removeSession(termService, tab)
                             }
-                            SessionRemover.removeSession(termService, tab)
+                        } else if (tab is XSessionTab) {
+                            SessionRemover.removeXSession(termService, tab)
                         }
-                    } else if (tab is XSessionTab) {
-                        SessionRemover.removeXSession(termService, tab)
+                        updatePlaceholderVisibility()
                     }
-                    updatePlaceholderVisibility()
-                }
 
-                override fun onAllTabsRemoved(tabSwitcher: TabSwitcher, tabs: Array<out Tab>, animation: Animation) {
-                    // Reload session history from disk after all tabs closed
-                    val h = SessionHistory.getHistory(this@NeoTermActivity)
-                    sessionHistoryAdapter?.updateData(h.sessions)
-                    updatePlaceholderVisibility()
-                }
-            })
+                    override fun onAllTabsRemoved(tabSwitcher: TabSwitcher, tabs: Array<out Tab>, animation: Animation) {
+                        // Reload session history from disk after all tabs closed
+                        val h = SessionHistory.getHistory(this@NeoTermActivity)
+                        sessionHistoryAdapter?.updateData(h.sessions)
+                        updatePlaceholderVisibility()
+                    }
+                }.also { tabSwitcher.addListener(it) }
+            }
             val tab = tabSwitcher.selectedTab as NeoTab?
             tab?.onResume()
 
@@ -497,6 +501,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         tab?.onDestroy()
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this)
+        tabSwitcherListener?.let { tabSwitcher.removeListener(it) }
 
         // Close all remaining session history records
         tabSessionMap.forEach { (handle, sid) ->
