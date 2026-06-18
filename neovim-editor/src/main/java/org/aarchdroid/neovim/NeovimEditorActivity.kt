@@ -30,8 +30,6 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     companion object {
         private const val TAG = "NeovimEditor"
         private const val REQUEST_OPEN_FILE = 1001
-        private const val PORT = 9999
-        private const val HOST = "127.0.0.1"
     }
 
     private lateinit var editorView: NeovimEditorView
@@ -39,7 +37,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     private lateinit var posView: TextView
 
     private val launcher = NeovimLauncher(this)
-    private val client = NeovimClient(HOST, PORT)
+    private val client = NeovimClient()
     private val buffer = NeovimBuffer()
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val inputQueue = Channel<String>(Channel.UNLIMITED)
@@ -118,14 +116,14 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         supportActionBar?.title = "Starting Neovim..."
 
         scope.launch {
-            val launched = launcher.launch()
-            if (!launched) {
+            val proc = launcher.launch()
+            if (proc == null) {
                 supportActionBar?.title = "Neovim not found!"
                 Toast.makeText(this@NeovimEditorActivity, "Install nvim first", Toast.LENGTH_LONG).show()
                 return@launch
             }
 
-            val connectedOk = client.connect()
+            val connectedOk = client.connect(proc)
             if (!connectedOk) {
                 supportActionBar?.title = "Connection failed"
                 return@launch
@@ -695,7 +693,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     }
 
     private fun openInTerminal() {
-        val cmd = "nvim --listen $HOST:$PORT --remote-ui"
+        val cmd = "nvim --remote-ui"
         val intent = Bridge.createExecuteIntent(cmd)
         intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
         startActivity(intent)
@@ -720,9 +718,9 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         withContext(Dispatchers.IO) { client.disconnect() }
         launcher.shutdown()
         delay(500)
-        val launched = launcher.launch()
-        if (launched) {
-            val ok = client.connect()
+        val proc = launcher.launch()
+        if (proc != null) {
+            val ok = client.connect(proc)
             if (ok) {
                 val (initCols, initRows) = withContext(Dispatchers.Main) { editorView.getGridSize() }
                 client.command("set laststatus=0 noshowmode noshowcmd noruler")

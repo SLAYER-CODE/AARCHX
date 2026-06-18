@@ -4,87 +4,43 @@ import android.content.Context
 import android.util.Log
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.net.InetSocketAddress
-import java.net.Socket
 
 class NeovimLauncher(private val context: Context) {
     companion object {
         private const val TAG = "NeovimLauncher"
-        private const val PORT = 9999
-        private const val HOST = "127.0.0.1"
         private const val CHROOT_DIR = "/data/local/aarchdroid"
     }
 
-    data class LaunchedProcess(
-        val process: Process,
-        val host: String,
-        val port: Int
-    )
+    private var process: Process? = null
+    var nvimPath: String? = null
 
-    private var launched: LaunchedProcess? = null
+    val isRunning: Boolean get() = process?.isAlive ?: false
 
-    val isRunning: Boolean get() = launched != null
-    fun getHost(): String = HOST
-    fun getPort(): Int = PORT
-
-    suspend fun launch(): Boolean {
+    suspend fun launch(): Process? {
         return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                val nvimPath = findNvim()
-                if (nvimPath == null) {
+                val path = findNvim()
+                if (path == null) {
                     Log.e(TAG, "nvim not found")
-                    return@withContext false
+                    return@withContext null
                 }
+                nvimPath = path
 
-                killExistingOnPort()
-
-                val proc = if (nvimPath.startsWith(CHROOT_DIR)) {
-                    launchInChroot(nvimPath)
+                val proc = if (path.startsWith(CHROOT_DIR)) {
+                    launchInChroot(path)
                 } else {
-                    launchDirect(nvimPath)
+                    launchDirect(path)
                 }
 
-                // Fast poll: check every 200ms with 200ms connect timeout
-                // Total max: 30 attempts × 200ms = 6s (same as before but finer granularity)
-                var attempts = 0
-                val maxAttempts = 30
-                while (attempts < maxAttempts) {
-                    Thread.sleep(200)
-                    if (checkPortOpen(HOST, PORT, 200)) {
-                        launched = LaunchedProcess(proc, HOST, PORT)
-                        Log.d(TAG, "nvim launched from $nvimPath (attempt ${attempts + 1})")
-                        return@withContext true
-                    }
-                    attempts++
-                }
+                // Consume stderr so process doesn't block on pipe buffer
+                Thread({ try { proc.errorStream.bufferedReader().readText() } catch (_: Exception) {} }, "nvim-stderr").start()
 
-                // Port still not open — kill any stale process and retry once
-                Log.e(TAG, "nvim not responding on $HOST:$PORT after $maxAttempts attempts, retrying...")
-                killExistingOnPort()
-                Thread.sleep(500)
-
-                val proc2 = if (nvimPath.startsWith(CHROOT_DIR)) {
-                    launchInChroot(nvimPath)
-                } else {
-                    launchDirect(nvimPath)
-                }
-
-                attempts = 0
-                while (attempts < 15) { // 15 × 200ms = 3s for retry
-                    Thread.sleep(200)
-                    if (checkPortOpen(HOST, PORT, 200)) {
-                        launched = LaunchedProcess(proc2, HOST, PORT)
-                        Log.d(TAG, "nvim launched on retry (attempt ${attempts + 1})")
-                        return@withContext true
-                    }
-                    attempts++
-                }
-
-                Log.e(TAG, "nvim failed to launch after retry")
-                false
+                process = proc
+                Log.d(TAG, "nvim launched with --embed from $path")
+                proc
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to launch nvim: ${e.message}")
-                false
+                null
             }
         }
     }
@@ -92,7 +48,7 @@ class NeovimLauncher(private val context: Context) {
     private fun launchInChroot(fullPath: String): Process {
         val relPath = fullPath.removePrefix(CHROOT_DIR)
         val cmd = "mount -o remount,exec,suid,dev,rw /data 2>/dev/null; " +
-                "exec chroot $CHROOT_DIR $relPath --headless --listen $HOST:$PORT " +
+                "exec chroot $CHROOT_DIR $relPath --embed " +
                 "-c 'set notermguicolors' -c 'highlight Normal ctermbg=NONE' -c 'startinsert' " +
                 "-c 'set laststatus=0 noshowmode noshowcmd'"
         Log.d(TAG, "Launching via chroot: su -c $cmd")
@@ -102,14 +58,12 @@ class NeovimLauncher(private val context: Context) {
     private fun launchDirect(nvimPath: String): Process {
         val pb = ProcessBuilder(
             nvimPath,
-            "--headless",
-            "--listen", "$HOST:$PORT",
+            "--embed",
             "-c", "set notermguicolors",
             "-c", "highlight Normal ctermbg=NONE",
             "-c", "startinsert",
             "-c", "set laststatus=0 noshowmode noshowcmd"
         )
-        pb.environment()["NVIM_LISTEN_ADDRESS"] = "$HOST:$PORT"
         pb.environment()["TERM"] = "xterm-256color"
 
         // If path is under Termux, add its lib path
@@ -117,46 +71,18 @@ class NeovimLauncher(private val context: Context) {
             pb.environment()["LD_LIBRARY_PATH"] = "/data/data/com.termux/files/usr/lib"
         }
 
-        pb.redirectErrorStream(true)
+        // stderr → /dev/null so it doesn't corrupt msgpack stream
+        pb.redirectErrorStream(false)
+        pb.redirectError(ProcessBuilder.Redirect.to(File("/dev/null")))
         Log.d(TAG, "Launching direct: $nvimPath")
         return pb.start()
     }
 
     fun shutdown() {
         try {
-            launched?.process?.destroy()
-            killExistingOnPort()
+            process?.destroy()
         } catch (_: Exception) {}
-        launched = null
-    }
-
-    private fun checkPortOpen(host: String, port: Int, timeout: Int = 1000): Boolean {
-        return try {
-            Socket().use { socket ->
-                socket.connect(InetSocketAddress(host, port), timeout)
-                true
-            }
-        } catch (_: Exception) {
-            false
-        }
-    }
-
-    private fun killExistingOnPort() {
-        try {
-            val cmds = listOf(
-                arrayOf("su", "-c", "fuser -k ${PORT}/tcp 2>/dev/null"),
-                arrayOf("su", "-c", "lsof -ti:$PORT 2>/dev/null | xargs kill -9 2>/dev/null"),
-                arrayOf("sh", "-c", "fuser -k ${PORT}/tcp 2>/dev/null"),
-                arrayOf("sh", "-c", "lsof -ti:$PORT 2>/dev/null | xargs kill -9 2>/dev/null")
-            )
-            for (cmd in cmds) {
-                try {
-                    val p = Runtime.getRuntime().exec(cmd)
-                    p.waitFor(2, java.util.concurrent.TimeUnit.SECONDS)
-                } catch (_: Exception) {}
-            }
-            Thread.sleep(300)
-        } catch (_: Exception) {}
+        process = null
     }
 
     private fun findNvim(): String? {

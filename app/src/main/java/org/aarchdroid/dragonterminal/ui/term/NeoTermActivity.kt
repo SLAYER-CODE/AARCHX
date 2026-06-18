@@ -403,7 +403,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             isOutsideTouchable = true
         }
 
-        popup.showAsDropDown(anchor, anchor.width, 0)
+        val xoff = (anchor.width - contentWidth) / 2
+        popup.showAsDropDown(anchor, xoff, 0)
 
         val tab = tabSwitcher.selectedTab
         if (tab is TermTab) {

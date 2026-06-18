@@ -6,16 +6,11 @@ import org.msgpack.core.MessagePack
 import org.msgpack.core.MessageUnpacker
 import org.msgpack.value.Value
 import org.msgpack.value.ValueFactory
+import java.io.InputStream
 import java.io.OutputStream
-import java.net.InetSocketAddress
-import java.net.Socket
-import java.net.SocketTimeoutException
 import java.nio.ByteBuffer
 
-class NeovimClient(
-    private val host: String = "127.0.0.1",
-    private val port: Int = 9999
-) {
+class NeovimClient {
     interface Callback {
         fun onConnected()
         fun onDisconnected()
@@ -28,37 +23,31 @@ class NeovimClient(
         val args: List<List<Value>>
     )
 
-    private var socket: Socket? = null
-    private var output: OutputStream? = null
+    private var process: Process? = null
+    private var processInput: InputStream? = null
+    private var processOutput: OutputStream? = null
     private var requestId = 1
     private var isConnected = false
     private val writeLock = Any()
     private var callback: Callback? = null
     private var readJob: Job? = null
-    private var keepAliveJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun setCallback(cb: Callback) {
         callback = cb
     }
 
-    suspend fun connect(timeoutMs: Long = 5000): Boolean {
+    suspend fun connect(proc: Process): Boolean {
         return withContext(Dispatchers.IO) {
             try {
-                // Close previous socket if any (prevents FD leak on reconnect)
-                try { socket?.close() } catch (_: Exception) {}
-                socket = null
-                output = null
-                val sock = Socket()
-                sock.connect(InetSocketAddress(host, port), timeoutMs.toInt())
-                sock.soTimeout = 45000
-                socket = sock
-                output = sock.getOutputStream()
+                process?.destroy()
+                process = proc
+                processInput = proc.inputStream
+                processOutput = proc.outputStream
                 isConnected = true
                 callback?.onConnected()
                 startReader()
-                startKeepAlive()
-                Log.d("NeovimClient", "Connected to nvim at $host:$port")
+                Log.d("NeovimClient", "Connected via --embed")
                 true
             } catch (e: Exception) {
                 Log.e("NeovimClient", "Connection failed: ${e.message}")
@@ -70,13 +59,13 @@ class NeovimClient(
 
     fun disconnect() {
         isConnected = false
-        keepAliveJob?.cancel()
         readJob?.cancel()
         try {
-            socket?.close()
+            process?.destroy()
         } catch (_: Exception) {}
-        socket = null
-        output = null
+        process = null
+        processInput = null
+        processOutput = null
         scope.coroutineContext[Job]?.let { it.children.forEach { c -> c.cancel() } }
         callback?.onDisconnected()
         callback = null
@@ -94,8 +83,8 @@ class NeovimClient(
                     packer.packString(method)
                     packArgs(packer, args.toList())
                     packer.close()
-                    output?.write(packer.toByteArray())
-                    output?.flush()
+                    processOutput?.write(packer.toByteArray())
+                    processOutput?.flush()
                 }
             } catch (e: Exception) {
                 Log.e("NeovimClient", "Request failed: ${e.message}")
@@ -114,8 +103,8 @@ class NeovimClient(
                     packer.packString(method)
                     packArgs(packer, args.toList())
                     packer.close()
-                    output?.write(packer.toByteArray())
-                    output?.flush()
+                    processOutput?.write(packer.toByteArray())
+                    processOutput?.flush()
                 }
             } catch (e: Exception) {
                 Log.e("NeovimClient", "Notify failed: ${e.message}")
@@ -219,10 +208,10 @@ class NeovimClient(
 
             while (isConnected) {
                 try {
-                    val sock = socket ?: break
-                    val n = sock.inputStream.read(buf)
+                    val input = processInput ?: break
+                    val n = input.read(buf)
                     if (n < 0) {
-                        Log.d("NeovimClient", "Socket closed")
+                        Log.d("NeovimClient", "Process stdout closed")
                         callback?.onDisconnected()
                         break
                     }
@@ -247,9 +236,6 @@ class NeovimClient(
                         }
                     }
                     tmp.compact()
-                } catch (e: SocketTimeoutException) {
-                    // Expected between messages — continue reading
-                    continue
                 } catch (e: Exception) {
                     if (isConnected) {
                         Log.e("NeovimClient", "Read error: ${e.message}")
@@ -257,17 +243,6 @@ class NeovimClient(
                     }
                     break
                 }
-            }
-        }
-    }
-
-    private fun startKeepAlive() {
-        keepAliveJob = scope.launch {
-            while (isConnected) {
-                delay(15000)
-                try {
-                    request("nvim_get_mode")
-                } catch (_: Exception) {}
             }
         }
     }
@@ -311,7 +286,6 @@ class NeovimClient(
                         val updates = rawList.map { event ->
                             val eventArr = event.asArrayValue()
                             val name = eventArr.list()[0].asStringValue().asString()
-                            // Cada arg msgpack es su propio event.args[i]
                             val evtArgs = mutableListOf<List<Value>>()
                             for (i in 1 until eventArr.list().size) {
                                 val v = eventArr.list()[i]
@@ -323,7 +297,6 @@ class NeovimClient(
                             }
                             RedrawEvent(name, evtArgs)
                         }
-                        // Log raw structure for first 30 redraw batches
                         if (logRawEvents && redrawCounter < 30) {
                             redrawCounter++
                             val eventNames = updates.map { it.name }
@@ -409,4 +382,3 @@ private class ByteBufferInputStream(private val buffer: ByteBuffer) : java.io.In
 
     override fun available(): Int = buffer.remaining()
 }
-
