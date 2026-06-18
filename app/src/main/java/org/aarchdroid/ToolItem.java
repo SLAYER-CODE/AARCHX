@@ -1,6 +1,8 @@
 package org.aarchdroid;
 
-public class ToolItem {
+import java.io.Serializable;
+
+public class ToolItem implements Serializable {
     public String key;
     public String displayName;
     public String description;

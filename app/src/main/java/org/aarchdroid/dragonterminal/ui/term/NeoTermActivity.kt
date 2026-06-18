@@ -17,6 +17,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
@@ -110,10 +111,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             ToolItem("C2/RAT", R.drawable.c2, "org.aarchdroid.Dco_c2_rat"),
             ToolItem("MacOS/iPhone", R.drawable.mobilenethacking, "org.aarchdroid.Dco_macos_iphone")
         )
-        private val activityClassCache = HashMap<String, Class<*>>()
     }
 
     private lateinit var errorDialog: Dialog
+    private var toolsDialog: android.app.AlertDialog? = null
 
     lateinit var tabSwitcher: TabSwitcher
     private lateinit var fullScreenHelper: FullScreenHelper
@@ -142,6 +143,19 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val d = toolsDialog
+                if (d != null && d.isShowing) {
+                    d.dismiss()
+                    toolsDialog = null
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        })
         Log.d("AArchDroid", "NeoTermActivity: onCreate() — entering terminal activity")
         Log.d("AArchDroid", "NeoTermActivity: intent action=" + (intent?.action ?: "null") +
                 " extras=" + (intent?.extras?.keySet()?.joinToString() ?: "null") +
@@ -380,12 +394,30 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             }
             onItemClickListener = AdapterView.OnItemClickListener { _, _, p, _ ->
                 val tool = TOOLS[p]
-                try {
-                    val clazz = activityClassCache.getOrPut(tool.activityClass) { Class.forName(tool.activityClass) }
-                    startActivity(Intent(this@NeoTermActivity, clazz))
-                } catch (e: Exception) {
-                    Log.e("AArchDroid", "showToolsPopup: cannot start ${tool.name} — ${e.message}")
-                }
+                val simpleName = tool.activityClass.substringAfterLast('.')
+                val dbKey = simpleName.removePrefix("Dco_").lowercase()
+
+                val toolView = ToolCategoryView(
+                    context = this@NeoTermActivity,
+                    categoryName = tool.name,
+                    bannerResId = tool.icon,
+                    statsToolsCount = "0",
+                    categoryDbKey = dbKey
+                )
+                toolView.setBackgroundColor(Color.parseColor("#CC111111"))
+
+                AlertDialog.Builder(this@NeoTermActivity)
+                    .setView(toolView)
+                    .setCancelable(true)
+                    .setOnDismissListener { toolsDialog = null }
+                    .show()
+                    .also { dialog ->
+                        toolsDialog = dialog
+                        dialog.window?.setLayout(
+                            (resources.displayMetrics.widthPixels * 0.90).toInt(),
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                        )
+                    }
                 popup?.dismiss()
             }
             divider = null

@@ -243,67 +243,9 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 Log.e(TAG, "Redraw error processing ${update.name}", e)
             }
         }
-        // Detectar BS/delete rápido: cursor movido a la izquierda/misma fila o hacia arriba
-        // (texto que deja de wrap) → limpiar celdas que nvim no reenvió
-        val curRow = buffer.cursor.row
-        val curCol = buffer.cursor.col
-        val movedLeft = curRow == prevCursorRow && curCol < prevCursorCol
-        val movedUp = curRow < prevCursorRow
-        if (movedLeft || movedUp) {
-            var hasGridLine = false
-            for (update in updates) {
-                if (update.name == "grid_line") {
-                    for (arg in update.args) {
-                        val row = if (arg.size >= 4) arg[1].asIntegerValue().toInt()
-                                  else if (arg.size >= 3) arg[1].asIntegerValue().toInt()
-                                  else -1
-                        if (row == curRow) { hasGridLine = true; break }
-                    }
-                }
-                if (hasGridLine) break
-            }
-            if (hasGridLine) {
-                if (movedLeft) {
-                    val clearFrom = curCol
-                    val clearTo = prevCursorCol - 1
-                    Log.d(TAG, "BS remnants: row=$curRow cols=$clearFrom..$clearTo (prev=$prevCursorCol cur=$curCol)")
-                    for (c in clearFrom..clearTo) {
-                        buffer.setCell(curRow, c, NeovimCell(char = ' ', foreground = defaultFg, background = defaultBg))
-                    }
-                    // Clear trailing cells beyond what grid_line covered
-                    val maxCol = rowLineMaxCol[curRow] ?: clearTo + 1
-                    if (maxCol < buffer.gridWidth) {
-                        Log.d(TAG, "BS remnants: trailing clear row=$curRow from=$maxCol to=${buffer.gridWidth - 1}")
-                        for (c in maxCol until buffer.gridWidth) {
-                            buffer.setCell(curRow, c, NeovimCell(char = ' ', foreground = defaultFg, background = defaultBg))
-                        }
-                    }
-                }
-                if (movedUp) {
-                    // Texto dejó de wrap: limpiar filas intermedias entre cursor actual y anterior
-                    Log.d(TAG, "BS remnants: unwrap row=$curRow..$prevCursorRow (prevRow=$prevCursorRow curRow=$curRow)")
-                    // trailing clear en la fila del cursor también
-                    val cursorMaxCol = rowLineMaxCol[curRow] ?: 0
-                    if (cursorMaxCol < buffer.gridWidth) {
-                        for (c in cursorMaxCol until buffer.gridWidth) {
-                            buffer.setCell(curRow, c, NeovimCell(char = ' ', foreground = defaultFg, background = defaultBg))
-                        }
-                    }
-                    for (r in curRow + 1..prevCursorRow) {
-                        val maxCol = rowLineMaxCol[r] ?: 0
-                        for (c in maxCol until buffer.gridWidth) {
-                            buffer.setCell(r, c, NeovimCell(char = ' ', foreground = defaultFg, background = defaultBg))
-                        }
-                    }
-                }
-            } else {
-                Log.d(TAG, "BS remnants: no gridLine for affected row, skipping")
-            }
-        } else {
-            Log.d(TAG, "BS remnants: no left move (prev=$prevCursorRow,$prevCursorCol cur=$curRow,$curCol)")
-        }
-        prevCursorRow = curRow
-        prevCursorCol = curCol
+        // Track cursor for next redraw
+        prevCursorRow = buffer.cursor.row
+        prevCursorCol = buffer.cursor.col
         val snapshot = buffer.copySnapshot()
         val modeName = snapshot.mode.name
         val cursorRow = snapshot.cursor.row
@@ -386,7 +328,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                     underline = attrs?.underline ?: false
                                 )
                                 if (repeat == 0) {
-                                    Log.w(TAG, "grid_line: repeat=0 at row=$row col=$col, char='${text[0]}'(${text[0].code}) hlId=$hlId")
+                                    Log.v(TAG, "grid_line: repeat=0 at row=$row col=$col")
                                 }
                                 for (k in 0 until repeat) {
                                     if (col < buffer.gridWidth) {
@@ -480,30 +422,44 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
             }
             "win_viewport" -> {
-                fun Value.toDoubleVal(): Double {
-                    return if (isFloatValue) asFloatValue().toDouble() else asIntegerValue().toDouble()
-                }
-                if (event.args.size >= 5 && event.args[0].size == 1) {
-                    // Positional: [[grid], [win], [top], [bot], [cur_line], [cur_col]?]
-                    val grid = event.args[0][0].asIntegerValue().toInt()
-                    val win = event.args[1][0].asIntegerValue().toInt()
-                    val topLine = event.args[2][0].toDoubleVal()
-                    val botLine = event.args[3][0].toDoubleVal()
-                    val curLine = event.args[4][0].toDoubleVal()
-                    val curCol = if (event.args.size > 5) event.args[5][0].toDoubleVal() else 0.0
-                    val scrollDelta = if (event.args.size > 6) event.args[6][0].toDoubleVal() else null
-                    Log.d(TAG, "win_viewport: grid=$grid win=$win top=$topLine bot=$botLine cur=($curLine,$curCol) delta=$scrollDelta")
-                } else if (event.args.isNotEmpty() && event.args[0].size >= 5) {
-                    // Array: [[grid, win, top, bot, cur_line, cur_col?, line_count?, scroll_delta?]]
-                    val a = event.args[0]
-                    val grid = a[0].asIntegerValue().toInt()
-                    val win = a[1].asIntegerValue().toInt()
-                    val topLine = a[2].toDoubleVal()
-                    val botLine = a[3].toDoubleVal()
-                    val curLine = a[4].toDoubleVal()
-                    val curCol = if (a.size > 5) a[5].toDoubleVal() else 0.0
-                    val scrollDelta = if (a.size > 7) a[7].toDoubleVal() else null
-                    Log.d(TAG, "win_viewport: grid=$grid win=$win top=$topLine bot=$botLine cur=($curLine,$curCol) delta=$scrollDelta")
+                try {
+                    fun Value.toDoubleValSafe(): Double {
+                        return when {
+                            isFloatValue -> asFloatValue().toDouble()
+                            isIntegerValue -> asIntegerValue().toDouble()
+                            isNilValue -> 0.0
+                            else -> { Log.w(TAG, "toDoubleValSafe: unexpected ${this.valueType} = $this"); 0.0 }
+                        }
+                    }
+                    fun Value.toIntValSafe(): Int {
+                        return when {
+                            isIntegerValue -> asIntegerValue().toInt()
+                            isNilValue -> 0
+                            else -> { Log.w(TAG, "toIntValSafe: unexpected ${this.valueType} = $this"); 0 }
+                        }
+                    }
+                    if (event.args.size >= 5 && event.args[0].size == 1) {
+                        val grid = event.args[0][0].toIntValSafe()
+                        val win = event.args[1][0].toIntValSafe()
+                        val topLine = event.args[2][0].toDoubleValSafe()
+                        val botLine = event.args[3][0].toDoubleValSafe()
+                        val curLine = event.args[4][0].toDoubleValSafe()
+                        val curCol = if (event.args.size > 5) event.args[5][0].toDoubleValSafe() else 0.0
+                        val scrollDelta = if (event.args.size > 6) event.args[6][0].toDoubleValSafe() else null
+                        Log.d(TAG, "win_viewport: grid=$grid win=$win top=$topLine bot=$botLine cur=($curLine,$curCol) delta=$scrollDelta")
+                    } else if (event.args.isNotEmpty() && event.args[0].size >= 5) {
+                        val a = event.args[0]
+                        val grid = a[0].toIntValSafe()
+                        val win = a[1].toIntValSafe()
+                        val topLine = a[2].toDoubleValSafe()
+                        val botLine = a[3].toDoubleValSafe()
+                        val curLine = a[4].toDoubleValSafe()
+                        val curCol = if (a.size > 5) a[5].toDoubleValSafe() else 0.0
+                        val scrollDelta = if (a.size > 7) a[7].toDoubleValSafe() else null
+                        Log.d(TAG, "win_viewport: grid=$grid win=$win top=$topLine bot=$botLine cur=($curLine,$curCol) delta=$scrollDelta")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "win_viewport: exception ${e.message} args=${event.args}")
                 }
             }
             "grid_clear" -> {
@@ -611,13 +567,16 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         editorView.requestKeyboard("extrakey")
     }
 
+    private var lastTitle = ""
+    private var lastPos = ""
     private fun updateToolbarTitle(modeName: String, cursorRow: Int, cursorCol: Int) {
         val mode = modeName.uppercase().take(4)
         val line = cursorRow + 1
         val col = cursorCol + 1
-        supportActionBar?.title = "$mode  $currentFileName"
-        posView.text = "$line,$col"
-        Log.v(TAG, "title: $mode  $currentFileName  | posView: $line,$col")
+        val title = "$mode  $currentFileName"
+        val pos = "$line,$col"
+        if (title != lastTitle) { supportActionBar?.title = title; lastTitle = title }
+        if (pos != lastPos) { posView.text = pos; lastPos = pos }
     }
 
     private fun openFilePicker() {
@@ -641,12 +600,15 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                     editorView.fileName = currentFileName
 
                     scope.launch {
+                        Log.d(TAG, "openFile: ${currentFileName} size=${content.length}")
                         client.command("enew!")
-                        val escaped = content.replace("'", "''")
-                        client.command("0put = '$escaped'")
-                        client.command("1delete_")
+                        // Split en background thread para no bloquear
+                        val lines = withContext(Dispatchers.Default) { content.split('\n') }
+                        Log.d(TAG, "openFile: lines=${lines.size}")
+                        client.request("nvim_buf_set_lines", 0, 0, -1, true, lines)
                         client.command("file " + escapeVimPath(currentFileName))
                         client.input("<Esc>gg")
+                        Log.d(TAG, "openFile: done")
                     }
                     Toast.makeText(this, "Opened: $currentFileName", Toast.LENGTH_SHORT).show()
                 }

@@ -46,6 +46,9 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     private var touchLastY = 0f
     private var touchAccumScroll = 0f
     private var isTouchDragging = false
+    private var pinchStartDist = 0f
+    private var pinchStartFontSize = 14f
+    private var isPinching = false
 
     var onInput: ((String) -> Unit)? = null
     var onResize: ((Int, Int) -> Unit)? = null
@@ -94,6 +97,17 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
             blinkHandler.postDelayed(this, cursorBlinkInterval)
         }
     }
+    private val resizeDebounceHandler = Handler(Looper.getMainLooper())
+    private val resizeDebounceRunnable = Runnable { emitResize() }
+    private var pendingCols = 0
+    private var pendingRows = 0
+
+    private fun emitResize() {
+        if (pendingCols > 0 && pendingRows > 0) {
+            Log.d("NeovimEditorView", "emitResize ${pendingRows}x${pendingCols}")
+            onResize?.invoke(pendingRows, pendingCols)
+        }
+    }
 
     init {
         setBackgroundColor(0xFF000000.toInt())
@@ -101,20 +115,50 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         isFocusableInTouchMode = true
 
         setOnTouchListener { _, event ->
-            when (event.action) {
+            val action = event.actionMasked
+            Log.v("NeovimEditorView", "TouchEvent action=$action pc=${event.pointerCount} ready=$isReady isPinching=$isPinching")
+            when (action) {
                 MotionEvent.ACTION_DOWN -> {
+                    isPinching = false
                     touchDownX = event.x
                     touchDownY = event.y
                     touchLastY = event.y
                     touchAccumScroll = 0f
                     isTouchDragging = false
-                    Log.v("NeovimEditorView", "ACTION_DOWN x=${event.x} y=${event.y}")
-                    requestFocus()
-                    showKeyboard("touch")
                     if (!isReady) return@setOnTouchListener true
                 }
+                MotionEvent.ACTION_POINTER_DOWN -> {
+                    if (event.pointerCount >= 2) {
+                        val x0 = event.getX(0); val y0 = event.getY(0)
+                        val x1 = event.getX(1); val y1 = event.getY(1)
+                        val dx = x0 - x1; val dy = y0 - y1
+                        pinchStartDist = kotlin.math.sqrt(dx * dx + dy * dy)
+                        pinchStartFontSize = fontSize
+                        isPinching = true
+                        isTouchDragging = false
+                        Log.d("NeovimEditorView", "PINCH START dist=$pinchStartDist fontSize=$fontSize p0=($x0,$y0) p1=($x1,$y1)")
+                    }
+                }
                 MotionEvent.ACTION_MOVE -> {
-                    if (!isReady || cellHeight <= 0f) return@setOnTouchListener true
+                    if (!isReady) return@setOnTouchListener true
+                    if (isPinching && event.pointerCount >= 2) {
+                        val x0 = event.getX(0); val y0 = event.getY(0)
+                        val x1 = event.getX(1); val y1 = event.getY(1)
+                        val dx = x0 - x1; val dy = y0 - y1
+                        val curDist = kotlin.math.sqrt(dx * dx + dy * dy)
+                        Log.v("NeovimEditorView", "PINCH MOVE curDist=$curDist startDist=$pinchStartDist")
+                        if (pinchStartDist > 0f) {
+                            val scale = curDist / pinchStartDist
+                            val rawSize = pinchStartFontSize * scale
+                            val newSize = rawSize.toInt().coerceIn(8, 36)
+                            Log.d("NeovimEditorView", "PINCH scale=$scale rawSize=$rawSize newSize=$newSize current=${fontSize.toInt()}")
+                            if (newSize != fontSize.toInt()) {
+                                setFontSize(newSize)
+                            }
+                        }
+                        return@setOnTouchListener true
+                    }
+                    if (cellHeight <= 0f) return@setOnTouchListener true
                     val dy = event.y - touchLastY
                     touchLastY = event.y
                     touchAccumScroll += dy
@@ -129,15 +173,25 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
                         isTouchDragging = true
                     }
                 }
+                MotionEvent.ACTION_POINTER_UP -> {
+                    Log.d("NeovimEditorView", "POINTER_UP pc=${event.pointerCount} idx=${event.actionIndex}")
+                    if (event.pointerCount <= 2) {
+                        isPinching = false
+                    }
+                }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    Log.v("NeovimEditorView", "ACTION_UP dragging=$isTouchDragging")
-                    if (!isTouchDragging && isReady) {
+                    Log.d("NeovimEditorView", "UP/CANCEL dragging=$isTouchDragging isPinching=$isPinching")
+                    if (!isTouchDragging && !isPinching && isReady) {
+                        // Tap: focus view and show keyboard
+                        requestFocus()
+                        showKeyboard("tap")
                         val col = ((touchDownX - gridOffsetX) / cellWidth).toInt()
                         val row = ((touchDownY - gridOffsetY) / cellHeight).toInt()
                         if (col in 0 until buffer.gridWidth && row in 0 until buffer.gridHeight) {
                             onInput?.invoke("<LeftMouse><${col + 1},${row + 1}>")
                         }
                     }
+                    isPinching = false
                 }
             }
             true
@@ -334,14 +388,14 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         cellHeight = metrics.descent - metrics.ascent + 2f
         cellWidth = maxOf(cellWidth, 1f)
         cellHeight = maxOf(cellHeight, 1f)
-        // Recalcular grid y notificar a nvim inmediatamente
-        // onSizeChanged no se dispara si el tamaño del view no cambia
+        // Debounced resize: only emit to nvim after 300ms of no font changes
+        resizeDebounceHandler.removeCallbacks(resizeDebounceRunnable)
         if (width > 0 && height > 0) {
             val statusHeight = (cellHeight + 4f).toInt().coerceAtLeast(20)
-            val cols = (width / cellWidth).toInt().coerceAtLeast(20)
-            val rows = ((height - statusHeight) / cellHeight).toInt().coerceAtLeast(8)
-            if (cols != buffer.gridWidth || rows != buffer.gridHeight) {
-                onResize?.invoke(rows, cols)
+            pendingCols = (width / cellWidth).toInt().coerceAtLeast(20)
+            pendingRows = ((height - statusHeight) / cellHeight).toInt().coerceAtLeast(8)
+            if (pendingCols != buffer.gridWidth || pendingRows != buffer.gridHeight) {
+                resizeDebounceHandler.postDelayed(resizeDebounceRunnable, 300)
             }
         }
         requestLayout()
@@ -356,8 +410,12 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         val rows = ((h - statusHeight) / cellHeight).toInt().coerceAtLeast(8)
         gridOffsetX = (w - cols * cellWidth) / 2f
         gridOffsetY = 0f
+        // Debounced resize
+        resizeDebounceHandler.removeCallbacks(resizeDebounceRunnable)
+        pendingCols = cols
+        pendingRows = rows
         if (cols != buffer.gridWidth || rows != buffer.gridHeight) {
-            onResize?.invoke(rows, cols)
+            resizeDebounceHandler.postDelayed(resizeDebounceRunnable, 300)
         }
     }
 
