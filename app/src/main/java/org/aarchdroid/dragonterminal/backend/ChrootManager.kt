@@ -9,9 +9,11 @@ object ChrootManager {
     private const val CHROOT_BASE = "/data/local/aarchdroid"
     private const val CHROOT_PROC = "$CHROOT_BASE/proc"
     private const val MOUNT_CACHE_TTL_MS = 500L
+    private const val USB_MOUNT_TTL_MS = 2000L
 
     private var lastMountCheckTime = 0L
     private var lastMountResult = false
+    private var lastUsbMountTime = 0L
 
     private val SETUP_COMMANDS: String by lazy {
         buildString {
@@ -40,7 +42,27 @@ object ChrootManager {
             append("mount -t devpts devpts $CHROOT_BASE/dev/pts 2>/dev/null; ")
             append("mount -t tmpfs tmpfs $CHROOT_BASE/dev/shm 2>/dev/null; ")
             append("chmod 1777 $CHROOT_BASE/tmp $CHROOT_BASE/dev/shm 2>/dev/null; ")
+            // /run tmpfs for PID files, sockets, service runtime data
+            append("mkdir -p $CHROOT_BASE/run 2>/dev/null; mount -t tmpfs tmpfs $CHROOT_BASE/run 2>/dev/null; chmod 1777 $CHROOT_BASE/run 2>/dev/null; ")
             append("umount $CHROOT_BASE/data/data/org.aarchdroid 2>/dev/null; mount -o bind /data/data/org.aarchdroid $CHROOT_BASE/data/data/org.aarchdroid")
+        }
+    }
+
+    private val USB_MOUNT_COMMAND: String by lazy {
+        // Iterate over host USB device nodes (if any) and create matching nodes
+        // in the chroot via mknod. This avoids relying on broken toybox mount --bind.
+        buildString {
+            append("USB_OK=0; ")
+            append("for node in /dev/bus/usb/*/*; do ")
+            append("[ -c \"\$node\" ] || continue; ")
+            append("maj=\$(stat -c '%t' \"\$node\"); min=\$(stat -c '%T' \"\$node\"); ")
+            append("rel=\"\${node#/dev/bus/usb/}\"; ")
+            append("mkdir -p $CHROOT_BASE/dev/bus/usb/\$(dirname \$rel) 2>/dev/null; ")
+            append("mknod $CHROOT_BASE/dev/bus/usb/\$rel c \$((0x\$maj)) \$((0x\$min)) 2>/dev/null; ")
+            append("USB_OK=1; ")
+            append("done; ")
+            append("chroot $CHROOT_BASE /bin/bash -c 'test -c /dev/bus/usb/*/*' 2>/dev/null && USB_OK=1; ")
+            append("echo USB_OK=\$USB_OK")
         }
     }
 
@@ -59,8 +81,28 @@ object ChrootManager {
     }
 
     fun ensureMounted(): Boolean {
-        if (isMounted()) return true
-        return runSetup()
+        val ok = if (isMounted()) true else runSetup()
+        mountUsb()
+        return ok
+    }
+
+    fun mountUsb(): Boolean {
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastUsbMountTime < USB_MOUNT_TTL_MS) return false
+        lastUsbMountTime = now
+        return try {
+            // Use -M (global mount namespace) so nodes match what nvim inside
+            // the chroot sees via getSuEntryArgs()
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-M", "-c", USB_MOUNT_COMMAND))
+            val output = process.inputStream.bufferedReader().readText().trim()
+            val exitCode = process.waitFor()
+            exitCode == 0 && output.contains("USB_OK=1")
+        } catch (e: IOException) {
+            false
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            false
+        }
     }
 
     private fun runSetup(): Boolean {

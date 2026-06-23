@@ -18,9 +18,8 @@
         android:minHeight="48dp">
         <View
             android:id="@+id/status_bar"
-            android:layout_width="4dp"
-            android:layout_height="28dp"
-            android:layout_gravity="center_vertical"
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
             android:background="#006400" />
         <RelativeLayout
             android:layout_width="0dp"

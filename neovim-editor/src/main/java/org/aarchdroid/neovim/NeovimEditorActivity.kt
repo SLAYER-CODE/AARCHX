@@ -129,8 +129,11 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 return@launch
             }
 
-            // Get actual view size (launcher took ~1s, view is already laid out)
-            val (initCols, initRows) = withContext(Dispatchers.Main) { editorView.getGridSize() }
+            // Wait until view is laid out, then get actual size
+            val (initCols, initRows) = withContext(Dispatchers.Main) {
+                editorView.waitForLayout()
+                editorView.getGridSize()
+            }
 
             // Pipeline: send all setup commands immediately (msgpack pipelining)
             client.command("set laststatus=0 noshowmode noshowcmd noruler")

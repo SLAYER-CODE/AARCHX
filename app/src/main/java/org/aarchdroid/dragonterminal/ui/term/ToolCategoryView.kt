@@ -20,11 +20,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.aarchdroid.*
 import org.aarchdroid.dragonterminal.bridge.Bridge
+import org.aarchdroid.dragonterminal.ui.term.getRecentTools
+import org.aarchdroid.dragonterminal.ui.term.saveRecentTool
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
+import android.os.Handler
+import android.os.Looper
 import java.util.HashSet
 
 class ToolCategoryView @JvmOverloads constructor(
@@ -43,9 +47,34 @@ class ToolCategoryView @JvmOverloads constructor(
     private var scrollListenerAttached = false
     private var hasRoot: Boolean? = null
     private var onDismissRequest: (() -> Unit)? = null
+    private val exitCheckHandler = Handler(Looper.getMainLooper())
+    private var exitCheckDone = false
+
+    private val exitCheckRunnable = object : Runnable {
+        override fun run() {
+            if (exitCheckDone) return
+            Log.d(TAG, "exitCheckRunnable: checking for exit files...")
+            val stateDir = File(context.filesDir, "install-state")
+            if (processToolExitFiles(context)) {
+                Log.d(TAG, "exitCheckRunnable: found exit files, processing")
+                exitCheckDone = true
+                processStaleInstalls(stateDir)
+                refreshStatusesAsync()
+            } else {
+                Log.d(TAG, "exitCheckRunnable: no exit files, scheduling next check")
+                exitCheckHandler.postDelayed(this, 2000)
+            }
+        }
+    }
 
     fun setOnDismissRequest(listener: () -> Unit) {
         onDismissRequest = listener
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        exitCheckDone = true
+        exitCheckHandler.removeCallbacks(exitCheckRunnable)
     }
 
     init {
@@ -70,6 +99,7 @@ class ToolCategoryView @JvmOverloads constructor(
 
         processExitFiles()
         refreshStatusesAsync()
+        exitCheckHandler.postDelayed(exitCheckRunnable, 2000)
         setupDynamicSizing(list)
     }
 
@@ -81,6 +111,7 @@ class ToolCategoryView @JvmOverloads constructor(
             Log.w(TAG, "No tools in DB for category '$categoryDbKey', using fallback")
             return buildFallbackToolList(ctx)
         }
+        val recent = getRecentTools(ctx)
         return infos.map { info ->
             ToolItem().apply {
                 key = info.toolKey
@@ -88,11 +119,12 @@ class ToolCategoryView @JvmOverloads constructor(
                 description = info.description ?: ""
                 source = info.source ?: ""
                 cmd = info.toolKey
-                val drawableName = info.toolKey.replace('-', '_')
-                iconResId = ctx.resources.getIdentifier(drawableName, "drawable", ctx.packageName)
-                    .takeIf { it != 0 } ?: R.drawable.andraxtool
+                iconResId = resolveIcon(info, ctx)
             }
-        }
+        }.sortedWith(compareBy<ToolItem> {
+            val idx = recent.indexOf(it.key)
+            if (idx >= 0) idx else Int.MAX_VALUE
+        }.thenBy { it.displayName })
     }
 
     private fun buildFallbackToolList(ctx: Context): List<ToolItem> {
@@ -105,7 +137,7 @@ class ToolCategoryView @JvmOverloads constructor(
                 description = info.description ?: ""
                 source = info.source ?: ""
                 cmd = info.toolKey
-                iconResId = R.drawable.andraxtool
+                iconResId = resolveIcon(info, ctx)
             }
         }
     }
@@ -116,15 +148,20 @@ class ToolCategoryView @JvmOverloads constructor(
     }
 
     private fun refreshStatusesAsync() {
+        val cat = categoryDbKey
+        Log.d(TAG, "refreshStatusesAsync: category=$cat")
         Thread {
             try {
                 val db = ToolDatabase.getInstance()
-                val statuses = db.getStatusMap(categoryDbKey)
-                val toolInfos = db.getToolInfoMap(categoryDbKey)
+                val statuses = db.getStatusMap(cat)
+                val toolInfos = db.getToolInfoMap(cat)
+                val sample = statuses.entries.take(5).joinToString { "${it.key}=${it.value}" }
+                Log.d(TAG, "refreshStatusesAsync: statuses sample: $sample (total=${statuses.size})")
                 post {
                     adapter?.updateCache(statuses, toolInfos)
                     adapter?.notifyDataSetChanged()
                     updateStatsSize()
+                    Log.d(TAG, "refreshStatusesAsync: adapter updated on UI thread")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "refreshStatusesAsync error", e)
@@ -170,51 +207,13 @@ class ToolCategoryView @JvmOverloads constructor(
     }
 
     private fun processExitFiles() {
-        try {
-            val stateDir = File(context.filesDir, "install-state")
-            if (!stateDir.exists()) return
-            val files = stateDir.listFiles() ?: return
-            var changed = false
-            for (f in files) {
-                val name = f.name
-                if (!name.endsWith(".exit")) continue
-                val toolKey = name.substring(0, name.length - 5)
-                try {
-                    val content = String(FileInputStream(f).readBytes()).trim()
-                    val exitCode = content.toInt()
-                    val isUninstall = File(stateDir, "${toolKey}.uninstall").exists()
-
-                    if (isUninstall) {
-                        if (exitCode == 0) ToolDatabase.getInstance().markUninstalled(toolKey)
-                        else ToolDatabase.getInstance().markInstalled(toolKey)
-                        File(stateDir, "${toolKey}.uninstall").delete()
-                    } else {
-                        if (exitCode == 0) {
-                            ToolDatabase.getInstance().markInstalled(toolKey)
-                        } else {
-                            val logFile = File(stateDir, "${toolKey}.log")
-                            val error = if (logFile.exists()) {
-                                val logBytes = FileInputStream(logFile).readBytes()
-                                val s = String(logBytes)
-                                if (s.length > 1000) s.substring(s.length - 1000) else s
-                            } else ""
-                            ToolDatabase.getInstance().markFailed(toolKey, error)
-                        }
-                    }
-                    f.delete()
-                    File(stateDir, "${toolKey}.log").delete()
-                    changed = true
-                } catch (e: Exception) {
-                    Log.e(TAG, "processExitFiles: error for $toolKey", e)
-                }
-            }
-            if (changed) {
-                processStaleInstalls(stateDir)
-                refreshStatusesAsync()
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "processExitFiles error", e)
+        val found = processToolExitFiles(context)
+        Log.d(TAG, "processExitFiles: processToolExitFiles returned $found")
+        val stateDir = File(context.filesDir, "install-state")
+        if (found) {
+            processStaleInstalls(stateDir)
         }
+        refreshStatusesAsync()
     }
 
     private fun processStaleInstalls(stateDir: File) {
@@ -223,11 +222,15 @@ class ToolCategoryView @JvmOverloads constructor(
             if (categoryDbKey.isEmpty()) return
             val statuses = db.getStatusMap(categoryDbKey)
             for ((toolKey, st) in statuses) {
-                if (st != "installing" && st != "uninstalling") continue
+                if (st != "installing" && st != "uninstalling") {
+                    Log.d(TAG, "processStaleInstalls: $toolKey status=$st - skipping")
+                    continue
+                }
                 val pendingFile = File(stateDir, "${toolKey}.pending")
                 val exitFile = File(stateDir, "${toolKey}.exit")
-                if (exitFile.exists()) continue
-                if (pendingFile.exists()) continue
+                if (exitFile.exists()) { Log.d(TAG, "processStaleInstalls: $toolKey has exitFile, skipping"); continue }
+                if (pendingFile.exists()) { Log.d(TAG, "processStaleInstalls: $toolKey has pendingFile, skipping"); continue }
+                Log.d(TAG, "processStaleInstalls: $toolKey has no exit/pending, marking as stale")
                 if (st == "installing") db.markFailed(toolKey, "Installation aborted or state lost")
                 else db.markInstalled(toolKey)
             }
@@ -238,6 +241,7 @@ class ToolCategoryView @JvmOverloads constructor(
 
     private fun processInstallTool(toolKey: String) {
         val nk = ToolDatabase.normalizeKey(toolKey)
+        saveRecentTool(context, nk)
         if (!processingTools.add(nk)) {
             Log.d(TAG, "processInstallTool($toolKey) already processing — ignored")
             return
@@ -266,6 +270,7 @@ class ToolCategoryView @JvmOverloads constructor(
 
     private fun onUninstallClick(toolKey: String) {
         val nk = ToolDatabase.normalizeKey(toolKey)
+        saveRecentTool(context, nk)
         if (!processingTools.add(nk)) {
             Log.d(TAG, "onUninstallClick($toolKey) already processing — ignored")
             return
@@ -287,6 +292,7 @@ class ToolCategoryView @JvmOverloads constructor(
     }
 
     private fun handleCardClick(item: ToolItem) {
+        saveRecentTool(context, item.key)
         if (item.source == "github") {
             runHackCmd("cd /Herramientas/${item.key} && ls -la", item.iconResId)
         } else {
@@ -295,6 +301,7 @@ class ToolCategoryView @JvmOverloads constructor(
     }
 
     private fun onLaunchTool(toolKey: String) {
+        saveRecentTool(context, toolKey)
         val source = ToolDatabase.getInstance().getSource(toolKey)
         if (source == "github") {
             runHackCmd("cd /Herramientas/$toolKey && ls -la")
@@ -322,6 +329,7 @@ class ToolCategoryView @JvmOverloads constructor(
         }
         try {
             context.startActivity(intent)
+            onDismissRequest?.invoke()
         } catch (e: Exception) {
             Log.e(TAG, "runHackCmd failed: ${e.message}", e)
         }
@@ -352,8 +360,8 @@ class ToolCategoryView @JvmOverloads constructor(
     }
 
     private fun buildInstallInline(toolKey: String, installCmd: String): String {
-        val filesDir = context.filesDir.absolutePath
-        val stateDir = "$filesDir/install-state"
+        val appDir = "/data/data/" + context.packageName + "/"
+        val stateDir = "${appDir}files/install-state"
         val logFile = "$stateDir/$toolKey.log"
         val exitFile = "$stateDir/$toolKey.exit"
 
@@ -391,8 +399,8 @@ class ToolCategoryView @JvmOverloads constructor(
     }
 
     private fun buildUninstallInline(toolKey: String, uninstallCmd: String): String {
-        val filesDir = context.filesDir.absolutePath
-        val stateDir = "$filesDir/install-state"
+        val appDir = "/data/data/" + context.packageName + "/"
+        val stateDir = "${appDir}files/install-state"
         val logFile = "$stateDir/$toolKey.log"
         val exitFile = "$stateDir/$toolKey.exit"
 
@@ -450,6 +458,10 @@ class ToolCategoryView @JvmOverloads constructor(
                         val lp = rv.layoutParams
                         lp.height = rvMax
                         rv.layoutParams = lp
+                        rv.post {
+                            setupScrollIndicator(rv)
+                            updateStatsSize()
+                        }
                         viewTreeObserver.removeOnPreDrawListener(this)
                         return false
                     }
@@ -514,7 +526,73 @@ class ToolCategoryView @JvmOverloads constructor(
         return (dp * resources.displayMetrics.density + 0.5f).toInt()
     }
 
+    private fun resolveIcon(info: ToolInfo, ctx: Context): Int {
+        val drawableName = if (!info.drawable.isNullOrEmpty()) {
+            info.drawable
+        } else {
+            info.toolKey.replace('-', '_')
+        }
+        return ctx.resources.getIdentifier(drawableName, "drawable", ctx.packageName)
+            .takeIf { it != 0 } ?: R.drawable.andraxtool
+    }
+
     companion object {
         private const val TAG = "ToolCategoryView"
+    }
+}
+
+internal fun processToolExitFiles(context: Context): Boolean {
+    val TAG = "ToolCatView"
+    try {
+        val stateDir = File(context.filesDir, "install-state")
+        Log.d(TAG, "processToolExitFiles: stateDir=$stateDir exists=${stateDir.exists()}")
+        if (!stateDir.exists()) return false
+        val files = stateDir.listFiles() ?: return false
+        val fileNames = files.map { it.name }
+        Log.d(TAG, "processToolExitFiles: files in dir: $fileNames")
+        var changed = false
+        for (f in files) {
+            val name = f.name
+            if (!name.endsWith(".exit")) continue
+            val toolKey = name.substring(0, name.length - 5)
+            Log.d(TAG, "processToolExitFiles: processing exit file for $toolKey")
+            try {
+                val content = String(FileInputStream(f).readBytes()).trim()
+                val exitCode = content.toInt()
+                Log.d(TAG, "processToolExitFiles: $toolKey exitCode=$exitCode")
+                val isUninstall = File(stateDir, "${toolKey}.uninstall").exists()
+                if (isUninstall) {
+                    Log.d(TAG, "processToolExitFiles: $toolKey is uninstall")
+                    if (exitCode == 0) ToolDatabase.getInstance().markUninstalled(toolKey)
+                    else ToolDatabase.getInstance().markInstalled(toolKey)
+                    File(stateDir, "${toolKey}.uninstall").delete()
+                } else {
+                    if (exitCode == 0) {
+                        Log.d(TAG, "processToolExitFiles: calling markInstalled($toolKey)")
+                        ToolDatabase.getInstance().markInstalled(toolKey)
+                    } else {
+                        val logFile = File(stateDir, "${toolKey}.log")
+                        val error = if (logFile.exists()) {
+                            val logBytes = FileInputStream(logFile).readBytes()
+                            val s = String(logBytes)
+                            if (s.length > 1000) s.substring(s.length - 1000) else s
+                        } else ""
+                        Log.d(TAG, "processToolExitFiles: calling markFailed($toolKey)")
+                        ToolDatabase.getInstance().markFailed(toolKey, error)
+                    }
+                }
+                f.delete()
+                File(stateDir, "${toolKey}.log").delete()
+                changed = true
+                Log.d(TAG, "processToolExitFiles: $toolKey processed successfully")
+            } catch (e: Exception) {
+                Log.e(TAG, "processExitFiles: error for $toolKey", e)
+            }
+        }
+        Log.d(TAG, "processToolExitFiles: returning $changed")
+        return changed
+    } catch (e: Exception) {
+        Log.e(TAG, "processExitFiles error", e)
+        return false
     }
 }

@@ -6,8 +6,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Dco_Mainframe extends DcoBaseActivity {
     private static final String TAG = "Dco_Mainframe";
@@ -21,80 +19,27 @@ public class Dco_Mainframe extends DcoBaseActivity {
             setContentView(R.layout.dco_list_scaffold);
             getWindow().setFlags(1024, 1024);
 
-            TextView titleView = findViewById(R.id.title);
-            titleView.setText("Mainframe");
-            ((android.widget.ImageView) findViewById(R.id.banner)).setImageResource(R.drawable.mainframe);
-            ((TextView) findViewById(R.id.stats_tools)).setText("13");
+            ((TextView) findViewById(R.id.title)).setText(getCategoryDisplayName());
+            ((ImageView) findViewById(R.id.banner)).setImageResource(getCategoryBannerResId());
+            ((TextView) findViewById(R.id.stats_tools)).setText(String.valueOf(getCategoryToolCount()));
 
             RecyclerView list = findViewById(R.id.tool_list);
             list.setLayoutManager(new LinearLayoutManager(this));
 
-            createAdapter(list, buildToolList(), new ToolAdapter.OnToolClickListener() {
+            createAdapter(list, loadToolsFromDb(), new ToolAdapter.OnToolClickListener() {
                 @Override
-                public void onToolClick(ToolItem item) {
-                    handleCardClick(item);
-                }
-
+                public void onToolClick(ToolItem item) { handleCardClick(item); }
                 @Override
-                public void onInstallClick(String toolKey) {
-                    processInstallTool(toolKey);
-                }
-
+                public void onInstallClick(String toolKey) { processInstallTool(toolKey); }
                 @Override
-                public void onUninstallClick(String toolKey) {
-                    Dco_Mainframe.this.onUninstallClick(toolKey);
-                }
-
+                public void onUninstallClick(String toolKey) { Dco_Mainframe.this.onUninstallClick(toolKey); }
                 @Override
-                public void onLaunchTool(String toolKey) {
-                    Dco_Mainframe.this.onLaunchTool(toolKey);
-                }
+                public void onLaunchTool(String toolKey) { Dco_Mainframe.this.onLaunchTool(toolKey); }
             });
             list.setHasFixedSize(true);
         } catch (Exception e) {
             Log.e(TAG, "onCreate failed", e);
             finish();
         }
-    }
-
-    private List<ToolItem> buildToolList() {
-        List<ToolItem> list = new ArrayList<>();
-        list.add(makeItem("psikotik", "PSIKOTIK", "TSO User Enumerator", "psikotik -h", "ziron"));
-        list.add(makeItem("mfsniffer", "MFSniffer", "Capture TSO user ID and password", "mfsniffer -h", "ziron"));
-        list.add(makeItem("birp", "BIRP", "Big Iron Recon &amp; Pwnage", "birp -h", "ziron"));
-        list.add(makeItem("mfdos", "MFDoS", "Mainframe TN3270 DoS", "mfdos -h", "ziron"));
-        list.add(makeItem("phatso", "PhaTSO", "TSO User Brute Forcer", "phatso -h", "ziron"));
-        list.add(makeItem("tpxbrute", "TPX_Brute", "The z/OS TPX logon brute forcer", "tpx-brute -h", "ziron"));
-        list.add(makeItem("mainframe_bruter", "Mainframe_Bruter", "z/OS Mainframe Bruteforcer", "mainframe-bruter -h", "ziron"));
-        list.add(makeItem("cicsshot", "CICSSHOT", "Screenshotting CICS transactions", "cicsshot -h", "ziron"));
-        list.add(makeItem("cicspwn", "CICSPWN", "Pentest CICS Transaction servers on z/OS", "cicspwn -h", "ziron"));
-        list.add(makeItem("TShOcker", "TShOcker", "Meterpreter like TSO reverse shell", "tshocker -h", "ziron"));
-        list.add(makeItem("netEBCDICat", "netEBCDICat", "Accept z/OS EBCDIC Socket Reverse Shells", "netebcdicat -h", "ziron"));
-        list.add(makeItem("maintp", "MainTP", "Mainframe Reverse/Bind Root Shell", "maintp -h", "ziron"));
-        list.add(makeItem("zosprivesc", "zOS-PRIVESC", "Privilege escalation on z/OS", "zos-privesc", "ziron"));
-        return list;
-    }
-
-    private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
-        ToolItem item = new ToolItem();
-        item.key = key;
-        item.source = resolveSource(key);
-        item.displayName = displayName;
-        item.description = description;
-        item.cmd = cmd;
-        if (drawableName == null || drawableName.isEmpty()) {
-            item.iconResId = R.drawable.andraxtool;
-        } else {
-            int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
-            item.iconResId = id != 0 ? id : R.drawable.andraxtool;
-        }
-        return item;
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause");
-        finish();
     }
 }

@@ -19,6 +19,7 @@ public class ToolInfo {
     public String installPath;
     public long installedAt;
     public String errorLog;
+    public String drawable;
 
     public ToolInfo() {
     }

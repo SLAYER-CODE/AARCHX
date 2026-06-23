@@ -87,6 +87,7 @@ class ToolCategoryFragment : Fragment() {
             Log.w(TAG, "No tools in DB for category '$categoryDbKey', using fallback")
             return buildFallbackToolList(ctx)
         }
+        val recent = getRecentTools(ctx)
         return infos.map { info ->
             ToolItem().apply {
                 key = info.toolKey
@@ -94,11 +95,12 @@ class ToolCategoryFragment : Fragment() {
                 description = info.description ?: ""
                 source = info.source ?: ""
                 cmd = info.toolKey
-                val drawableName = info.toolKey.replace('-', '_')
-                iconResId = ctx.resources.getIdentifier(drawableName, "drawable", ctx.packageName)
-                    .takeIf { it != 0 } ?: R.drawable.andraxtool
+                iconResId = resolveIcon(info, ctx)
             }
-        }
+        }.sortedWith(compareBy<ToolItem> {
+            val idx = recent.indexOf(it.key)
+            if (idx >= 0) idx else Int.MAX_VALUE
+        }.thenBy { it.displayName })
     }
 
     private fun buildFallbackToolList(ctx: Context): List<ToolItem> {
@@ -111,7 +113,7 @@ class ToolCategoryFragment : Fragment() {
                 description = info.description ?: ""
                 source = info.source ?: ""
                 cmd = info.toolKey
-                iconResId = R.drawable.andraxtool
+                iconResId = resolveIcon(info, ctx)
             }
         }
     }
@@ -251,6 +253,7 @@ class ToolCategoryFragment : Fragment() {
 
     fun processInstallTool(toolKey: String) {
         val nk = ToolDatabase.normalizeKey(toolKey)
+        saveRecentTool(requireContext(), nk)
         if (!processingTools.add(nk)) {
             Log.d(TAG, "processInstallTool($toolKey) already processing — ignored")
             return
@@ -279,6 +282,7 @@ class ToolCategoryFragment : Fragment() {
 
     fun onUninstallClick(toolKey: String) {
         val nk = ToolDatabase.normalizeKey(toolKey)
+        saveRecentTool(requireContext(), nk)
         if (!processingTools.add(nk)) {
             Log.d(TAG, "onUninstallClick($toolKey) already processing — ignored")
             return
@@ -300,6 +304,7 @@ class ToolCategoryFragment : Fragment() {
     }
 
     private fun handleCardClick(item: ToolItem) {
+        saveRecentTool(requireContext(), item.key)
         if (item.source == "github") {
             runHackCmd("cd /Herramientas/${item.key} && ls -la", item.iconResId)
         } else {
@@ -308,6 +313,7 @@ class ToolCategoryFragment : Fragment() {
     }
 
     private fun onLaunchTool(toolKey: String) {
+        saveRecentTool(requireContext(), toolKey)
         val source = ToolDatabase.getInstance().getSource(toolKey)
         if (source == "github") {
             runHackCmd("cd /Herramientas/$toolKey && ls -la")
@@ -365,8 +371,8 @@ class ToolCategoryFragment : Fragment() {
     }
 
     private fun buildInstallInline(toolKey: String, installCmd: String): String {
-        val filesDir = requireContext().filesDir.absolutePath
-        val stateDir = "$filesDir/install-state"
+        val appDir = "/data/data/" + requireContext().packageName + "/"
+        val stateDir = "${appDir}files/install-state"
         val logFile = "$stateDir/$toolKey.log"
         val exitFile = "$stateDir/$toolKey.exit"
 
@@ -404,8 +410,8 @@ class ToolCategoryFragment : Fragment() {
     }
 
     private fun buildUninstallInline(toolKey: String, uninstallCmd: String): String {
-        val filesDir = requireContext().filesDir.absolutePath
-        val stateDir = "$filesDir/install-state"
+        val appDir = "/data/data/" + requireContext().packageName + "/"
+        val stateDir = "${appDir}files/install-state"
         val logFile = "$stateDir/$toolKey.log"
         val exitFile = "$stateDir/$toolKey.exit"
 
@@ -528,9 +534,19 @@ class ToolCategoryFragment : Fragment() {
         return (dp * resources.displayMetrics.density + 0.5f).toInt()
     }
 
+    private fun resolveIcon(info: ToolInfo, ctx: Context): Int {
+        val drawableName = if (!info.drawable.isNullOrEmpty()) {
+            info.drawable
+        } else {
+            info.toolKey.replace('-', '_')
+        }
+        return ctx.resources.getIdentifier(drawableName, "drawable", ctx.packageName)
+            .takeIf { it != 0 } ?: R.drawable.andraxtool
+    }
+
     companion object {
         private const val TAG = "ToolCategoryFragment"
-        private const val ARG_CATEGORY = "category"
+        private const val ARG_CATEGORY = "name"
         private const val ARG_BANNER = "banner"
         private const val ARG_STATS = "stats"
         private const val ARG_DB_KEY = "db_key"

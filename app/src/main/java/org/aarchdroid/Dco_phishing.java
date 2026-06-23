@@ -6,8 +6,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Dco_phishing extends DcoBaseActivity {
     private static final String TAG = "Dco_phishing";
@@ -21,72 +19,27 @@ public class Dco_phishing extends DcoBaseActivity {
             setContentView(R.layout.dco_list_scaffold);
             getWindow().setFlags(1024, 1024);
 
-            TextView titleView = findViewById(R.id.title);
-            titleView.setText("Phishing");
-            ((android.widget.ImageView) findViewById(R.id.banner)).setImageResource(R.drawable.phishing);
-            ((TextView) findViewById(R.id.stats_tools)).setText("5");
+            ((TextView) findViewById(R.id.title)).setText(getCategoryDisplayName());
+            ((ImageView) findViewById(R.id.banner)).setImageResource(getCategoryBannerResId());
+            ((TextView) findViewById(R.id.stats_tools)).setText(String.valueOf(getCategoryToolCount()));
 
             RecyclerView list = findViewById(R.id.tool_list);
             list.setLayoutManager(new LinearLayoutManager(this));
 
-            createAdapter(list, buildToolList(), new ToolAdapter.OnToolClickListener() {
+            createAdapter(list, loadToolsFromDb(), new ToolAdapter.OnToolClickListener() {
                 @Override
-                public void onToolClick(ToolItem item) {
-                    handleCardClick(item);
-                }
-
+                public void onToolClick(ToolItem item) { handleCardClick(item); }
                 @Override
-                public void onInstallClick(String toolKey) {
-                    processInstallTool(toolKey);
-                }
-
+                public void onInstallClick(String toolKey) { processInstallTool(toolKey); }
                 @Override
-                public void onUninstallClick(String toolKey) {
-                    Dco_phishing.this.onUninstallClick(toolKey);
-                }
-
+                public void onUninstallClick(String toolKey) { Dco_phishing.this.onUninstallClick(toolKey); }
                 @Override
-                public void onLaunchTool(String toolKey) {
-                    Dco_phishing.this.onLaunchTool(toolKey);
-                }
+                public void onLaunchTool(String toolKey) { Dco_phishing.this.onLaunchTool(toolKey); }
             });
             list.setHasFixedSize(true);
         } catch (Exception e) {
             Log.e(TAG, "onCreate failed", e);
             finish();
         }
-    }
-
-    private List<ToolItem> buildToolList() {
-        List<ToolItem> list = new ArrayList<>();
-        list.add(makeItem("evilginx2", "EVILGINX2", "MITM Attack Framework for Credential Harvesting", "sudo evilginx", "evilginx2"));
-        list.add(makeItem("modlishka", "Modlishka", "Reverse proxy for next level phishing", "sudo modlishka", "andraxtool"));
-        list.add(makeItem("gophish", "GOPhish", "Open-Source Phishing Toolkit", "sudo gophish", "gophish"));
-        list.add(makeItem("bitb", "BITB", "Browser In The Browser Templates", "bitb", "bitb"));
-        list.add(makeItem("urlcrazy", "URLCrazy", "URL hijacking, Phishing, and Corporate Espionage", "urlcrazy", "urlcrazy"));
-        return list;
-    }
-
-    private ToolItem makeItem(String key, String displayName, String description, String cmd, String drawableName) {
-        ToolItem item = new ToolItem();
-        item.key = key;
-        item.source = resolveSource(key);
-        item.displayName = displayName;
-        item.description = description;
-        item.cmd = cmd;
-        if (drawableName == null || drawableName.isEmpty()) {
-            item.iconResId = R.drawable.andraxtool;
-        } else {
-            int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
-            item.iconResId = id != 0 ? id : R.drawable.andraxtool;
-        }
-        return item;
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause");
-        finish();
     }
 }

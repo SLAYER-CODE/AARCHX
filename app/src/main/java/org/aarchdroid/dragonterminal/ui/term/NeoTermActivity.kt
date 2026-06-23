@@ -370,6 +370,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
         val listView = ListView(context).apply {
             background = ContextCompat.getDrawable(context, R.drawable.popup_menu_green_border)
+            verticalScrollbarThumbDrawable = ColorDrawable(Color.parseColor("#39FF14"))
+            verticalScrollbarTrackDrawable = ColorDrawable(Color.TRANSPARENT)
             adapter = object : BaseAdapter() {
                 override fun getCount() = TOOLS.size
                 override fun getItem(p: Int) = TOOLS[p]
@@ -404,8 +406,16 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                     statsToolsCount = "0",
                     categoryDbKey = dbKey
                 )
+                toolView.setOnDismissRequest {
+                    toolsDialog?.dismiss()
+                }
+                toolView.layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
                 toolView.setBackgroundColor(Color.parseColor("#CC111111"))
 
+                val dm = resources.displayMetrics
                 AlertDialog.Builder(this@NeoTermActivity)
                     .setView(toolView)
                     .setCancelable(true)
@@ -414,7 +424,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                     .also { dialog ->
                         toolsDialog = dialog
                         dialog.window?.setLayout(
-                            (resources.displayMetrics.widthPixels * 0.90).toInt(),
+                            (dm.widthPixels * 0.95).toInt(),
                             ViewGroup.LayoutParams.WRAP_CONTENT
                         )
                     }
@@ -459,6 +469,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     override fun onResume() {
         super.onResume()
+        processToolExitFiles(this)
         Log.d("NeoTermAct", "onResume: tabCount=${tabSwitcher.count}, selectedTab=null? ${tabSwitcher.selectedTab == null}, termView=null? ${(tabSwitcher.selectedTab as? TermTab)?.termData?.termView == null}")
 
         try {

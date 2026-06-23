@@ -13,6 +13,7 @@ import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputMethodManager
+import kotlin.coroutines.suspendCoroutine
 
 
 class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
@@ -84,6 +85,20 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         return Pair(cols, rows)
     }
 
+    suspend fun waitForLayout() {
+        if (width > 0 && height > 0) return
+        suspendCoroutine<Unit> { cont ->
+            viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    if (width > 0 && height > 0) {
+                        viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        cont.resumeWith(Result.success(Unit))
+                    }
+                }
+            })
+        }
+    }
+
     private var savedLines = ""
     var statusLine: String = ""
         set(value) {
@@ -97,15 +112,23 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
             blinkHandler.postDelayed(this, cursorBlinkInterval)
         }
     }
-    private val resizeDebounceHandler = Handler(Looper.getMainLooper())
-    private val resizeDebounceRunnable = Runnable { emitResize() }
-    private var pendingCols = 0
-    private var pendingRows = 0
+    private var lastGridCols = 0
+    private var lastGridRows = 0
+    private var maxGridCols = 0
+    private var maxGridRows = 0
 
-    private fun emitResize() {
-        if (pendingCols > 0 && pendingRows > 0) {
-            Log.d("NeovimEditorView", "emitResize ${pendingRows}x${pendingCols}")
-            onResize?.invoke(pendingRows, pendingCols)
+    private fun emitResize(cols: Int, rows: Int) {
+        // Only ever grow the grid; never shrink it.
+        // This prevents content loss when IME opens/closes.
+        if (cols > maxGridCols) maxGridCols = cols
+        if (rows > maxGridRows) maxGridRows = rows
+        val emitCols = maxGridCols
+        val emitRows = maxGridRows
+        if (emitCols > 0 && emitRows > 0 && (emitCols != lastGridCols || emitRows != lastGridRows)) {
+            lastGridCols = emitCols
+            lastGridRows = emitRows
+            Log.d("NeovimEditorView", "emitResize ${emitRows}x${emitCols}")
+            onResize?.invoke(emitRows, emitCols)
         }
     }
 
@@ -162,14 +185,13 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
                     val dy = event.y - touchLastY
                     touchLastY = event.y
                     touchAccumScroll += dy
-                    while (touchAccumScroll >= cellHeight) {
-                        onInput?.invoke("<ScrollWheelUp>")
-                        touchAccumScroll -= cellHeight
-                        isTouchDragging = true
-                    }
-                    while (touchAccumScroll <= -cellHeight) {
-                        onInput?.invoke("<ScrollWheelDown>")
-                        touchAccumScroll += cellHeight
+                    val steps = (touchAccumScroll / cellHeight).toInt()
+                    if (steps != 0) {
+                        val key = if (steps > 0) "<ScrollWheelUp>" else "<ScrollWheelDown>"
+                        val count = kotlin.math.abs(steps)
+                        val totalKey = key.repeat(count)
+                        onInput?.invoke(totalKey)
+                        touchAccumScroll -= steps * cellHeight
                         isTouchDragging = true
                     }
                 }
@@ -388,15 +410,12 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         cellHeight = metrics.descent - metrics.ascent + 2f
         cellWidth = maxOf(cellWidth, 1f)
         cellHeight = maxOf(cellHeight, 1f)
-        // Debounced resize: only emit to nvim after 300ms of no font changes
-        resizeDebounceHandler.removeCallbacks(resizeDebounceRunnable)
+        // Immediate resize: send to nvim right away (dedup in emitResize)
         if (width > 0 && height > 0) {
             val statusHeight = (cellHeight + 4f).toInt().coerceAtLeast(20)
-            pendingCols = (width / cellWidth).toInt().coerceAtLeast(20)
-            pendingRows = ((height - statusHeight) / cellHeight).toInt().coerceAtLeast(8)
-            if (pendingCols != buffer.gridWidth || pendingRows != buffer.gridHeight) {
-                resizeDebounceHandler.postDelayed(resizeDebounceRunnable, 300)
-            }
+            val cols = (width / cellWidth).toInt().coerceAtLeast(20)
+            val rows = ((height - statusHeight) / cellHeight).toInt().coerceAtLeast(8)
+            emitResize(cols, rows)
         }
         requestLayout()
         postInvalidate()
@@ -410,13 +429,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         val rows = ((h - statusHeight) / cellHeight).toInt().coerceAtLeast(8)
         gridOffsetX = (w - cols * cellWidth) / 2f
         gridOffsetY = 0f
-        // Debounced resize
-        resizeDebounceHandler.removeCallbacks(resizeDebounceRunnable)
-        pendingCols = cols
-        pendingRows = rows
-        if (cols != buffer.gridWidth || rows != buffer.gridHeight) {
-            resizeDebounceHandler.postDelayed(resizeDebounceRunnable, 300)
-        }
+        emitResize(cols, rows)
     }
 
     override fun onDraw(canvas: Canvas) {

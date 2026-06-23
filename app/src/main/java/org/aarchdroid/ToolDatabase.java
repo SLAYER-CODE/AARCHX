@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ToolDatabase {
-    private static final int PREBUILT_DB_VERSION = 2;
+    private static final int PREBUILT_DB_VERSION = 6;
     private static ToolDatabase instance;
     private final NeoTermDatabase db;
 

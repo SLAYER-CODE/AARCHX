@@ -1,6 +1,7 @@
 *.tar
 *.tar.gz
 *.tgz
+*.bak
 
 # Android build artifacts
 build/

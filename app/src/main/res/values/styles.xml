@@ -94,6 +94,11 @@
         <item name="android:windowExitAnimation">@null</item>
     </style>
     
+    <style name="ToolbarTitleStyle" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
     <style name="AppTheme.Dark" parent="Theme.MaterialComponents">
         <item name="colorAccent">@color/colorAccent</item>
         <item name="windowActionModeOverlay">true</item>

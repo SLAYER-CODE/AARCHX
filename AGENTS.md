@@ -1,61 +1,33 @@
 # AArchDroid
 
-## Build
-cd AArchDroid && ./gradlew assembleDebug
-APK: AArchDroid/app/build/outputs/apk/debug/
+See `../AGENTS.md` for root-level monorepo context (build, version matrix, known issues).
 
-## Estructura
-- app/src/main/java/org/aarchdroid/dragonterminal/
-  - floatui/ — FloatService, FloatWindowView (multi-ventana flotante)
-  - ui/term/ — NeoTermActivity, NeoTermService (terminal principal)
-  - ui/term/tab/ — NeoTabDecorator, TermTab (tab switcher)
-  - backend/ — TerminalSession, ShellTermSession
-- app/src/main/res/
-  - layout/float_window.xml — overlay flotante
-  - drawable/ — ic_float, ic_tab_icon, phone_close_tab_icon
-- chrome-tabs/ — librería tab switcher (módulo fuente)
+## NeovimEditor (módulo `neovim-editor`)
 
-## Modificaciones recientes
-- Red chroot: /etc/resolv.conf con fallback (8.8.8.8 + 1.1.1.1), proc/sys/devpts montados, /tmp creado en inline command (5 sitios)
-- Multi-ventana float (FloatService soporta N ventanas + takeover)
-- Botón ancla "↓" en float windows → transfiere sesión de vuelta al gestor
-- Botón float "↗" en tab switcher (TextView ANSI verde)
-- Close button "X" verde ANSI en tab switcher (phone_tab.xml + AbstractTabViewHolder)
-- Tab icon verde (ic_tab_icon.xml vector)
-- ACTION_ANCHOR en NeoTermActivity para recibir sesiones ancladas
-- AArchDroidApp.transferredSession como puente entre servicios
-
-## Convenciones
-- FloatService: usa FloatWindowView + FloatSessionClient + FloatViewClient
-- Sesiones transferidas via AArchDroidApp.transferredSession (nunca serializar)
-- Callbacks de sesión se reemplazan al transferir (FloatService ↔ NeoTermActivity)
-
----
-
-# NeovimEditor (módulo `neovim-editor`)
-
-## Build
+### Build
+```sh
 cd AArchDroid && ./gradlew :neovim-editor:assembleDebug
-AAR: AArchDroid/neovim-editor/build/outputs/aar/
+```
+AAR: `neovim-editor/build/outputs/aar/`
 
-## Arquitectura msgpack-RPC
+### Arquitectura msgpack-RPC
 - `NeovimClient` — IO thread via `Dispatchers.IO`, lee socket, parsea msgpack, llama `onRedraw` en IO.
 - `NeovimEditorActivity` — recibe `onRedraw` en IO, llama `processRedrawEvent` (modifica `buffer`), toma snapshot, lanza `updateBuffer` en Main.
 - `NeovimEditorView` — `onDraw` con grid con buffer propio, `onKeyDown` + IME `InputConnection` → `onInput`.
 - `NeovimBuffer` — grid cells + cursor + mode.
 
-## Pipeline de redibujo
+### Pipeline de redibujo
 1. IO: `onRedraw(updates)` → `processRedrawEvent(c/u)` → `takeBufferSnapshot()` → `scope.launch(Main) { updateBuffer(snapshot); updateStatusLine() }`
 2. Main: `updateBuffer(snapshot)` → copia cells/cursor/mode al view buffer → `postInvalidate()`
 3. Main: `onDraw` → itera cells → dibuja fondo + texto + cursor
 
-## Thread safety
+### Thread safety
 - `NeovimBuffer` usa `synchronized(lock)` en resize/setCell/clear/scroll/copySnapshot.
 - `copySnapshot()`: bajo lock, crea `NeovimBuffer`, **hace `snap.cells.clear()`**, copia rows desde `this.cells`.
 - Activity: `takeBufferSnapshot()` delega a `buffer.copySnapshot()`.
 - View: `updateBuffer()` valida `newBuffer.cells.size == gridHeight` antes de aplicar.
 
-## Bugs pasados clave
+### Bugs pasados clave
 | Bug | Root Cause | Fix |
 |-----|-----------|-----|
 | Init redraw events no llegan | `notify("nvim_ui_attach")` enviaba duplicado como notificación | Quitar `notify` |
@@ -67,6 +39,6 @@ AAR: AArchDroid/neovim-editor/build/outputs/aar/
 | Double key dispatch | `setOnKeyListener` + `onKeyDown` | Unificar en `onKeyDown` + `sendKeyEvent` |
 | grid_line trailing clear rompía Enter+wrap | while loop en cada segmento limpiaba celdas parciales | dirty-rows-on-flush: trackear maxCol por fila, limpiar en `flush` |
 
-## Problemas abiertos
+### Problemas abiertos
 - **Keyboard overlay**: Se cambió de `adjustResize` a `adjustNothing` + `OnApplyWindowInsetsListener`. El listener pone `paddingBottom = imeBottom` y recalcula grid con `visibleH = height - imeBottom`. ¯barra y status line deben quedar visibles.
 - **Celdas sin color de highlight**: `foregroundId` se almacena pero no se resuelve a color real. Siempre usa blanco.

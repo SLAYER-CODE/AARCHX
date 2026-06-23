@@ -9,9 +9,10 @@
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/terminal_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="40dp"
         android:background="#000000"
         android:theme="@style/ThemeOverlay.AppCompat.Dark"
+        app:titleTextAppearance="@style/ToolbarTitleStyle"
         android:visibility="visible" />
 
     <FrameLayout

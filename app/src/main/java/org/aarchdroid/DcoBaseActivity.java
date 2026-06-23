@@ -10,6 +10,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.util.Log;
@@ -17,11 +18,14 @@ import android.util.DisplayMetrics;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import org.aarchdroid.dragonterminal.bridge.Bridge;
+import org.aarchdroid.dragonterminal.ui.term.RecentToolsKt;
 import java.io.DataOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +38,76 @@ public class DcoBaseActivity extends Activity {
     private boolean scrollListenerAttached = false;
     protected ToolAdapter adapter;
     private final Set<String> processingTools = new HashSet<>();
+
+    protected String getCategoryDisplayName() {
+        String cat = getCurrentCategory();
+        String[] parts = cat.split("_");
+        StringBuilder sb = new StringBuilder();
+        for (String part : parts) {
+            if (sb.length() > 0) sb.append(" ");
+            if (part.isEmpty()) continue;
+            sb.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
+        }
+        return sb.length() > 0 ? sb.toString() : cat;
+    }
+
+    protected int getCategoryBannerResId() {
+        String cat = getCurrentCategory();
+        if (cat.isEmpty()) return R.drawable.andraxtool;
+        String drawableName = cat.replace('-', '_');
+        int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
+        return id != 0 ? id : R.drawable.andraxtool;
+    }
+
+    protected int getCategoryToolCount() {
+        String cat = getCurrentCategory();
+        if (cat.isEmpty()) return 0;
+        List<ToolInfo> infos = ToolDatabase.getInstance().getToolsByCategory(cat);
+        return infos != null ? infos.size() : 0;
+    }
+
+    protected List<ToolItem> loadToolsFromDb() {
+        String category = getCurrentCategory();
+        List<ToolInfo> infos = ToolDatabase.getInstance().getToolsByCategory(category);
+        List<ToolItem> tools = new ArrayList<>();
+        if (infos == null || infos.isEmpty()) {
+            Log.w(TAG, "No tools in DB for category '" + category + "'");
+            return tools;
+        }
+        for (ToolInfo info : infos) {
+            if (info == null) continue;
+            ToolItem item = new ToolItem();
+            item.key = info.toolKey;
+            item.displayName = info.displayName != null && !info.displayName.isEmpty()
+                ? info.displayName : info.toolKey;
+            item.description = info.description != null ? info.description : "";
+            item.source = resolveSource(info.toolKey);
+            item.cmd = info.toolKey;
+            item.iconResId = resolveIcon(info);
+            tools.add(item);
+        }
+        List<String> recentKeys = RecentToolsKt.getRecentTools(this);
+        if (recentKeys != null && !recentKeys.isEmpty()) {
+            final List<String> order = recentKeys;
+            Collections.sort(tools, (a, b) -> {
+                int ia = order.indexOf(a.key);
+                int ib = order.indexOf(b.key);
+                if (ia >= 0 && ib >= 0) return Integer.compare(ia, ib);
+                if (ia >= 0) return -1;
+                if (ib >= 0) return 1;
+                return 0;
+            });
+        }
+        return tools;
+    }
+
+    private int resolveIcon(ToolInfo info) {
+        String drawableName = (info.drawable != null && !info.drawable.isEmpty())
+            ? info.drawable
+            : info.toolKey.replace('-', '_');
+        int id = getResources().getIdentifier(drawableName, "drawable", getPackageName());
+        return id != 0 ? id : R.drawable.andraxtool;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -197,6 +271,7 @@ public class DcoBaseActivity extends Activity {
             Log.d(TAG, "processInstallTool(" + toolKey + ") already processing — ignored");
             return;
         }
+        RecentToolsKt.saveRecentTool(this, toolKey);
         Log.d(TAG, "processInstallTool(" + toolKey + ") called");
         String installCmd = ToolDatabase.getInstance().getInstallCommand(toolKey);
         Log.d(TAG, "processInstallTool: installCmd=" + installCmd);
@@ -227,6 +302,7 @@ public class DcoBaseActivity extends Activity {
             Log.d(TAG, "onUninstallClick(" + toolKey + ") already processing — ignored");
             return;
         }
+        RecentToolsKt.saveRecentTool(this, toolKey);
         String cmd = ToolDatabase.getInstance().getUninstallCommand(toolKey);
         if (cmd != null) {
             ToolDatabase.getInstance().setStatus(toolKey, "uninstalling");
@@ -244,6 +320,7 @@ public class DcoBaseActivity extends Activity {
     }
 
     public void handleCardClick(ToolItem item) {
+        RecentToolsKt.saveRecentTool(this, item.key);
         if ("github".equals(item.source)) {
             run_hack_cmd("cd /Herramientas/" + item.key + " && ls -la", item.iconResId);
         } else {
@@ -252,6 +329,7 @@ public class DcoBaseActivity extends Activity {
     }
 
     public void onLaunchTool(String toolKey) {
+        RecentToolsKt.saveRecentTool(this, toolKey);
         String source = ToolDatabase.getInstance().getSource(toolKey);
         if ("github".equals(source)) {
             run_hack_cmd("cd /Herramientas/" + toolKey + " && ls -la");
