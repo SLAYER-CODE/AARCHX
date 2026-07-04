@@ -11,6 +11,21 @@ public class Dco_phreaking extends DcoBaseActivity {
     private static final String TAG = "Dco_phreaking";
 
     @Override
+    protected String getCurrentCategory() {
+        return "voip_3g_4g";
+    }
+
+    @Override
+    protected String getCategoryDisplayName() {
+        return "Phreaking";
+    }
+
+    @Override
+    protected int getCategoryBannerResId() {
+        return R.drawable.phreaking;
+    }
+
+    @Override
     protected void onCreate(Bundle bundle) {
         try {
             requestWindowFeature(1);

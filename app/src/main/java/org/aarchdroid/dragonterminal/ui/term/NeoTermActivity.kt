@@ -91,6 +91,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         const val KEY_NO_RESTORE = "no_restore"
         const val REQUEST_SETUP = 22313
         const val ACTION_ANCHOR = "aarchdroid.terminal.action.anchor"
+        const val INTERNA_TARGET = "/data/local/aarchdroid/root/Interna"
+        const val EXTERNA_TARGET = "/data/local/aarchdroid/root/Externa"
 
         private data class ToolItem(val name: String, val icon: Int, val activityClass: String)
         private val TOOLS = listOf(
@@ -163,10 +165,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 " component=" + (intent?.component?.className ?: "null"))
 
         lifecycleScope.launch(Dispatchers.IO) {
-            rootAvailable = isRooted(this@NeoTermActivity)
-            if (!rootAvailable) {
-                withContext(Dispatchers.Main) { showNoRootDialog() }
-            }
             changehostname("AARCHX")
         }
 
@@ -287,6 +285,14 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         return true
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        menu?.findItem(R.id.menu_item_mountsdcard)?.title =
+            if (isMounted(INTERNA_TARGET)) "Interna Unmount" else "Interna"
+        menu?.findItem(R.id.menu_item_mount_external)?.title =
+            if (isMounted(EXTERNA_TARGET)) "Externa Unmount" else "Externa"
+        return super.onPrepareOptionsMenu(menu)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item?.itemId) {
             R.id.menu_item_settings -> {
@@ -309,26 +315,36 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             }
 
             R.id.menu_item_mountsdcard -> {
-                val target = "/data/local/aarchdroid/root/Interna"
+                val target = INTERNA_TARGET
                 if (isMounted(target)) {
-                    Toast.makeText(this, "ya se monto", Toast.LENGTH_SHORT).show()
+                    suRunGlobal("umount -l $target")
+                    item.title = "Interna"
+                    Toast.makeText(this, "Interna desmontada", Toast.LENGTH_SHORT).show()
                 } else {
                     suRun("/data/data/org.aarchdroid/files/bin/busybox mkdir -p $target")
-                    suRun("/data/data/org.aarchdroid/files/bin/busybox mount -o bind /sdcard $target")
+                    suRunGlobal("/data/data/org.aarchdroid/files/bin/busybox mount -o bind /sdcard $target")
+                    item.title = "Interna Unmount"
+                    Toast.makeText(this, "Interna montada", Toast.LENGTH_SHORT).show()
                 }
                 true
             }
 
             R.id.menu_item_mount_external -> {
-                val target = "/data/local/aarchdroid/root/Externa"
-                val extSd = findExternalSd()
-                if (extSd == null) {
-                    Toast.makeText(this, "no se detecto tarjeta externa", Toast.LENGTH_SHORT).show()
-                } else if (isMounted(target)) {
-                    Toast.makeText(this, "ya se monto", Toast.LENGTH_SHORT).show()
+                val target = EXTERNA_TARGET
+                if (isMounted(target)) {
+                    suRunGlobal("umount -l $target")
+                    item.title = "Externa"
+                    Toast.makeText(this, "Externa desmontada", Toast.LENGTH_SHORT).show()
                 } else {
-                    suRun("/data/data/org.aarchdroid/files/bin/busybox mkdir -p $target")
-                    suRun("/data/data/org.aarchdroid/files/bin/busybox mount -o bind $extSd $target")
+                    val extSd = findExternalSd()
+                    if (extSd == null) {
+                        Toast.makeText(this, "no se detecto tarjeta externa", Toast.LENGTH_SHORT).show()
+                    } else {
+                        suRun("/data/data/org.aarchdroid/files/bin/busybox mkdir -p $target")
+                        suRunGlobal("/data/data/org.aarchdroid/files/bin/busybox mount -o bind $extSd $target")
+                        item.title = "Externa Unmount"
+                        Toast.makeText(this, "Externa montada", Toast.LENGTH_SHORT).show()
+                    }
                 }
                 true
             }
@@ -748,8 +764,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             update_colors()
             updatePlaceholderVisibility()
             get_motherfucker_battery()
-            lifecycleScope.launch(Dispatchers.IO) { checkinstallterm() }
-
             if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
                 Log.d("AArchDroid", "NeoTermActivity: notifications disabled — continuing anyway")
             }
@@ -873,16 +887,27 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             Log.d("AArchDroid", "NeoTermActivity: no existing sessions — creating first session")
             toggleSwitcher(showSwitcher = true, easterEgg = false)
 
+            rootAvailable = isRooted(this)
+            Log.d("AArchDroid", "NeoTermActivity: synchronous root check — rootAvailable=" + rootAvailable)
+
             try {
-
-                addNewSession(null, false, createRevealAnimation())
-                Log.d("AArchDroid", "NeoTermActivity: first session created successfully")
-
+                if (rootAvailable && File("/data/local/aarchdroid/bin/bash").exists()) {
+                    ChrootManager.ensureMounted()
+                    addNewSession(null, false, createRevealAnimation())
+                    Log.d("AArchDroid", "NeoTermActivity: first Arch session created")
+                } else {
+                    Log.d("AArchDroid", "NeoTermActivity: status not OK — creating recovery session")
+                    createRecoverySession()
+                }
             } catch (e: Exception) {
                 Log.e("AArchDroid", "NeoTermActivity: addNewSession failed — " + e.message)
-                val intent = Intent(AArchDroidApp.get(), NeoTermActivity::class.java)
-                startActivity(intent)
-                finish()
+                try {
+                    createRecoverySession()
+                } catch (_: Exception) {
+                    val intent = Intent(AArchDroidApp.get(), NeoTermActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                }
             }
 
         }
@@ -1035,9 +1060,14 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
         val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/archdroid.sh"
         if (!systemShell && profile.loginShell == defaultScript) {
-            ChrootManager.ensureMounted()
-            parameter.executablePath("su")
-            parameter.arguments(ChrootManager.getSuEntryArgs())
+            rootAvailable = isRooted(this@NeoTermActivity)
+            if (rootAvailable && File("/data/local/aarchdroid/bin/bash").exists()) {
+                ChrootManager.ensureMounted()
+                parameter.executablePath("su")
+                parameter.arguments(ChrootManager.getSuEntryArgs())
+            } else {
+                parameter.systemShell(true)
+            }
         }
 
         val session = try {
@@ -1620,27 +1650,59 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
     }
 
-    fun isMounted(path: String): Boolean {
-        try {
-            return File("/proc/mounts").readText().contains(path)
-        } catch (e: Exception) {
-            return false
+    fun suRunGlobal(cmd: String) {
+        if (!rootAvailable) {
+            Log.w("AArchDroid", "suRunGlobal: root not available, skipping: " + cmd.take(100))
+            return
         }
+        try {
+            val p = Runtime.getRuntime().exec(arrayOf("su", "-M", "-c", cmd))
+            val stdoutReader = Thread { try { p.inputStream.use { it.readBytes() } } catch (_: Exception) {} }
+            val stderrReader = Thread { try { p.errorStream.use { it.readBytes() } } catch (_: Exception) {} }
+            stdoutReader.start(); stderrReader.start()
+            if (!p.waitFor(10, java.util.concurrent.TimeUnit.SECONDS)) {
+                Log.w("AArchDroid", "suRunGlobal timed out: " + cmd.take(100))
+                p.destroyForcibly()
+            }
+            stdoutReader.join(1000); stderrReader.join(1000)
+        } catch (e: Exception) {
+            Log.w("AArchDroid", "suRunGlobal failed: " + cmd.take(100) + " — " + e.message)
+        }
+    }
+
+    fun isMounted(path: String): Boolean {
+        val result = suRunOutput("grep -Fq ' $path ' /proc/mounts && echo 1 || echo 0")
+        return result == "1"
     }
 
     fun findExternalSd(): String? {
         val mounts = suRunOutput("cat /proc/mounts 2>/dev/null") ?: return null
-        // Look for block device mounts under /storage/ or /mnt/ (external SD)
-        for (line in mounts.lines()) {
+        val lines = mounts.lines()
+        val uuid = Regex("^[A-Z0-9]{4}-[A-Z0-9]{4}$")
+
+        // 1) Prefer UUID-style paths under /storage/ or /mnt/media_rw/ (SD cards)
+        for (line in lines) {
             val parts = line.split(" ")
             if (parts.size < 2) continue
-            val dev = parts[0]
             val path = parts[1]
-            if (dev.startsWith("/dev/block/") && !path.contains("emulated")) {
-                if (path.startsWith("/storage/") || path.startsWith("/mnt/")) return path
+            if (path.contains("emulated")) continue
+            val seg = path.substringAfterLast("/")
+            if (uuid.matches(seg) && (path.startsWith("/storage/") || path.startsWith("/mnt/media_rw/"))) {
+                return path
             }
         }
-        // Fallback: scan known paths
+
+        // 2) Any non-emulated /storage/ entry (covers OTG, odd OEM paths)
+        for (line in lines) {
+            val parts = line.split(" ")
+            if (parts.size < 2) continue
+            val path = parts[1]
+            if (path.startsWith("/storage/") && !path.contains("emulated")) {
+                return path
+            }
+        }
+
+        // 3) Known OEM fallback paths
         val extra = suRunOutput("ls -d /mnt/external_sd /mnt/extSdCard /mnt/sdcard/external_sd 2>/dev/null | head -1")
         if (!extra.isNullOrBlank()) return extra
         return null
@@ -1663,46 +1725,84 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
     }
 
-    fun showNoRootDialog() {
-        runOnUiThread {
-            val dialog = Dialog(this)
-            dialog.setContentView(R.layout.dialog_root_required)
-            dialog.setCancelable(false)
+    private fun createRecoverySession() {
+        try {
+            val hasRoot = isRooted(this@NeoTermActivity)
+            rootAvailable = hasRoot
+            val chrootExists = File("/data/local/aarchdroid/bin/bash").exists()
+            val chrootMounted = if (hasRoot && chrootExists) ChrootManager.isMounted() else false
 
-            val title = dialog.findViewById<android.widget.TextView>(R.id.dialog_title)
-            val message = dialog.findViewById<android.widget.TextView>(R.id.dialog_message)
-            val retryBtn = dialog.findViewById<android.widget.Button>(R.id.btn_retry)
-            val rejectBtn = dialog.findViewById<android.widget.Button>(R.id.btn_reject)
+            val banner = StringBuilder()
+            banner.append("\n")
+            banner.append("╔══════════════════════════════════════╗\n")
+            banner.append("║       AArchDroid Terminal           ║\n")
+            banner.append("╚══════════════════════════════════════╝\n")
+            banner.append("\n")
+            banner.append(if (hasRoot) "  [✓] Root detectado\n" else "  [✗] Root no detectado\n")
+            if (hasRoot) {
+                banner.append(if (chrootExists) "  [✓] Chroot instalado\n" else "  [✗] Chroot no instalado\n")
+                if (chrootExists) {
+                    banner.append(if (chrootMounted) "  [✓] Monturas activas\n" else "  [✗] Monturas inactivas\n")
+                }
+            }
+            banner.append("\n")
 
-            title.text = "Se requiere acceso Root"
-            message.text = "AArchDroid Terminal necesita acceso root " +
-                    "para funcionar completamente.\n\n" +
-                    "No se detectó root en este dispositivo."
-            retryBtn.text = "REINTENTAR"
-            rejectBtn.text = "RECHAZAR"
+            if (!hasRoot) {
+                banner.append("  Concede permisos root y presiona Enter.\n")
+                banner.append("  Si no aparece el diálogo, abre la app SuperUser.\n")
+                banner.append("\n")
+            } else if (!chrootExists) {
+                banner.append("  El chroot no está instalado en /data/local/aarchdroid.\n")
+                banner.append("  Abre AArchDroid (app principal) para extraer\n")
+                banner.append("  e instalar el sistema base.\n")
+                banner.append("\n")
+            } else if (!chrootMounted) {
+                banner.append("  Las monturas del chroot no están activas.\n")
+                banner.append("\n")
+            } else {
+                banner.append("  Estado OK.\n")
+                banner.append("\n")
+            }
+            banner.append("  Shell de sistema disponible.\n")
 
-            retryBtn.setOnClickListener {
-                dialog.dismiss()
-                Thread {
-                    val ok = isRooted(this@NeoTermActivity)
-                    runOnUiThread {
-                        rootAvailable = ok
-                        if (ok) {
-                            Log.d("AArchDroid", "NeoTermActivity: root granted — continuing")
-                        } else {
-                            showNoRootDialog()
-                        }
+            val bannerStr = banner.toString()
+            val script = "echo '${bannerStr.replace("'", "'\\''")}'; exec /system/bin/sh"
+            Log.d("AArchDroid", "NeoTermActivity: creating recovery session")
+            val sessionCallback = TermSessionCallback()
+            val viewClient = TermViewClient(this)
+
+            val parameter = ShellParameter()
+                .callback(sessionCallback)
+                .systemShell(true)
+                .arguments(arrayOf("sh", "-c", script))
+
+            val session = termService!!.createTermSession(parameter)
+            session.mSessionName = "Recuperación"
+
+            val tab = createTab(session.mSessionName) as TermTab
+            tab.termData.initializeSessionWith(session, sessionCallback, viewClient)
+
+            addNewTab(tab, createRevealAnimation())
+            switchToSession(tab)
+            Handler(Looper.getMainLooper()).postDelayed({
+                val currentTab = tabSwitcher.selectedTab
+                if (currentTab is TermTab) {
+                    currentTab.termData.termView?.let { view ->
+                        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
                     }
-                }.start()
-            }
+                }
+            }, 300)
 
-            rejectBtn.setOnClickListener {
-                Log.d("AArchDroid", "NeoTermActivity: REJECT — exiting")
-                finishAffinity()
-                finishAndRemoveTask()
+            earlyTerminalPlaceholder?.let { placeholder ->
+                placeholder.post {
+                    val parent = placeholder.parent as? ViewGroup
+                    parent?.removeView(placeholder)
+                    earlyTerminalPlaceholder = null
+                }
             }
-
-            dialog.show()
+        } catch (e: Exception) {
+            Log.e("AArchDroid", "NeoTermActivity: createRecoverySession failed — " + e.message)
         }
     }
 
@@ -1739,71 +1839,20 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     }
 
 
-    fun isRooted(c:Context):Boolean {
-        var result = false
-        var stdin: OutputStream? = null
-        var stdout: InputStream? = null
-        var process: Process? = null
-
-        try {
-            process = Runtime.getRuntime().exec("su")
-            stdin = process.getOutputStream()
-            stdout = process.getInputStream()
-            var os: DataOutputStream? = null
-
-            try {
-                os = DataOutputStream(stdin)
-                os.writeBytes("ls /data\n")
-                os.writeBytes("exit\n")
-                os.flush()
+    fun isRooted(c:Context): Boolean {
+        return try {
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
+            val finished = process.waitFor(3, java.util.concurrent.TimeUnit.SECONDS)
+            if (finished) {
+                val output = process.inputStream.bufferedReader().readText()
+                output.contains("uid=0")
+            } else {
+                process.destroy()
+                false
             }
-
-            catch (e:IOException) {
-                e.printStackTrace()
-            }
-
-            finally {
-                os?.close()
-            }
-
-            var n = 0
-            var reader: BufferedReader? = null
-
-            try {
-                reader = BufferedReader(InputStreamReader(stdout))
-                while (reader.readLine() != null) {
-                    n++
-                }
-            }
-
-            catch (e:IOException) {
-                e.printStackTrace()
-            }
-
-            finally {
-                reader?.close()
-            }
-
-            if (n > 0) {
-                result = true
-            }
+        } catch (e: Exception) {
+            false
         }
-        catch (e:IOException) {
-            e.printStackTrace()
-        }
-
-        finally {
-            stdout?.close()
-            stdin?.close()
-            process?.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)
-            process?.destroy()
-        }
-
-        if (!result) {
-            android.util.Log.w("NeoTerm", "Root check failed — no root access")
-        }
-
-        return result
     }
 
 

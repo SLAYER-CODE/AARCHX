@@ -1,5 +1,6 @@
 package org.aarchdroid;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -55,6 +56,7 @@ import java.util.Set;
 import org.aarchdroid.ToolDatabase;
 import org.aarchdroid.ToolInfo;
 import org.aarchdroid.dragonterminal.bridge.Bridge;
+import org.aarchdroid.dragonterminal.backend.ChrootManager;
 import org.aarchdroid.drawer.DrawerAdapter;
 import org.aarchdroid.drawer.DrawerItem;
 import org.aarchdroid.drawer.DrawerSection;
@@ -83,6 +85,9 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
     private boolean isFragmentOpen;
     private View gridContainer;
     private final Set<String> processingTools = new HashSet<>();
+    private Runnable pendingSi = null;
+    private Runnable pendingNo = null;
+    private boolean gridExpandable = false;
 
     ActivityResultLauncher<Intent> install_dialog_result = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
         static final /* synthetic */ boolean $assertionsDisabled = false;
@@ -219,6 +224,13 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
         retryBtn.setOnClickListener(v -> {
+            if (pendingSi != null) {
+                Runnable r = pendingSi;
+                pendingSi = null;
+                pendingNo = null;
+                r.run();
+                return;
+            }
             retryBtn.setEnabled(false);
             exitBtn.setEnabled(false);
             appendLog("[*] Verificando root...");
@@ -227,7 +239,6 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
                 runOnUiThread(() -> {
                     if (rooted) {
                         appendLog("[+] Root detectado!");
-                        showToolbarAnimated();
                         doInstall();
                     } else {
                         appendLog("[-] Root no detectado.");
@@ -239,6 +250,13 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
         });
 
         exitBtn.setOnClickListener(v -> {
+            if (pendingNo != null) {
+                Runnable r = pendingNo;
+                pendingSi = null;
+                pendingNo = null;
+                r.run();
+                return;
+            }
             appendLog("[!] Saliendo...");
             finishAffinity();
             finishAndRemoveTask();
@@ -257,22 +275,82 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
                     });
                     return;
                 }
-                boolean installed = checkRootfsInstalled();
                 boolean rooted = checkRoot();
+                boolean installed = checkRootfsInstalled();
                 if (installed) {
-                    runOnUiThread(() -> {
-                        showToolbarAnimated();
-                        enableLauncherActivities();
-                        setInstallComplete();
-                        appendLog("[+] Rootfs ya instalado.");
-                        completeSetup();
-                    });
+                    final boolean wasUninstalled = getSharedPreferences(getPackageName(), MODE_PRIVATE)
+                        .getBoolean("uninstall_performed", false);
+                    if (wasUninstalled && rooted) {
+                        String creationDate = "";
+                        String totalSize = "";
+                        try {
+                            Process p1 = Runtime.getRuntime().exec(
+                                new String[]{"su", "-c", "stat -c '%y' " + MARKER + " 2>/dev/null"});
+                            BufferedReader r1 = new BufferedReader(
+                                new InputStreamReader(p1.getInputStream()));
+                            creationDate = r1.readLine();
+                            r1.close();
+                            p1.waitFor();
+                            Process p2 = Runtime.getRuntime().exec(
+                                new String[]{"su", "-c", "du -sh " + CHROOT_DIR + " 2>/dev/null | cut -f1"});
+                            BufferedReader r2 = new BufferedReader(
+                                new InputStreamReader(p2.getInputStream()));
+                            totalSize = r2.readLine();
+                            r2.close();
+                            p2.waitFor();
+                        } catch (Exception e) {}
+                        if (creationDate == null) creationDate = "desconocido";
+                        if (totalSize == null) totalSize = "desconocido";
+                        final String fDate = creationDate;
+                        final String fSize = totalSize;
+                        runOnUiThread(() -> {
+                            appendLog("[*] Instalacion previa detectada.");
+                            appendLog("[*] Fecha:     " + fDate);
+                            appendLog("[*] Tamaño:    " + fSize);
+                            appendLog("[*] Ubicacion: " + CHROOT_DIR);
+                            showSiNoButtons("¿Desea instalar el sistema?",
+                                () -> {
+                                    getSharedPreferences(getPackageName(), MODE_PRIVATE)
+                                        .edit().putBoolean("uninstall_performed", false).apply();
+                                    doInstall();
+                                },
+                                () -> {
+                                    appendLog("[!] Instalacion cancelada.");
+                                    reverseToFreshState();
+                                });
+                        });
+                    } else {
+                        runOnUiThread(() -> {
+                            showToolbarAnimated();
+                            enableLauncherActivities();
+                            setInstallComplete();
+                            appendLog("[+] Rootfs ya instalado.");
+                            completeSetup();
+                        });
+                    }
                 } else if (rooted) {
-                    runOnUiThread(() -> {
-                        appendLog("[+] Root detectado.");
-                        showToolbarAnimated();
-                        doInstall();
-                    });
+                    final boolean wasUninstalled = getSharedPreferences(getPackageName(), MODE_PRIVATE)
+                        .getBoolean("uninstall_performed", false);
+                    if (wasUninstalled) {
+                        runOnUiThread(() -> {
+                            appendLog("[-] Se detecto instalacion previa pero no se detecto el rootfs.");
+                            showSiNoButtons("¿Desea descomprimir e instalar?",
+                                () -> {
+                                    getSharedPreferences(getPackageName(), MODE_PRIVATE)
+                                        .edit().putBoolean("uninstall_performed", false).apply();
+                                    doInstall();
+                                },
+                                () -> {
+                                    appendLog("[!] Instalacion cancelada.");
+                                    reverseToFreshState();
+                                });
+                        });
+                    } else {
+                        runOnUiThread(() -> {
+                            appendLog("[+] Root detectado.");
+                            doInstall();
+                        });
+                    }
                 } else {
                     runOnUiThread(() -> {
                         appendLog("[-] Root no detectado.");
@@ -374,10 +452,39 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         if (menuItem.getItemId() == R.id.action_settings) {
             PopupMenu popup = new PopupMenu(this, toolbar, Gravity.END);
+            boolean isMounted = ChrootManager.INSTANCE.isMounted();
+            popup.getMenu().add(isMounted ? "Unmount" : "Mount");
             popup.getMenu().add("Uninstall");
             popup.setOnMenuItemClickListener(item -> {
-                call_uninstall_dialog();
-                return true;
+                String title = item.getTitle().toString();
+                if ("Unmount".equals(title)) {
+                    new Thread(() -> {
+                        String report = ChrootManager.INSTANCE.runUnmount();
+                        runOnUiThread(() -> {
+                            for (String line : report.split("\n")) {
+                                if (!line.trim().isEmpty()) appendLog(line);
+                            }
+                        });
+                    }).start();
+                    return true;
+                } else if ("Mount".equals(title)) {
+                    new Thread(() -> {
+                        appendLog("[*] Montando chroot...");
+                        boolean ok = ChrootManager.INSTANCE.ensureMounted();
+                        runOnUiThread(() -> {
+                            if (ok) {
+                                appendLog("[+] Chroot montado.");
+                            } else {
+                                appendLog("[-] Error al montar.");
+                            }
+                        });
+                    }).start();
+                    return true;
+                } else if ("Uninstall".equals(title)) {
+                    doUninstall();
+                    return true;
+                }
+                return false;
             });
             popup.show();
             return true;
@@ -827,13 +934,67 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
         });
     }
 
+    private void showSiNoButtons(String question, Runnable onSi, Runnable onNo) {
+        runOnUiThread(() -> {
+            appendLog("[?] " + question);
+            pendingSi = onSi;
+            pendingNo = onNo;
+            retryBtn.setText("SI");
+            retryBtn.setTextSize(14);
+            retryBtn.setBackgroundResource(R.drawable.button_hacker);
+            retryBtn.setTextColor(0xFF00FF00);
+            retryBtn.setVisibility(View.VISIBLE);
+            retryBtn.setEnabled(true);
+            exitBtn.setText("NO");
+            exitBtn.setTextSize(14);
+            exitBtn.setBackgroundResource(R.drawable.button_hacker);
+            exitBtn.setTextColor(0xFF00FF00);
+            exitBtn.setVisibility(View.VISIBLE);
+            exitBtn.setEnabled(true);
+        });
+    }
+
+    private void showCountdownAndExit() {
+        pendingSi = null;
+        pendingNo = null;
+        runOnUiThread(() -> {
+            retryBtn.setVisibility(View.GONE);
+            exitBtn.setText("saliendo 5");
+            exitBtn.setTextSize(14);
+            exitBtn.setBackgroundResource(R.drawable.button_hacker_red);
+            exitBtn.setTextColor(0xFFFF0000);
+            exitBtn.setEnabled(false);
+            exitBtn.setVisibility(View.VISIBLE);
+
+            final Handler h = new Handler();
+            final int[] count = {5};
+            h.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    count[0]--;
+                    if (count[0] > 0) {
+                        exitBtn.setText("saliendo " + count[0]);
+                        h.postDelayed(this, 1000);
+                    } else {
+                        finishAffinity();
+                        finishAndRemoveTask();
+                    }
+                }
+            }, 1000);
+        });
+    }
+
     private void completeSetup() {
+        gridExpandable = true;
         showToolbarAnimated();
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        retryBtn.setVisibility(View.GONE);
+        exitBtn.setVisibility(View.GONE);
         logCuadro.postDelayed(this::expandToGrid, 400);
     }
 
     private void expandToGrid() {
+        if (!gridExpandable) return;
         if (gridContainer.getVisibility() == View.VISIBLE) return;
         View logContent = findViewById(R.id.log_content);
         int toolbarH = toolbar.getHeight() > 0 ? toolbar.getHeight() :
@@ -900,6 +1061,18 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
 
                 appendLog("[*] Extrayendo rootfs (~30s)...");
                 extractRootfs();
+
+                appendLog("[*] Configurando perfil de bash (/etc/profile.d)...");
+                try {
+                    Runtime.getRuntime().exec("su -c mkdir -p " + CHROOT_DIR + "/etc/profile.d").waitFor();
+                    Runtime.getRuntime().exec("su -c \"echo '[ -f /root/.bashrc ] && . /root/.bashrc' > " + CHROOT_DIR + "/etc/profile.d/aarchdroid.sh\"").waitFor();
+                    appendLog("[+] Perfil configurado.");
+                } catch (Exception e) {
+                    appendLog("[-] Perfil fallo: " + e.getMessage());
+                }
+
+                appendLog("[*] Instalando script ADB /data/local/aarchrun.sh...");
+                ChrootManager.INSTANCE.writeHelperScript(this);
 
                 setInstallComplete();
                 enableLauncherActivities();
@@ -1083,35 +1256,163 @@ public class MainActivity extends AppCompatActivity implements DrawerAdapter.OnI
     private void enableLauncherActivities() {
         try {
             PackageManager pm = getPackageManager();
-            ComponentName[][] launchers = {
-                {new ComponentName(this, Dco_Information_Gathering.class)},
-                {new ComponentName(this, Dco_Scanning.class)},
-                {new ComponentName(this, Dco_Packet_Crafting.class)},
-                {new ComponentName(this, Dco_network_hacking.class)},
-                {new ComponentName(this, Dco_bug_bounty.class)},
-                {new ComponentName(this, Dco_website_hacking.class)},
-                {new ComponentName(this, Dco_phishing.class)},
-                {new ComponentName(this, Dco_exploitation.class)},
-                {new ComponentName(this, Dco_c2_rat.class)},
-                {new ComponentName(this, Dco_macos_iphone.class)},
-                {new ComponentName(this, Dco_Password_Hacking.class)},
-                {new ComponentName(this, Dco_phreaking.class)},
-                {new ComponentName(this, Dco_ics_scada_iot.class)},
-                {new ComponentName(this, Dco_Mainframe.class)},
-                {new ComponentName(this, Dco_stress_testing.class)},
-                {new ComponentName(this, Dco_Wireless_Hacking.class)},
-                {new ComponentName(this, Dco_voip_3g_4g.class)},
-                {new ComponentName(this, org.aarchdroid.dragonterminal.ui.term.NeoTermActivity.class)},
-                {new ComponentName(this, org.aarchdroid.codehackide.MainActivityCodeHackIDE.class)},
-            };
-            for (ComponentName[] c : launchers) {
-                pm.setComponentEnabledSetting(c[0],
-                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                    PackageManager.DONT_KILL_APP);
-            }
+            setLauncherEnabled(pm, PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
             appendLog("[+] Launcher icons activados");
         } catch (Exception e) {
             appendLog("[-] Error activando launchers: " + e.getMessage());
         }
+    }
+
+    private void disableLauncherActivities() {
+        try {
+            PackageManager pm = getPackageManager();
+            setLauncherEnabled(pm, PackageManager.COMPONENT_ENABLED_STATE_DISABLED);
+            appendLog("[-] Launcher icons desactivados");
+        } catch (Exception e) {
+            appendLog("[-] Error desactivando launchers: " + e.getMessage());
+        }
+    }
+
+    private void setLauncherEnabled(PackageManager pm, int state) {
+        ComponentName[][] launchers = {
+            {new ComponentName(this, Dco_Information_Gathering.class)},
+            {new ComponentName(this, Dco_Scanning.class)},
+            {new ComponentName(this, Dco_Packet_Crafting.class)},
+            {new ComponentName(this, Dco_network_hacking.class)},
+            {new ComponentName(this, Dco_bug_bounty.class)},
+            {new ComponentName(this, Dco_website_hacking.class)},
+            {new ComponentName(this, Dco_phishing.class)},
+            {new ComponentName(this, Dco_exploitation.class)},
+            {new ComponentName(this, Dco_c2_rat.class)},
+            {new ComponentName(this, Dco_macos_iphone.class)},
+            {new ComponentName(this, Dco_Password_Hacking.class)},
+            {new ComponentName(this, Dco_phreaking.class)},
+            {new ComponentName(this, Dco_ics_scada_iot.class)},
+            {new ComponentName(this, Dco_Mainframe.class)},
+            {new ComponentName(this, Dco_stress_testing.class)},
+            {new ComponentName(this, Dco_Wireless_Hacking.class)},
+            {new ComponentName(this, Dco_voip_3g_4g.class)},
+            {new ComponentName(this, org.aarchdroid.dragonterminal.ui.term.NeoTermActivity.class)},
+            {new ComponentName(this, org.aarchdroid.codehackide.MainActivityCodeHackIDE.class)},
+        };
+        for (ComponentName[] c : launchers) {
+            pm.setComponentEnabledSetting(c[0], state, PackageManager.DONT_KILL_APP);
+        }
+    }
+
+    private void reverseToFreshState() {
+        // fade grid out
+        gridContainer.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction(() -> gridContainer.setVisibility(View.GONE))
+            .start();
+        // slide log back down
+        View logContent = findViewById(R.id.log_content);
+        logContent.animate().translationY(0).setDuration(200).start();
+        // slide toolbar up and hide
+        int h = toolbar.getHeight();
+        if (h <= 0) h = 150;
+        toolbar.animate()
+            .translationY(-h)
+            .setDuration(350)
+            .withEndAction(() -> toolbar.setVisibility(View.GONE))
+            .start();
+        gridExpandable = false;
+        // lock drawer
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        // restore buttons to fresh state
+        retryBtn.setVisibility(View.VISIBLE);
+        retryBtn.setEnabled(true);
+        retryBtn.setBackgroundResource(R.drawable.button_hacker);
+        retryBtn.setTextColor(0xFF00FF00);
+        retryBtn.setText("REINTENTAR");
+        retryBtn.setTextSize(14);
+        exitBtn.setVisibility(View.VISIBLE);
+        exitBtn.setEnabled(true);
+        exitBtn.setBackgroundResource(R.drawable.button_hacker);
+        exitBtn.setTextColor(0xFF00FF00);
+        exitBtn.setText("SALIR");
+        exitBtn.setTextSize(14);
+    }
+
+    private void doUninstall() {
+        android.app.Dialog d = new android.app.Dialog(this);
+        d.setContentView(R.layout.dialog_root_required);
+        d.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        ((TextView) d.findViewById(R.id.dialog_title)).setText("UNINSTALL ANDRAX-NG?");
+        ((TextView) d.findViewById(R.id.dialog_message)).setText(
+            "This action can't be undone!\n\nAll files in the container will be destroyed.");
+        Button okBtn = d.findViewById(R.id.btn_retry);
+        okBtn.setText("OK");
+        okBtn.setOnClickListener(v -> {
+            d.dismiss();
+            appendLog("[*] Desmontando chroot...");
+            new Thread(() -> {
+                try {
+                    String unmountReport = ChrootManager.INSTANCE.runUnmount();
+                    runOnUiThread(() -> {
+                        for (String line : unmountReport.split("\n")) {
+                            if (!line.trim().isEmpty()) appendLog(line);
+                        }
+                    });
+
+                    getSharedPreferences(getPackageName(), MODE_PRIVATE)
+                        .edit().putBoolean("install_complete", false)
+                        .putBoolean("uninstall_performed", true).apply();
+
+                    runOnUiThread(() -> {
+                        appendLog("[*] Desmontaje completado.");
+                        disableLauncherActivities();
+                        reverseToFreshState();
+                        showSiNoButtons("¿Desea borrar " + CHROOT_DIR + "?",
+                            () -> {
+                                appendLog("[*] Obteniendo información del chroot...");
+                                new Thread(() -> {
+                                    String totalSize = "";
+                                    try {
+                                        Process p = Runtime.getRuntime().exec(
+                                            new String[]{"su", "-c", "du -sh " + CHROOT_DIR + " 2>/dev/null | cut -f1"});
+                                        BufferedReader r = new BufferedReader(
+                                            new InputStreamReader(p.getInputStream()));
+                                        totalSize = r.readLine();
+                                        r.close();
+                                        p.waitFor();
+                                    } catch (Exception e) {}
+                                    if (totalSize == null) totalSize = "desconocido";
+                                    final String fSize = totalSize;
+                                    try {
+                                        Runtime.getRuntime().exec("su -c rm -rf " + CHROOT_DIR).waitFor();
+                                        runOnUiThread(() -> {
+                                            appendLog("[+] " + CHROOT_DIR + " eliminado.");
+                                            appendLog("[*] Tamaño borrado: " + fSize);
+                                            appendLog("[*] Ubicacion: " + CHROOT_DIR);
+                                            appendLog("[!] AArchDroid desinstalado.");
+                                            showCountdownAndExit();
+                                        });
+                                    } catch (Exception e) {
+                                        appendLog("[-] Error: " + e.getMessage());
+                                    }
+                                }).start();
+                            },
+                            () -> {
+                                appendLog("[!] Archivos conservados en " + CHROOT_DIR);
+                                appendLog("[!] AArchDroid desinstalado (datos conservados).");
+                                showCountdownAndExit();
+                            });
+                    });
+                } catch (Exception e) {
+                    runOnUiThread(() -> {
+                        appendLog("[-] Error: " + e.getMessage());
+                        retryBtn.setEnabled(true);
+                        exitBtn.setEnabled(true);
+                    });
+                }
+            }).start();
+        });
+        Button cancelBtn = d.findViewById(R.id.btn_reject);
+        cancelBtn.setText("CANCEL");
+        cancelBtn.setOnClickListener(v -> d.dismiss());
+        d.show();
     }
 }

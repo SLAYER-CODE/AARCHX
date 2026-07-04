@@ -209,7 +209,7 @@ public class DcoBaseActivity extends Activity {
         }
     }
 
-    private String getCurrentCategory() {
+    protected String getCurrentCategory() {
         String className = getClass().getSimpleName();
         if (className.startsWith("Dco_")) {
             return className.substring(4).toLowerCase();

@@ -36,6 +36,34 @@ ${BUSYBOX} mount -o bind /dev "${ROOTFS_DIR}/dev" 2>/dev/null
 
 # Configure pacman
 echo "en_US.UTF-8 UTF-8" > "${ROOTFS_DIR}/etc/locale.gen"
+cat > "${ROOTFS_DIR}/etc/pacman.conf" << 'PACMAN'
+[options]
+HoldPkg      = pacman glibc
+Architecture = aarch64
+Color
+VerbosePkgLists
+ParallelDownloads = 5
+DisableDownloadTimeout
+DisableSandbox
+SigLevel    = Never
+
+[core]
+Include = /etc/pacman.d/mirrorlist
+
+[extra]
+Include = /etc/pacman.d/mirrorlist
+
+[community]
+Include = /etc/pacman.d/mirrorlist
+
+[blackarch]
+SigLevel = Never
+Server = https://ftp.halifax.rwth-aachen.de/blackarch/$repo/os/$arch
+Server = https://mirrors.sjtug.sjtu.edu.cn/blackarch/$repo/os/$arch
+Server = https://mirror.aktkn.sg/blackarch/$repo/os/$arch
+Server = https://blackarch.anionversuch.de/blackarch/$repo/os/$arch
+PACMAN
+
 cat > "${ROOTFS_DIR}/etc/pacman.d/mirrorlist" << 'MIRRORS'
 Server = http://mirror.archlinuxarm.org/$arch/$repo
 Server = http://eu.mirror.archlinuxarm.org/$arch/$repo

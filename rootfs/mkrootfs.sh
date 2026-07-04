@@ -51,22 +51,29 @@ Server = http://eu.mirror.archlinuxarm.org/$arch/$repo
 Server = http://us.mirror.archlinuxarm.org/$arch/$repo
 MIRRORS
 
+# Verify pacman config works
+echo "[!] Testing pacman config..."
+arch-chroot "${ROOTFS}" /bin/bash -c "pacman -Sy 2>&1" || echo "[!] pacman -Sy had errors (may be offline during build)"
+
 echo "[3/5] Adding BlackArch repo..."
 arch-chroot "${ROOTFS}" /bin/bash << 'CHROOT'
-    pacman-key --init 2>/dev/null
-    pacman-key --populate archlinuxarm 2>/dev/null
+    pacman-key --init 2>&1
+    pacman-key --populate archlinuxarm 2>&1
     
     # Add BlackArch keyring
-    curl -sL "https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz" -o /tmp/blackarch-keyring.pkg.tar.xz 2>/dev/null
+    echo "[*] Downloading BlackArch keyring..."
+    curl -sL "https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz" -o /tmp/blackarch-keyring.pkg.tar.xz
     if [ -f /tmp/blackarch-keyring.pkg.tar.xz ]; then
-        pacman -U --noconfirm /tmp/blackarch-keyring.pkg.tar.xz 2>/dev/null || true
+        pacman -U --noconfirm /tmp/blackarch-keyring.pkg.tar.xz 2>&1 || echo "[!] BlackArch keyring install failed (non-fatal)"
         rm -f /tmp/blackarch-keyring.pkg.tar.xz
+    else
+        echo "[!] Could not download BlackArch keyring (non-fatal)"
     fi
     
-    pacman -Sy --noconfirm 2>/dev/null || true
+    pacman -Sy --noconfirm 2>&1 || echo "[!] pacman -Sy had errors (may be offline during build)"
 CHROOT
 
-echo "[4/5] Installing essential tools + auto-install hook..."
+echo "[4/5] Installing essential tools..."
 arch-chroot "${ROOTFS}" /bin/bash << 'CHROOT'
     # Install network and basic tools
     pacman -S --noconfirm --needed \
@@ -87,10 +94,10 @@ arch-chroot "${ROOTFS}" /bin/bash << 'CHROOT'
         which \
         man-db \
         man-pages \
-        2>&1 | tail -5 || true
+        2>&1 | tail -5 || echo "[!] Some packages failed to install (may be offline)"
 CHROOT
 
-# Copy our bashrc with command_not_found_handle
+# Copy our bashrc
 cp ../app/src/main/assets/all/scripts/bashrc-aarchdroid "${ROOTFS}/root/.bashrc"
 
 # Setup root user

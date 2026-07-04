@@ -116,10 +116,22 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
     private var lastGridRows = 0
     private var maxGridCols = 0
     private var maxGridRows = 0
+    val maxGridWidth: Int get() = maxGridCols
+    val maxGridHeight: Int get() = maxGridRows
 
-    private fun emitResize(cols: Int, rows: Int) {
-        // Only ever grow the grid; never shrink it.
-        // This prevents content loss when IME opens/closes.
+    private fun emitResize(cols: Int, rows: Int, force: Boolean = false) {
+        Log.d("NeovimEditorView", "emitResize cols=$cols rows=$rows force=$force maxGrid=${maxGridCols}x${maxGridRows} lastGrid=${lastGridCols}x${lastGridRows}")
+        if (force) {
+            if (cols > 0 && rows > 0 && (cols != lastGridCols || rows != lastGridRows)) {
+                lastGridCols = cols
+                lastGridRows = rows
+                maxGridCols = maxOf(maxGridCols, cols)
+                maxGridRows = maxOf(maxGridRows, rows)
+                Log.d("NeovimEditorView", "emitResize FORCED ${rows}x${cols}")
+                onResize?.invoke(rows, cols)
+            }
+            return
+        }
         if (cols > maxGridCols) maxGridCols = cols
         if (rows > maxGridRows) maxGridRows = rows
         val emitCols = maxGridCols
@@ -131,6 +143,8 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
             onResize?.invoke(emitRows, emitCols)
         }
     }
+
+    var keyboardActive = false
 
     init {
         setBackgroundColor(0xFF000000.toInt())
@@ -306,8 +320,13 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
 
     fun requestKeyboard(source: String) {
         Log.d("NeovimEditorView", "requestKeyboard src=$source isFocused=$isFocused hasWindowToken=$windowToken")
+        keyboardActive = true
         keyboardRetryCount = 0
         keyboardPost(source)
+    }
+
+    fun notifyKeyboardClosed() {
+        keyboardActive = false
     }
 
     private fun keyboardPost(source: String) {
@@ -333,7 +352,7 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         }
         Log.d("NeovimEditorView", "showKeyboard src=$source attempt=$attempt isFocused=$isFocused windowToken=$windowToken")
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 val wic = windowInsetsController
                 Log.v("NeovimEditorView", "  wic=$wic")
                 if (wic != null) {
@@ -345,7 +364,10 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
             if (imm != null) {
                 Log.d("NeovimEditorView", "  isAcceptingText=${imm.isAcceptingText} isActive=${imm.isActive(this)}")
                 val result = imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
-                Log.d("NeovimEditorView", "  showSoftInput result=$result")
+                if (!result && attempt < 2) {
+                    postDelayed({ showKeyboard(source, attempt + 1) }, 200)
+                }
+                Log.d("NeovimEditorView", "  showSoftInput result=$result attempt=$attempt")
             } else {
                 Log.w("NeovimEditorView", "  imm is NULL")
             }
@@ -368,11 +390,14 @@ class NeovimEditorView(context: Context, attrs: AttributeSet? = null) : View(con
         if (gainFocus) {
             cursorVisible = true
             if (isReady) blinkHandler.postDelayed(blinkRunnable, cursorBlinkInterval)
-            showKeyboard("focus")
         } else {
             blinkHandler.removeCallbacks(blinkRunnable)
-            hideKeyboard()
         }
+    }
+
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        Log.d("NeovimEditorView", "onWindowFocusChanged hasWindowFocus=$hasWindowFocus isReady=$isReady")
     }
 
     fun updateBuffer(newBuffer: NeovimBuffer) {

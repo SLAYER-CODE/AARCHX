@@ -17,13 +17,10 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import org.aarchdroid.R
-import org.aarchdroid.dragonterminal.backend.ChrootManager
 import org.aarchdroid.dragonterminal.backend.EmulatorDebug
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.frontend.logging.NLog
-import org.aarchdroid.AArchDroidApp
 import org.aarchdroid.dragonterminal.frontend.session.shell.ShellParameter
-import org.aarchdroid.dragonterminal.frontend.session.shell.ShellProfile
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XParameter
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XSession
 import org.aarchdroid.dragonterminal.ui.term.NeoTermActivity
@@ -54,35 +51,8 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         tryStartForeground()
         PreferenceManager.getDefaultSharedPreferences(this)
             .registerOnSharedPreferenceChangeListener(this)
-        // Pre-create a terminal session so su -c starts early
-        preCreateSession()
-    }
-
-    private fun preCreateSession() {
-        if (mTerminalSessions.isNotEmpty()) return
-
-        Log.d("AArchDroid", "NeoTermService: pre-creating default terminal session")
-        val profile = ShellProfile()
-        val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/archdroid.sh"
-        val parameter = ShellParameter()
-            .systemShell(false)
-            .profile(profile)
-
-        if (profile.loginShell == defaultScript) {
-            ChrootManager.ensureMounted()
-            parameter.executablePath("su")
-            parameter.arguments(ChrootManager.getSuEntryArgs())
-        } else {
-            parameter.executablePath(profile.loginShell)
-        }
-
-        try {
-            val session = createTermSession(parameter)
-            session.initializeEmulator(80, 24, 0, 0)
-            Log.d("AArchDroid", "NeoTermService: pre-created session handle=" + session.mHandle)
-        } catch (e: Exception) {
-            Log.e("AArchDroid", "NeoTermService: pre-create session failed — " + e.message)
-        }
+        // Session creation is handled by NeoTermActivity.enterMain()
+        // based on root/chroot status — no pre-creation needed.
     }
 
     override fun onSharedPreferenceChanged(prefs: SharedPreferences?, key: String?) {

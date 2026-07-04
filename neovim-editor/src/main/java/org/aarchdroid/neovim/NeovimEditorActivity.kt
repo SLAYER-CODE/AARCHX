@@ -2,8 +2,10 @@ package org.aarchdroid.neovim
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.WindowInsets
 import android.provider.OpenableColumns
 import android.util.Log
 import android.view.Gravity
@@ -52,6 +54,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     private var defaultFg: Int = NeovimColor.WHITE
     private var defaultBg: Int = 0xFF000000.toInt()
     private val rowLineMaxCol = mutableMapOf<Int, Int>()
+    private var pendingFullRefresh = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -138,6 +141,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             // Pipeline: send all setup commands immediately (msgpack pipelining)
             client.command("set laststatus=0 noshowmode noshowcmd noruler")
             client.uiAttach(initCols, initRows)
+            buffer.resize(initCols, initRows)
             client.command("startinsert")
 
             // Discard keystrokes typed before connection was ready (would be sent in normal mode)
@@ -146,6 +150,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
             connected.set(true)
             withContext(Dispatchers.Main) {
                 editorView.isReady = true
+                editorView.requestKeyboard("connect")
             }
 
             withContext(Dispatchers.Main) {
@@ -220,6 +225,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
 
     override fun onConnected() {
         Log.d(TAG, "onConnected called")
+        pendingFullRefresh = false
+        rowLineMaxCol.clear()
     }
 
     override fun onDisconnected() {
@@ -230,22 +237,59 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (editorView.keyboardActive && connected.get()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window?.insetsController?.show(WindowInsets.Type.ime())
+            }
+            val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+            imm?.showSoftInput(editorView, android.view.inputmethod.InputMethodManager.SHOW_FORCED)
+        }
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         Log.d(TAG, "onWindowFocusChanged hasFocus=$hasFocus connected=${connected.get()}")
     }
 
     override fun onRedraw(updates: List<NeovimClient.RedrawEvent>) {
-        rowLineMaxCol.clear()
+        var hasFlush = false
         val names = updates.map { "${it.name}(${it.args.size})" }
         Log.d(TAG, "onRedraw events=${updates.size}: $names")
         for (update in updates) {
             try {
+                if (update.name == "grid_resize" || update.name == "grid_clear") pendingFullRefresh = true
+                if (update.name == "flush") hasFlush = true
                 processRedrawEvent(update)
             } catch (e: Exception) {
                 Log.e(TAG, "Redraw error processing ${update.name}", e)
             }
         }
+        // Deferred tilde fill: after grid_resize/grid_clear, fill rows not covered
+        // by grid_line with ~. rowLineMaxCol is NOT cleared per-batch (only on
+        // grid_resize/grid_clear), so grid_line events from prior batches are
+        // reflected when flush arrives.
+        if (pendingFullRefresh && hasFlush && rowLineMaxCol.isNotEmpty()) {
+            pendingFullRefresh = false
+            val tilde = NeovimCell(char = '~', foreground = defaultFg, background = defaultBg)
+            for (r in 0 until buffer.gridHeight) {
+                if (r !in rowLineMaxCol) {
+                    for (c in 0 until buffer.gridWidth) {
+                        buffer.setCell(r, c, tilde)
+                    }
+                }
+            }
+        }
+        // Log first row cells for debugging
+        val firstRowChars = (0 until minOf(buffer.gridWidth, 42)).map { c ->
+            buffer.getCell(0, c)?.char ?: '?'
+        }.joinToString("")
+        Log.d(TAG, "row0 chars: \"$firstRowChars\" rowsInRowLineMaxCol=${rowLineMaxCol.size}")
         // Track cursor for next redraw
         prevCursorRow = buffer.cursor.row
         prevCursorCol = buffer.cursor.col
@@ -281,6 +325,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
                 if (w >= 0 && h >= 0) {
                     Log.d(TAG, "grid_resize $w x $h")
+                    rowLineMaxCol.clear()
                     buffer.resize(w, h)
                 } else {
                     Log.w(TAG, "grid_resize unexpected args: ${event.args}")
@@ -350,7 +395,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                         val display = chars.toString().replace(' ', '·')
                         val capped = if (display.length > 40) display.take(40) + "…" else display
                         segmentInfo.add("g${grid}r${row}c${colStart}[$segCells:\"$capped\"]")
-                        if (col > (rowLineMaxCol[row] ?: 0)) rowLineMaxCol[row] = col
+                        if (col > (rowLineMaxCol[row] ?: -1)) rowLineMaxCol[row] = col
+                        else if (row !in rowLineMaxCol) rowLineMaxCol[row] = colStart
                     } else if (arg.size >= 3) {
                         val grid = arg[0].asIntegerValue().toInt()
                         val row = arg[1].asIntegerValue().toInt()
@@ -364,7 +410,8 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                                 totalCells++
                             }
                         }
-                        if (text.length > (rowLineMaxCol[row] ?: 0)) rowLineMaxCol[row] = text.length
+                        if (text.length > (rowLineMaxCol[row] ?: -1)) rowLineMaxCol[row] = text.length
+                        else if (row !in rowLineMaxCol) rowLineMaxCol[row] = 0
                     }
                 }
                 Log.d(TAG, "grid_line: total=$totalCells segments=${segmentInfo.joinToString(" ")}")
@@ -466,7 +513,15 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
                 }
             }
             "grid_clear" -> {
-                buffer.clear(defaultFg, defaultBg)
+                // Clear old content. grid_line will overwrite window rows;
+                // untouched rows get filled with ~ at batch end (via fullRefresh).
+                rowLineMaxCol.clear()
+                val empty = NeovimCell(char = ' ', foreground = defaultFg, background = defaultBg)
+                for (r in 0 until buffer.gridHeight) {
+                    for (c in 0 until buffer.gridWidth) {
+                        buffer.setCell(r, c, empty)
+                    }
+                }
             }
             "flush" -> {
                 // Signal to render
@@ -557,8 +612,13 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     }
 
     private fun toggleKeyboard() {
-        val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
-        imm?.toggleSoftInput(android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT, 0)
+        if (editorView.keyboardActive) {
+            editorView.notifyKeyboardClosed()
+            hideKeyboard()
+        } else {
+            editorView.keyboardActive = true
+            editorView.requestKeyboard("toggle")
+        }
     }
 
     private fun hideKeyboard() {
@@ -583,6 +643,9 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     }
 
     private fun openFilePicker() {
+        val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+        imm?.hideSoftInputFromWindow(editorView.windowToken, 0)
+        editorView.keyboardActive = false
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "*/*"
@@ -604,13 +667,29 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
 
                     scope.launch {
                         Log.d(TAG, "openFile: ${currentFileName} size=${content.length}")
-                        client.command("enew!")
-                        // Split en background thread para no bloquear
+                        // Read current view size on Main thread, then take max of
+                        // maxGrid (historical max) and current grid (for safety).
+                        val (curCols, curRows) = withContext(Dispatchers.Main) {
+                            if (editorView.maxGridWidth <= 0 || editorView.maxGridHeight <= 0) {
+                                editorView.waitForLayout()
+                            }
+                            editorView.getGridSize()
+                        }
+                        val fullCols = maxOf(editorView.maxGridWidth.coerceAtLeast(20), curCols)
+                        val fullRows = maxOf(editorView.maxGridHeight.coerceAtLeast(8), curRows)
+                        Log.d(TAG, "openFile: grid=${fullCols}x${fullRows} (cur=${curCols}x${curRows} max=${editorView.maxGridWidth}x${editorView.maxGridHeight})")
+                        // Split content BEFORE neovim commands (parallel CPU work)
                         val lines = withContext(Dispatchers.Default) { content.split('\n') }
                         Log.d(TAG, "openFile: lines=${lines.size}")
+                        // Notify (fire-and-forget) for resize and enew — saves 2 round-trips.
+                        // Neovim processes them in order, then nvim_buf_set_lines fills content.
+                        client.notify("nvim_ui_try_resize", fullCols, fullRows)
+                        client.notify("nvim_command", "enew!")
                         client.request("nvim_buf_set_lines", 0, 0, -1, true, lines)
-                        client.command("file " + escapeVimPath(currentFileName))
+                        client.notify("nvim_command", "file " + escapeVimPath(currentFileName))
                         client.input("<Esc>gg")
+                        // Force full redraw to ensure all rows are populated
+                        client.notify("nvim_command", "redraw!")
                         Log.d(TAG, "openFile: done")
                     }
                     Toast.makeText(this, "Opened: $currentFileName", Toast.LENGTH_SHORT).show()
@@ -658,8 +737,7 @@ class NeovimEditorActivity : AppCompatActivity(), NeovimClient.Callback {
     }
 
     private fun openInTerminal() {
-        val cmd = "nvim --remote-ui"
-        val intent = Bridge.createExecuteIntent(cmd)
+        val intent = Bridge.createExecuteIntent("nvim")
         intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
         startActivity(intent)
     }

@@ -90,11 +90,24 @@ class NeovimBuffer {
 
     fun resize(width: Int, height: Int) {
         synchronized(lock) {
+            val oldCells = cells.map { it.toMutableList() }
+            val oldWidth = gridWidth
             gridWidth = width
             gridHeight = height
             cells.clear()
             for (r in 0 until height) {
                 val row = MutableList(width) { defaultCell }
+                if (r < oldCells.size) {
+                    val copyCount = minOf(width, oldWidth)
+                    for (c in 0 until copyCount) {
+                        row[c] = oldCells[r][c]
+                    }
+                } else if (oldCells.isNotEmpty()) {
+                    // New rows beyond old grid: don't pre-fill ~ — let grid_line
+                    // set content and tilde fill in onRedraw handle EOF lines.
+                    // Keep defaultCell (space) to avoid flash of ~ before grid_line.
+                }
+                // else: first init (oldCells empty) → keep defaultCell (space)
                 cells.add(row)
             }
         }
