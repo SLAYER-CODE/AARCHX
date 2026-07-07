@@ -142,6 +142,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     private var earlyTerminalPlaceholder: View? = null
     private val tabSessionMap = HashMap<String, String>() // TerminalSession.handle -> sessionId
     private var tabSwitcherListener: TabSwitcherListener? = null
+    private var forceHistoryVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -500,30 +501,16 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
                     override fun onSwitcherHidden(tabSwitcher: TabSwitcher) {
                         toolbar.setBackgroundResource(R.color.black_fuck)
-                        val hiddenTab = tabSwitcher.selectedTab
-                        if (hiddenTab is TermTab) {
-                            hiddenTab.termData.extraKeysView?.visibility = View.VISIBLE
-                        }
                         Handler(Looper.getMainLooper()).postDelayed({
                             val tab = tabSwitcher.selectedTab
                             if (tab is TermTab) {
                                 tab.termData.termView?.let { view ->
                                     view.requestFocus()
                                     val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                                    imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                                    imm.restartInput(view)
                                 }
                             }
                         }, 0)
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            val tab = tabSwitcher.selectedTab
-                            if (tab is TermTab) {
-                                tab.termData.termView?.let { view ->
-                                    view.requestFocus()
-                                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                                    imm.showSoftInput(view, 0)
-                                }
-                            }
-                        }, 250)
                     }
 
                     override fun onSelectionChanged(tabSwitcher: TabSwitcher, selectedTabIndex: Int, selectedTab: Tab?) {
@@ -534,7 +521,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                                     Handler(Looper.getMainLooper()).postDelayed({
                                         view.requestFocus()
                                         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                                        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                                        imm.restartInput(view)
                                     }, 300)
                                 }
                             }
@@ -615,6 +602,19 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             val tab = tabSwitcher.selectedTab as NeoTab?
             tab?.onResume()
 
+            if (NeoPreference.isImeVisible()) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val resumeTab = tabSwitcher.selectedTab
+                    if (resumeTab is TermTab) {
+                        resumeTab.termData.termView?.let { view ->
+                            view.requestFocus()
+                            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                            imm.showSoftInput(view, InputMethodManager.SHOW_FORCED)
+                        }
+                    }
+                }, 100)
+            }
+
         } catch (e: Exception) {
 
         }
@@ -675,6 +675,15 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         super.onWindowFocusChanged(hasFocus)
         val tab = tabSwitcher.selectedTab as NeoTab?
         tab?.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            val termTab = tabSwitcher.selectedTab
+            if (termTab is TermTab) {
+                termTab.termData.termView?.let { view ->
+                    view.updateSize()
+                    view.invalidate()
+                }
+            }
+        }
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -884,30 +893,35 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             }
 
         } else if (pendingAnchorSession == null) {
-            Log.d("AArchDroid", "NeoTermActivity: no existing sessions — creating first session")
-            toggleSwitcher(showSwitcher = true, easterEgg = false)
+            if (NeoPreference.isAutoStartEnabled()) {
+                Log.d("AArchDroid", "NeoTermActivity: no existing sessions — creating first session")
+                toggleSwitcher(showSwitcher = true, easterEgg = false)
 
-            rootAvailable = isRooted(this)
-            Log.d("AArchDroid", "NeoTermActivity: synchronous root check — rootAvailable=" + rootAvailable)
+                rootAvailable = isRooted(this)
+                Log.d("AArchDroid", "NeoTermActivity: synchronous root check — rootAvailable=" + rootAvailable)
 
-            try {
-                if (rootAvailable && File("/data/local/aarchdroid/bin/bash").exists()) {
-                    ChrootManager.ensureMounted()
-                    addNewSession(null, false, createRevealAnimation())
-                    Log.d("AArchDroid", "NeoTermActivity: first Arch session created")
-                } else {
-                    Log.d("AArchDroid", "NeoTermActivity: status not OK — creating recovery session")
-                    createRecoverySession()
-                }
-            } catch (e: Exception) {
-                Log.e("AArchDroid", "NeoTermActivity: addNewSession failed — " + e.message)
                 try {
-                    createRecoverySession()
-                } catch (_: Exception) {
-                    val intent = Intent(AArchDroidApp.get(), NeoTermActivity::class.java)
-                    startActivity(intent)
-                    finish()
+                    if (rootAvailable && File("/data/local/aarchdroid/bin/bash").exists()) {
+                        ChrootManager.ensureMounted()
+                        addNewSession(null, false, createRevealAnimation())
+                        Log.d("AArchDroid", "NeoTermActivity: first Arch session created")
+                    } else {
+                        Log.d("AArchDroid", "NeoTermActivity: status not OK — creating recovery session")
+                        createRecoverySession()
+                    }
+                } catch (e: Exception) {
+                    Log.e("AArchDroid", "NeoTermActivity: addNewSession failed — " + e.message)
+                    try {
+                        createRecoverySession()
+                    } catch (_: Exception) {
+                        val intent = Intent(AArchDroidApp.get(), NeoTermActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
                 }
+            } else {
+                Log.d("AArchDroid", "NeoTermActivity: auto-start disabled — showing empty state")
+                toggleSwitcher(showSwitcher = true, easterEgg = false)
             }
 
         }
@@ -1040,13 +1054,14 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     private fun addNewSession(sessionName: String?, systemShell: Boolean, animation: Animation)
             = addNewSessionWithProfile(sessionName, systemShell, animation, ShellProfile.create())
 
-    private fun addNewSessionWithProfile(profile: ShellProfile) {
+    private fun addNewSessionWithProfile(profile: ShellProfile, cwd: String? = null) {
         addNewSessionWithProfile(null, getSystemShellMode(),
-                createRevealAnimation(), profile)
+                createRevealAnimation(), profile, cwd)
     }
 
     private fun addNewSessionWithProfile(sessionName: String?, systemShell: Boolean,
-                                         animation: Animation, profile: ShellProfile) {
+                                         animation: Animation, profile: ShellProfile,
+                                         cwd: String? = null) {
         Log.d("AArchDroid", "NeoTermActivity: addNewSessionWithProfile — systemShell=" + systemShell +
                 " profile=" + profile.profileName)
 
@@ -1057,6 +1072,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 .callback(sessionCallback)
                 .systemShell(systemShell)
                 .profile(profile)
+        if (cwd != null) {
+            parameter.currentWorkingDirectory(cwd)
+        }
 
         val defaultScript = AArchDroidApp.get().filesDir.absolutePath + "/bin/archdroid.sh"
         if (!systemShell && profile.loginShell == defaultScript) {
@@ -1456,6 +1474,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         if (!tabSwitcher.isSwitcherShown) {
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
+            NeoPreference.setImeVisible(!NeoPreference.isImeVisible())
         }
     }
 
@@ -1500,6 +1519,91 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
     }
 
+    @Suppress("unused", "UNUSED_PARAMETER")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onKillTerminalEvent(event: KillTerminalEvent) {
+        val tab = tabSwitcher.selectedTab
+        if (tab is TermTab) {
+            if (tabSwitcher.count > 1) {
+                tabSwitcher.removeTab(tab)
+            } else {
+                tab.requireHideIme()
+                toggleSwitcher(showSwitcher = true, easterEgg = false)
+                tabSwitcher.removeTab(tab)
+            }
+        }
+    }
+
+    @Suppress("unused", "UNUSED_PARAMETER")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onToggleHistoryEvent(event: ToggleHistoryEvent) {
+        forceHistoryVisible = !forceHistoryVisible
+        updatePlaceholderVisibility()
+    }
+
+    @Suppress("unused", "UNUSED_PARAMETER")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onOpenFloatEvent(event: OpenFloatEvent) {
+        val intent = Intent(this, FloatService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+
+    @Suppress("unused", "UNUSED_PARAMETER")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onNewTerminalSamePathEvent(event: NewTerminalSamePathEvent) {
+        val tab = tabSwitcher.selectedTab
+        if (tab is TermTab) {
+            val session = tab.termData.termSession
+            if (session != null && session.isRunning()) {
+                val pid = session.pid
+                val cwd = if (pid > 0) {
+                    try {
+                        java.io.File("/proc/$pid/cwd").canonicalPath
+                    } catch (e: Exception) { null }
+                } else null
+                addNewSessionWithProfile(ShellProfile.create(), cwd)
+                return
+            }
+        }
+        addNewSession()
+    }
+
+    @Suppress("unused", "UNUSED_PARAMETER")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onSelectAllEvent(event: SelectAllEvent) {
+        val tab = tabSwitcher.selectedTab
+        if (tab is TermTab) {
+            tab.termData.termView?.selectAllText()
+        }
+    }
+
+    @Suppress("unused", "UNUSED_PARAMETER")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onFloatCurrentTerminalEvent(event: FloatCurrentTerminalEvent) {
+        val tab = tabSwitcher.selectedTab
+        if (tab is TermTab) {
+            val session = tab.termData.termSession
+            if (session != null) {
+                transferringHandle = session.mHandle
+                tabSwitcher.removeTab(tab)
+            }
+        }
+    }
+
+    @Suppress("unused", "UNUSED_PARAMETER")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onToggleTerminalSwitcherEvent(event: ToggleTerminalSwitcherEvent) {
+        if (tabSwitcher.isSwitcherShown) {
+            tabSwitcher.hideSwitcher()
+        } else {
+            toggleSwitcher(showSwitcher = true, easterEgg = true)
+        }
+    }
+
     fun update_colors() {
         // Simple fix to bug on custom color
         Handler().postDelayed({
@@ -1521,6 +1625,35 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         val emptyText = findViewById<TextView>(R.id.empty_logs_text)
         val historyList = findViewById<View>(R.id.sessionHistoryList)
         val launchBtn = findViewById<Button>(R.id.launch_terminal_button)
+
+        if (forceHistoryVisible) {
+            placeholder.visibility = View.VISIBLE
+            toolbar.menu?.findItem(R.id.toggle_tab_switcher_menu_item)?.isVisible = tabSwitcher.count > 0
+            val logsDisabled = org.aarchdroid.dragonterminal.frontend.config.NeoPreference.isLoggingDisabled()
+            if (logsDisabled) {
+                toolbar.title = "Terminal"
+                toolbar.menu?.findItem(R.id.menu_item_clear_logs)?.isVisible = false
+                emptyText.text = "Historial deshabilitado en Ajustes"
+                emptyText.visibility = View.VISIBLE
+                emptyContainer.visibility = View.VISIBLE
+                historyList.visibility = View.GONE
+            } else {
+                val count = SessionHistory.getHistoryCount(this@NeoTermActivity)
+                val hasLogs = count > 0
+                toolbar.title = if (hasLogs) "($count) Logs" else "Terminal"
+                toolbar.menu?.findItem(R.id.menu_item_clear_logs)?.isVisible = hasLogs
+                if (hasLogs) {
+                    emptyContainer.visibility = View.GONE
+                    historyList.visibility = View.VISIBLE
+                } else {
+                    emptyText.visibility = View.VISIBLE
+                    emptyContainer.visibility = View.VISIBLE
+                    historyList.visibility = View.GONE
+                }
+            }
+            launchBtn.setOnClickListener { addNewSession() }
+            return
+        }
 
         if (::tabSwitcher.isInitialized) {
             placeholder.visibility = if (tabSwitcher.count == 0) View.VISIBLE else View.GONE

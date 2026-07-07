@@ -12,7 +12,7 @@ import org.aarchdroid.dragonterminal.component.extrakey.ExtraKeyComponent
 import org.aarchdroid.dragonterminal.frontend.component.ComponentManager
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.config.NeoTermPath
-import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.ToggleImeEvent
+import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.*
 import org.aarchdroid.dragonterminal.frontend.terminal.TerminalView
 import org.aarchdroid.dragonterminal.frontend.terminal.extrakey.button.ControlButton
 import org.aarchdroid.dragonterminal.frontend.terminal.extrakey.button.IExtraButton
@@ -25,31 +25,86 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
 
     companion object {
         private val ESC = ControlButton(IExtraButton.KEY_ESC)
-        private val TAB = ControlButton(IExtraButton.KEY_TAB)
-        private val PAGE_UP = object : ControlButton(IExtraButton.KEY_PAGE_UP) {
+        private val CTRL_R = object : ControlButton(IExtraButton.KEY_TAB) {
+            init {
+                displayText = "Ctrl+R"
+            }
             override fun onClick(view: View) {
-                val tv = view.findViewById<TerminalView>(R.id.terminal_view)
-                tv?.scrollPage(true)
+                val tv = (view.parent as? View)?.findViewById<TerminalView>(R.id.terminal_view)
+                    ?: view.findViewById(R.id.terminal_view)
+                tv?.currentSession?.write("\u0012")
             }
         }
-        private val PAGE_DOWN = object : ControlButton(IExtraButton.KEY_PAGE_DOWN) {
+        private val TOGGLE_HISTORY = object : ControlButton(IExtraButton.KEY_PAGE_UP) {
+            init {
+                displayText = "⇄"
+            }
             override fun onClick(view: View) {
-                val tv = view.findViewById<TerminalView>(R.id.terminal_view)
-                tv?.scrollPage(false)
+                EventBus.getDefault().post(ToggleHistoryEvent())
             }
         }
-        private val HOME = ControlButton(IExtraButton.KEY_HOME)
-        private val END = ControlButton(IExtraButton.KEY_END)
-        private val ARROW_UP = ArrowButton(IExtraButton.KEY_ARROW_UP)
-        private val ARROW_DOWN = ArrowButton(IExtraButton.KEY_ARROW_DOWN)
-        private val ARROW_LEFT = ArrowButton(IExtraButton.KEY_ARROW_LEFT)
-        private val ARROW_RIGHT = ArrowButton(IExtraButton.KEY_ARROW_RIGHT)
+        private val OPEN_FLOAT = object : ControlButton(IExtraButton.KEY_PAGE_DOWN) {
+            init {
+                displayText = "⊞"
+            }
+            override fun onClick(view: View) {
+                EventBus.getDefault().post(OpenFloatEvent())
+            }
+        }
+        private val PREV_SESSION = object : ControlButton(IExtraButton.KEY_ARROW_LEFT) {
+            init {
+                displayText = "◀"
+            }
+            override fun onClick(view: View) {
+                EventBus.getDefault().post(SwitchSessionEvent(toNext = false))
+            }
+        }
+        private val SELECT_ALL = object : ControlButton(IExtraButton.KEY_ARROW_DOWN) {
+            init {
+                displayText = "▣"
+            }
+            override fun onClick(view: View) {
+                EventBus.getDefault().post(SelectAllEvent())
+            }
+        }
+        private val NEXT_SESSION = object : ControlButton(IExtraButton.KEY_ARROW_RIGHT) {
+            init {
+                displayText = "▶"
+            }
+            override fun onClick(view: View) {
+                EventBus.getDefault().post(SwitchSessionEvent(toNext = true))
+            }
+        }
         private val TOGGLE_IME = object : ControlButton(IExtraButton.KEY_TOGGLE_IME) {
             init {
                 displayText = "⌨"
             }
             override fun onClick(view: View) {
                 EventBus.getDefault().post(ToggleImeEvent())
+            }
+        }
+        private val NEW_SESSION = object : ControlButton(IExtraButton.KEY_HOME) {
+            init {
+                displayText = "+"
+            }
+            override fun onClick(view: View) {
+                EventBus.getDefault().post(CreateNewSessionEvent())
+            }
+        }
+        private val NEW_SESSION_PATH = object : ControlButton(IExtraButton.KEY_ARROW_UP) {
+            init {
+                displayText = "↕"
+            }
+            override fun onClick(view: View) {
+                EventBus.getDefault().post(NewTerminalSamePathEvent())
+            }
+        }
+        private val FLOAT_CURRENT = object : ControlButton(IExtraButton.KEY_END) {
+            init {
+                displayText = "↗"
+            }
+            override fun onClick(view: View) {
+                EventBus.getDefault().post(FloatCurrentTerminalEvent())
             }
         }
 
@@ -67,8 +122,22 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
 
     // Initialize StatedControlButton here
     // For avoid memory and context leak.
-    private val CTRL = StatedControlButton(IExtraButton.KEY_CTRL)
-    private val ALT = StatedControlButton(IExtraButton.KEY_ALT)
+    private val TOGGLE_SWITCHER = object : ControlButton(IExtraButton.KEY_CTRL) {
+        init {
+            displayText = "Ctrl"
+        }
+        override fun onClick(view: View) {
+            EventBus.getDefault().post(ToggleTerminalSwitcherEvent())
+        }
+    }
+    private val KILL = object : ControlButton(IExtraButton.KEY_ALT) {
+        init {
+            displayText = "✕"
+        }
+        override fun onClick(view: View) {
+            EventBus.getDefault().post(KillTerminalEvent())
+        }
+    }
 
     private var buttonPanelExpanded = false
     private val EXPAND_BUTTONS = object : ControlButton(IExtraButton.KEY_SHOW_ALL_BUTTONS) {
@@ -114,11 +183,11 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
     }
 
     fun readControlButton(): Boolean {
-        return CTRL.readState()
+        return false
     }
 
     fun readAltButton(): Boolean {
-        return ALT.readState()
+        return false
     }
 
     fun addUserKey(button: IExtraButton) {
@@ -225,28 +294,27 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
 
         outerButton.setOnClickListener {
             outerButton.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            val root = rootView
-            extraButton.onClick(root)
+            extraButton.onClick(this@ExtraKeysView)
         }
         contentView.addView(outerButton)
     }
 
     private fun initBuiltinKeys() {
-        addBuiltinKey(TAB)
-        addBuiltinKey(ALT)
-        addBuiltinKey(PAGE_DOWN)
-        addBuiltinKey(ARROW_LEFT)
-        addBuiltinKey(ARROW_DOWN)
-        addBuiltinKey(ARROW_RIGHT)
+        addBuiltinKey(CTRL_R)
+        addBuiltinKey(KILL)
+        addBuiltinKey(OPEN_FLOAT)
+        addBuiltinKey(PREV_SESSION)
+        addBuiltinKey(SELECT_ALL)
+        addBuiltinKey(NEXT_SESSION)
         addBuiltinKey(TOGGLE_IME)
 
         addBuiltinKey(ESC)
         addBuiltinKey(EXPAND_BUTTONS)
-        addBuiltinKey(PAGE_UP)
-        addBuiltinKey(HOME)
-        addBuiltinKey(ARROW_UP)
-        addBuiltinKey(END)
-        addBuiltinKey(CTRL)
+        addBuiltinKey(TOGGLE_HISTORY)
+        addBuiltinKey(NEW_SESSION)
+        addBuiltinKey(NEW_SESSION_PATH)
+        addBuiltinKey(FLOAT_CURRENT)
+        addBuiltinKey(TOGGLE_SWITCHER)
     }
 
     private fun calculateButtonWidth(): Int {

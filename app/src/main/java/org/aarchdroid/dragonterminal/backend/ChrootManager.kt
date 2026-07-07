@@ -33,6 +33,8 @@ object ChrootManager {
             append("chmod 1777 $CHROOT_BASE/tmp $CHROOT_BASE/dev/shm 2>/dev/null; ")
             // /run tmpfs for PID files, sockets, service runtime data
             append("mkdir -p $CHROOT_BASE/run 2>/dev/null; mount -t tmpfs tmpfs $CHROOT_BASE/run 2>/dev/null; chmod 1777 $CHROOT_BASE/run 2>/dev/null; ")
+            // wpa_supplicant socket from host (for OneShot, wpa_cli, etc.)
+            append("mkdir -p $CHROOT_BASE/var/run/wpa_supplicant 2>/dev/null; mount -o bind /data/vendor/wifi/wpa/sockets $CHROOT_BASE/var/run/wpa_supplicant 2>/dev/null; ")
             append("umount $CHROOT_BASE/data/data/org.aarchdroid 2>/dev/null; mount -o bind /data/data/org.aarchdroid $CHROOT_BASE/data/data/org.aarchdroid")
         }
     }
@@ -73,6 +75,7 @@ object ChrootManager {
     fun runUnmount(): String {
         return try {
             val mounts = listOf(
+                "$CHROOT_BASE/var/run/wpa_supplicant",
                 "$CHROOT_BASE/root/Externa",
                 "$CHROOT_BASE/root/Interna",
                 "$CHROOT_BASE/storage",
@@ -135,6 +138,8 @@ grep -q "${D}CHROOT_BASE/run" /proc/mounts 2>/dev/null || mount -t tmpfs tmpfs "
 grep -q "${D}CHROOT_BASE/dev/shm" /proc/mounts 2>/dev/null || mount -t tmpfs tmpfs "${D}CHROOT_BASE/dev/shm" 2>/dev/null
 grep -q "${D}CHROOT_BASE/data/data/org.aarchdroid" /proc/mounts 2>/dev/null || mount -o bind /data/data/org.aarchdroid "${D}CHROOT_BASE/data/data/org.aarchdroid" 2>/dev/null
 
+grep -q "${D}CHROOT_BASE/var/run/wpa_supplicant" /proc/mounts 2>/dev/null || mount -o bind /data/vendor/wifi/wpa/sockets "${D}CHROOT_BASE/var/run/wpa_supplicant" 2>/dev/null
+
 if [ ! -f "${D}CHROOT_BASE/etc/resolv.conf" ] || [ ! -s "${D}CHROOT_BASE/etc/resolv.conf" ]; then
     cp /system/etc/resolv.conf "${D}CHROOT_BASE/etc/resolv.conf" 2>/dev/null || echo "nameserver 8.8.8.8" > "${D}CHROOT_BASE/etc/resolv.conf"
 fi
@@ -142,9 +147,10 @@ fi
 SHELL=${D}(grep "^root:" "${D}CHROOT_BASE/etc/passwd" | cut -d: -f7)
 [ -z "${D}SHELL" ] && SHELL="/bin/bash"
 [ ! -x "${D}CHROOT_BASE${D}SHELL" ] && SHELL="/bin/bash"
+export HOME=/root
 case "${D}SHELL" in
-  */bash) exec chroot "${D}CHROOT_BASE" ${D}SHELL --rcfile /root/.bashrc;;
-  *) exec chroot "${D}CHROOT_BASE" ${D}SHELL 2>/dev/null;;
+  */bash) exec chroot "${D}CHROOT_BASE" /bin/sh -c "cd /root && exec ${D}SHELL --rcfile /root/.bashrc";;
+  *) exec chroot "${D}CHROOT_BASE" /bin/sh -c "cd /root && exec ${D}SHELL" 2>/dev/null;;
 esac
 """
             val tmpFile = java.io.File(context.cacheDir, "aarchrun.sh")
@@ -161,7 +167,7 @@ esac
     }
 
     fun getEntryCommand(): String {
-        return "SHELL=\$(grep \"^root:\" $CHROOT_BASE/etc/passwd | cut -d: -f7); [ -z \"\$SHELL\" ] && SHELL=/bin/bash; [ ! -x $CHROOT_BASE/\$SHELL ] && SHELL=/bin/bash; case \"\$SHELL\" in */bash) exec chroot $CHROOT_BASE \$SHELL --rcfile /root/.bashrc;; *) exec chroot $CHROOT_BASE \$SHELL;; esac"
+        return "export HOME=/root; SHELL=\$(grep \"^root:\" $CHROOT_BASE/etc/passwd | cut -d: -f7); [ -z \"\$SHELL\" ] && SHELL=/bin/bash; [ ! -x $CHROOT_BASE/\$SHELL ] && SHELL=/bin/bash; case \"\$SHELL\" in */bash) exec chroot $CHROOT_BASE /bin/sh -c \"cd /root && exec \$SHELL --rcfile /root/.bashrc\";; *) exec chroot $CHROOT_BASE /bin/sh -c \"cd /root && exec \$SHELL\";; esac"
     }
 
     fun getSuEntryArgs(): Array<String> {

@@ -7,6 +7,7 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import org.aarchdroid.dragonterminal.backend.KeyHandler
 import org.aarchdroid.dragonterminal.backend.TerminalSession
+import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.terminal.TerminalViewClient
 
 class FloatViewClient(
@@ -21,7 +22,7 @@ class FloatViewClient(
     fun initFloatView() {
         view.terminalView.isFocusable = true
         view.terminalView.isFocusableInTouchMode = true
-        fontSize = org.aarchdroid.dragonterminal.frontend.config.NeoPreference.getFontSize()
+        fontSize = NeoPreference.getFontSize()
         view.terminalView.setTextSize(fontSize)
     }
 
@@ -132,6 +133,9 @@ class FloatViewClient(
     }
 
     private fun handleVirtualKeys(keyCode: Int, event: KeyEvent, down: Boolean): Boolean {
+        if (!NeoPreference.isSpecialVolumeKeysEnabled()) {
+            return false
+        }
         val device = event.device
         if (device != null && device.keyboardType == InputDevice.KEYBOARD_TYPE_ALPHABETIC) {
             return false

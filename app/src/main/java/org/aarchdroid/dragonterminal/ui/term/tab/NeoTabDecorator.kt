@@ -89,6 +89,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                     bindTerminalView(termTab, terminalView, null)
                 } else {
                     val extraKeysView = view.findViewById<ExtraKeysView>(R.id.extra_keys)
+                    extraKeysView?.visibility = View.VISIBLE
                     bindTerminalView(termTab, terminalView, extraKeysView)
                     terminalView.requestFocus()
                 }

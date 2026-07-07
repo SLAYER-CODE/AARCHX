@@ -979,6 +979,9 @@ public final class TerminalView extends View {
             int cellHeight = mRenderer.mFontLineSpacing;
             mTermSession.updateSize(newColumns, newRows, cellWidth, cellHeight);
             mEmulator = mTermSession.getEmulator();
+            if (mEmulator != null) {
+                mEmulator.setCursorBlinkingEnabled(mCursorBlinkingEnabled);
+            }
             startCursorBlinker();
 
             mTopRow = 0;
@@ -1137,6 +1140,71 @@ public final class TerminalView extends View {
             mSelX1 = mSelY1 = mSelX2 = mSelY2 = -1;
             invalidate();
         }
+    }
+
+    public void selectAllText() {
+        if (mEmulator == null) return;
+        mIsSelectingText = true;
+        mSelX1 = 0;
+        mSelY1 = -mEmulator.getScreen().getActiveTranscriptRows();
+        mSelX2 = mEmulator.mColumns;
+        mSelY2 = mEmulator.mRows - 1;
+        mClient.copyModeChanged(true);
+        if (mActionMode != null) {
+            mActionMode.finish();
+        }
+        final ActionMode.Callback callback = new ActionMode.Callback() {
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                int show = MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_WITH_TEXT;
+                ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                menu.add(Menu.NONE, 1, Menu.NONE, R.string.copy_text).setShowAsAction(show);
+                menu.add(Menu.NONE, 2, Menu.NONE, R.string.paste_text).setEnabled(clipboard.hasPrimaryClip()).setShowAsAction(show);
+                return true;
+            }
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) { return false; }
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                if (!mIsSelectingText) return true;
+                switch (item.getItemId()) {
+                    case 1:
+                        String selectedText = mEmulator.getSelectedText(mSelX1, mSelY1, mSelX2, mSelY2).trim();
+                        mTermSession.clipboardText(selectedText);
+                        break;
+                    case 2:
+                        pasteFromClipboard();
+                        break;
+                }
+                toggleSelectingText(null);
+                return true;
+            }
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {}
+        };
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            mActionMode = startActionMode(new ActionMode.Callback2() {
+                @Override
+                public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                    return callback.onCreateActionMode(mode, menu);
+                }
+                @Override
+                public boolean onPrepareActionMode(ActionMode mode, Menu menu) { return false; }
+                @Override
+                public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                    return callback.onActionItemClicked(mode, item);
+                }
+                @Override
+                public void onDestroyActionMode(ActionMode mode) {}
+                @Override
+                public void onGetContentRect(ActionMode mode, View view, Rect outRect) {
+                    outRect.set(0, 0, getWidth(), getHeight());
+                }
+            }, ActionMode.TYPE_FLOATING);
+        } else {
+            mActionMode = startActionMode(callback);
+        }
+        invalidate();
     }
 
     public TerminalSession getCurrentSession() {

@@ -89,7 +89,20 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         return serviceBinder
     }
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+    override fun onUnbind(intent: Intent?): Boolean {
+        val sessions = synchronized(mTerminalSessions) {
+            synchronized(mXSessions) {
+                mTerminalSessions.size + mXSessions.size
+            }
+        }
+        if (sessions == 0) {
+            stopSelf()
+        }
+        return super.onUnbind(intent)
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent == null) return Service.START_STICKY
         val action = intent.action
         when (action) {
             ACTION_SERVICE_STOP -> {
@@ -186,9 +199,18 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     }
 
     private fun checkStopSelf() {
-        // Do NOT stop the service — it must stay alive to accept new terminals.
-        // User kills it via the "Exit" button in the notification.
-        updateNotification()
+        val sessions = synchronized(mTerminalSessions) {
+            synchronized(mXSessions) {
+                mTerminalSessions.size + mXSessions.size
+            }
+        }
+        if (sessions == 0) {
+            // Keep notification alive with "Andrax Ejecutándose" text.
+            // Service will be stopped in onUnbind() when the activity is destroyed.
+            updateNotification()
+        } else {
+            updateNotification()
+        }
     }
 
     private fun createOrFindSession(parameter: ShellParameter): TerminalSession {
@@ -235,7 +257,11 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
                 mTerminalSessions.size + mXSessions.size
             }
         }
-        val contentText = "Arch | $sessionCount sesión" + if (sessionCount != 1) "es" else ""
+        val contentText = if (sessionCount == 0) {
+            "Andrax Ejecutándose"
+        } else {
+            "Arch | $sessionCount sesión" + if (sessionCount != 1) "es" else ""
+        }
 
         val builder = NotificationCompat.Builder(this, channelId)
         builder.setContentTitle("Arch")

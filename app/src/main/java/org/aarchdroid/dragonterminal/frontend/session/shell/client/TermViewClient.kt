@@ -197,18 +197,18 @@ class TermViewClient(val context: Context) : TerminalViewClient {
         }
 
         val shellSession = termSessionData?.termSession as ShellTermSession? ?: return false
-
-        // Volume keys as special keys
-        val volumeAsSpecialKeys = shellSession.shellProfile.enableSpecialVolumeKeys
+        if (!shellSession.shellProfile.enableSpecialVolumeKeys) {
+            return false
+        }
 
         val inputDevice = event.device
         if (inputDevice != null && inputDevice.keyboardType == InputDevice.KEYBOARD_TYPE_ALPHABETIC) {
             return false
         } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            mVirtualControlKeyDown = down && volumeAsSpecialKeys
+            mVirtualControlKeyDown = down
             return true
         } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-            mVirtualFnKeyDown = down && volumeAsSpecialKeys
+            mVirtualFnKeyDown = down
             return true
         }
         return false

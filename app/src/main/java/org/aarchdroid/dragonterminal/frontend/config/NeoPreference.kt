@@ -26,6 +26,8 @@ object NeoPreference {
     const val KEY_CURRENT_SESSION = "neoterm_service_current_session"
     const val KEY_SYSTEM_SHELL = "neoterm_core_system_shell"
     const val KEY_SOURCES = "neoterm_package_enabled_sources"
+    const val KEY_IME_VISIBLE = "neoterm_keyboard_visible"
+    const val KEY_KEYBOARD_MODE = "neoterm_keyboard_mode"
 
     const val VALUE_HAPPY_EGG_TRIGGER = 8
 
@@ -202,6 +204,10 @@ object NeoPreference {
                 DefaultValues.enableBackButtonBeMappedToEscape)
     }
 
+    fun isImeVisible(): Boolean = loadBoolean(KEY_IME_VISIBLE, true)
+
+    fun setImeVisible(visible: Boolean) = store(KEY_IME_VISIBLE, visible)
+
     fun isExtraKeysEnabled(): Boolean {
         return loadBoolean(R.string.key_ui_eks_enabled, DefaultValues.enableExtraKeys)
     }
@@ -247,6 +253,18 @@ object NeoPreference {
     fun isClearOnStartupEnabled(): Boolean {
         return loadBoolean(R.string.key_general_clear_on_start,
                 DefaultValues.clearOnStart)
+    }
+
+    fun isAutoStartEnabled(): Boolean {
+        return loadBoolean(R.string.key_general_auto_start, DefaultValues.autoStart)
+    }
+
+    fun isKeyboardModeEnabled(): Boolean {
+        return loadBoolean(KEY_KEYBOARD_MODE, DefaultValues.keyboardModeEnabled)
+    }
+
+    fun setKeyboardModeEnabled(enabled: Boolean) {
+        store(KEY_KEYBOARD_MODE, enabled)
     }
 
     fun isCursorBlinkEnabled(): Boolean {

@@ -75,4 +75,21 @@
         android:summary="@string/pref_general_auto_completion_desc"
         android:title="@string/pref_general_auto_completion" /-->
 
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="@string/key_general_auto_start"
+        android:summary="@string/pref_general_auto_start_desc"
+        android:title="@string/pref_general_auto_start" />
+
+    <PreferenceCategory
+        android:title="@string/pref_keyboard_category"
+        android:key="keyboard_category" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="@string/key_keyboard_mode"
+        android:title="@string/pref_keyboard_mode"
+        android:summary="@string/pref_keyboard_mode_desc"
+        android:enabled="false" />
+
 </PreferenceScreen>

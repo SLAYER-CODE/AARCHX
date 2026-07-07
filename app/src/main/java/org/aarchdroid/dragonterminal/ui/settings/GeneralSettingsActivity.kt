@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.core.content.ContextCompat
 import android.view.MenuItem
 import org.aarchdroid.R
+import org.aarchdroid.dragonterminal.component.keyboard.KeyboardModule
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.utils.PackageUtils
 
@@ -19,6 +20,17 @@ class GeneralSettingsActivity : BasePreferenceActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setBackgroundDrawable(ContextCompat.getDrawable(applicationContext,R.color.blackfull))
         addPreferencesFromResource(R.xml.setting_general)
+
+        val keyboardPref = findPreference(getString(R.string.key_keyboard_mode))
+        if (keyboardPref != null) {
+            val isInstalled = KeyboardModule.isHackersKeyboardInstalled(this)
+            keyboardPref.isEnabled = isInstalled
+            keyboardPref.summary = if (isInstalled) {
+                getString(R.string.pref_keyboard_mode_enabled)
+            } else {
+                getString(R.string.pref_keyboard_mode_desc)
+            }
+        }
 
         /** val currentShell = NeoPreference.getLoginShellName()
         findPreference(getString(R.string.key_general_shell)).setOnPreferenceChangeListener { _, value ->

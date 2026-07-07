@@ -25,6 +25,8 @@ object DefaultValues {
     val disableLogs = true
     val commandLimit = 5
     val clearOnStart = false
+    val autoStart = true
+    val keyboardModeEnabled = false
 
     val loginShell = "archdroid.sh"
     val initialCommand = ""

@@ -1,0 +1,15 @@
+Limpiar codigo huerfano, agregar soporte para otros androids. 
+Revisar mejor el ocultamiento del teclado, y por que no se mantienen. cambio reliazo. de adjunst
+Mejorar herramientas de aarch que vienen con nethunter directamente.  en el aplicativo 
+Teclado personalizado y otras teclas si tengo ese teclado instalado. (extrakeys)
+Creacion de scripts Perzonalizados. Oneshot etc .. [Colores funcionamiento en otros dipositivos]
+Compilar todo para velosidad optima. (Quitar debugs)  [ usar compilacion de termux]
+Mejorar ventan de terminal del gestor de paquetes. y configuraciones[]
+
+
+Agregar configuraciones. Para iniciar Terminal Limpia, (Quitar log) comportamiento de salida etc .. 
+
+[Syncronizar herramientas de android Termux-Api, y hacer aplicaciones que conecten]
+[Creaccion de api para sincronizacion de camara analizis de qr] , Camara Flotante. fragmento. 
+Api Blueetho llamadas etc..
+Correjir Neovide. stylos , comportamiento.

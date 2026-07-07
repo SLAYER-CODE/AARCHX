@@ -25,4 +25,8 @@
 
     <string name="key_customization_font" translatable="false">neoterm_ui_font</string>
     <string name="key_customization_color_scheme" translatable="false">neoterm_ui_color_scheme</string>
+
+    <string name="key_general_auto_start" translatable="false">neoterm_general_auto_start</string>
+
+    <string name="key_keyboard_mode" translatable="false">neoterm_keyboard_mode</string>
 </resources>

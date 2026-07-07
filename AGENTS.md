@@ -38,6 +38,8 @@ AAR: `neovim-editor/build/outputs/aar/`
 | Defensive resize race | `buffer.resize(80,28)` en Main vs grid_resize en IO | `synchronized` + `copySnapshot` |
 | Double key dispatch | `setOnKeyListener` + `onKeyDown` | Unificar en `onKeyDown` + `sendKeyEvent` |
 | grid_line trailing clear rompía Enter+wrap | while loop en cada segmento limpiaba celdas parciales | dirty-rows-on-flush: trackear maxCol por fila, limpiar en `flush` |
+| Blank rows tras grid_resize (zoom-out/IME close) | grid_line solo cubre filas de ventanas; filas fuera de ventanas quedan defaultCell (espacio) en vez de `~` | En `onRedraw`, detectar `grid_resize` en el batch; tras procesar todos los eventos, llenar con `~` filas no presentes en `rowLineMaxCol` |
+| Contenido viejo persiste al cargar archivo nuevo | `grid_clear` era no-op; contenido de archivo anterior se mantenía en filas sin `grid_line` | `grid_clear` rellena todas las celdas con `~`; `grid_line` sobrescribe las filas de ventanas |
 
 ### Problemas abiertos
 - **Keyboard overlay**: Se cambió de `adjustResize` a `adjustNothing` + `OnApplyWindowInsetsListener`. El listener pone `paddingBottom = imeBottom` y recalcula grid con `visibleH = height - imeBottom`. ¯barra y status line deben quedar visibles.
