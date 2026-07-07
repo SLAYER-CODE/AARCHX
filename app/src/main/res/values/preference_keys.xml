@@ -28,5 +28,7 @@
 
     <string name="key_general_auto_start" translatable="false">neoterm_general_auto_start</string>
 
+    <string name="key_general_same_path" translatable="false">neoterm_general_same_path</string>
+
     <string name="key_keyboard_mode" translatable="false">neoterm_keyboard_mode</string>
 </resources>

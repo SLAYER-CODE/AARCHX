@@ -81,6 +81,12 @@
         android:summary="@string/pref_general_auto_start_desc"
         android:title="@string/pref_general_auto_start" />
 
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="@string/key_general_same_path"
+        android:summary="@string/pref_general_same_path_desc"
+        android:title="@string/pref_general_same_path" />
+
     <PreferenceCategory
         android:title="@string/pref_keyboard_category"
         android:key="keyboard_category" />

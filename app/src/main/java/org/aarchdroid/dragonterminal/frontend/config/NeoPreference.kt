@@ -259,6 +259,10 @@ object NeoPreference {
         return loadBoolean(R.string.key_general_auto_start, DefaultValues.autoStart)
     }
 
+    fun isSamePathEnabled(): Boolean {
+        return loadBoolean(R.string.key_general_same_path, false)
+    }
+
     fun isKeyboardModeEnabled(): Boolean {
         return loadBoolean(KEY_KEYBOARD_MODE, DefaultValues.keyboardModeEnabled)
     }

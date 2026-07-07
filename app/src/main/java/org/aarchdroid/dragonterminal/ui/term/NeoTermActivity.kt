@@ -501,6 +501,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
                     override fun onSwitcherHidden(tabSwitcher: TabSwitcher) {
                         toolbar.setBackgroundResource(R.color.black_fuck)
+                        updateExtraKeysButtonStates()
                         Handler(Looper.getMainLooper()).postDelayed({
                             val tab = tabSwitcher.selectedTab
                             if (tab is TermTab) {
@@ -614,6 +615,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                     }
                 }, 100)
             }
+            updateExtraKeysButtonStates()
 
         } catch (e: Exception) {
 
@@ -1489,6 +1491,24 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     @Suppress("unused", "UNUSED_PARAMETER")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onCreateNewSessionEvent(createNewSessionEvent: CreateNewSessionEvent) {
+        if (NeoPreference.isSamePathEnabled()) {
+            val tab = tabSwitcher.selectedTab
+            if (tab is TermTab) {
+                val session = tab.termData.termSession
+                if (session != null && session.isRunning()) {
+                    val pid = session.pid
+                    val cwd = if (pid > 0) {
+                        try {
+                            java.io.File("/proc/$pid/cwd").canonicalPath
+                        } catch (e: Exception) { null }
+                    } else null
+                    if (cwd != null) {
+                        addNewSessionWithProfile(ShellProfile.create(), cwd)
+                        return
+                    }
+                }
+            }
+        }
         addNewSession()
     }
 
@@ -1537,6 +1557,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     @Suppress("unused", "UNUSED_PARAMETER")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onToggleHistoryEvent(event: ToggleHistoryEvent) {
+        if (NeoPreference.isLoggingDisabled()) return
         forceHistoryVisible = !forceHistoryVisible
         updatePlaceholderVisibility()
     }
@@ -1544,6 +1565,14 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     @Suppress("unused", "UNUSED_PARAMETER")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onOpenFloatEvent(event: OpenFloatEvent) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            startActivity(intent)
+            return
+        }
         val intent = Intent(this, FloatService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
@@ -1597,11 +1626,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     @Suppress("unused", "UNUSED_PARAMETER")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onToggleTerminalSwitcherEvent(event: ToggleTerminalSwitcherEvent) {
-        if (tabSwitcher.isSwitcherShown) {
-            tabSwitcher.hideSwitcher()
-        } else {
-            toggleSwitcher(showSwitcher = true, easterEgg = true)
-        }
+        if (tabSwitcher.count <= 1) return
+        val rangedInt = RangedInt(tabSwitcher.selectedTabIndex, (0 until tabSwitcher.count))
+        val nextIndex = rangedInt.increaseOne()
+        tabSwitcher.selectTab(tabSwitcher.getTab(nextIndex))
     }
 
     fun update_colors() {
@@ -1625,6 +1653,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         val emptyText = findViewById<TextView>(R.id.empty_logs_text)
         val historyList = findViewById<View>(R.id.sessionHistoryList)
         val launchBtn = findViewById<Button>(R.id.launch_terminal_button)
+        updateExtraKeysButtonStates()
 
         if (forceHistoryVisible) {
             placeholder.visibility = View.VISIBLE
@@ -1696,6 +1725,14 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
     }
 
+    private fun updateExtraKeysButtonStates() {
+        for (i in 0 until tabSwitcher.count) {
+            val tab = tabSwitcher.getTab(i)
+            if (tab is TermTab) {
+                tab.termData.extraKeysView?.tabCount = tabSwitcher.count
+            }
+        }
+    }
 
     fun checkinstallterm() {
         val chrootMarker = File("/data/local/aarchdroid/.aarchdroid_chroot")

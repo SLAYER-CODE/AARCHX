@@ -2,6 +2,8 @@ package org.aarchdroid.dragonterminal.frontend.terminal.extrakey
 
 import android.content.Context
 import android.graphics.Typeface
+import android.os.Build
+import android.provider.Settings
 import android.util.AttributeSet
 import android.view.*
 import android.widget.GridLayout
@@ -27,7 +29,7 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
         private val ESC = ControlButton(IExtraButton.KEY_ESC)
         private val CTRL_R = object : ControlButton(IExtraButton.KEY_TAB) {
             init {
-                displayText = "Ctrl+R"
+                displayText = "↺"
             }
             override fun onClick(view: View) {
                 val tv = (view.parent as? View)?.findViewById<TerminalView>(R.id.terminal_view)
@@ -91,12 +93,14 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
                 EventBus.getDefault().post(CreateNewSessionEvent())
             }
         }
-        private val NEW_SESSION_PATH = object : ControlButton(IExtraButton.KEY_ARROW_UP) {
+        private val CLEAR_TERMINAL = object : ControlButton(IExtraButton.KEY_ARROW_UP) {
             init {
-                displayText = "↕"
+                displayText = "⌧"
             }
             override fun onClick(view: View) {
-                EventBus.getDefault().post(NewTerminalSamePathEvent())
+                val tv = (view.parent as? View)?.findViewById<TerminalView>(R.id.terminal_view)
+                    ?: view.findViewById(R.id.terminal_view)
+                tv?.currentSession?.write("\u000c")
             }
         }
         private val FLOAT_CURRENT = object : ControlButton(IExtraButton.KEY_END) {
@@ -117,6 +121,14 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
     private val builtinKeys = mutableListOf<IExtraButton>()
     private val userKeys = mutableListOf<IExtraButton>()
 
+    private val buttonStateMap = mutableMapOf<IExtraButton, View>()
+
+    var tabCount: Int = 0
+        set(value) {
+            field = value
+            refreshButtonStates()
+        }
+
     private val buttonBars: MutableList<LinearLayout> = mutableListOf()
     private var typeface: Typeface? = null
 
@@ -124,7 +136,7 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
     // For avoid memory and context leak.
     private val TOGGLE_SWITCHER = object : ControlButton(IExtraButton.KEY_CTRL) {
         init {
-            displayText = "Ctrl"
+            displayText = "↔"
         }
         override fun onClick(view: View) {
             EventBus.getDefault().post(ToggleTerminalSwitcherEvent())
@@ -158,6 +170,7 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
         initBuiltinKeys()
         loadDefaultUserKeys()
         updateButtons()
+        refreshButtonStates()
         expandButtonPanel(false)
     }
 
@@ -289,22 +302,35 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
         outerButton.typeface = typeface
         outerButton.text = extraButton.displayText
         outerButton.setPadding(0, 0, 0, 0)
-        outerButton.setTextColor(IExtraButton.NORMAL_TEXT_COLOR)
+        outerButton.setTextColor(0xFF00FF00.toInt())
         outerButton.setAllCaps(false)
+
+        outerButton.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> outerButton.setTextColor(0xFFFF0000.toInt())
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    val enabled = isButtonEnabled(extraButton)
+                    outerButton.setTextColor(if (enabled) 0xFF00FF00.toInt() else 0xFF005500.toInt())
+                }
+            }
+            false
+        }
 
         outerButton.setOnClickListener {
             outerButton.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             extraButton.onClick(this@ExtraKeysView)
         }
         contentView.addView(outerButton)
+        buttonStateMap[extraButton] = outerButton
+        outerButton.alpha = if (isButtonEnabled(extraButton)) 1.0f else 0.4f
     }
 
     private fun initBuiltinKeys() {
         addBuiltinKey(CTRL_R)
         addBuiltinKey(KILL)
         addBuiltinKey(OPEN_FLOAT)
-        addBuiltinKey(PREV_SESSION)
         addBuiltinKey(SELECT_ALL)
+        addBuiltinKey(PREV_SESSION)
         addBuiltinKey(NEXT_SESSION)
         addBuiltinKey(TOGGLE_IME)
 
@@ -312,9 +338,30 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
         addBuiltinKey(EXPAND_BUTTONS)
         addBuiltinKey(TOGGLE_HISTORY)
         addBuiltinKey(NEW_SESSION)
-        addBuiltinKey(NEW_SESSION_PATH)
+        addBuiltinKey(CLEAR_TERMINAL)
         addBuiltinKey(FLOAT_CURRENT)
         addBuiltinKey(TOGGLE_SWITCHER)
+    }
+
+    private fun isButtonEnabled(button: IExtraButton): Boolean {
+        return when (button) {
+            TOGGLE_HISTORY -> !NeoPreference.isLoggingDisabled()
+            TOGGLE_SWITCHER, PREV_SESSION, NEXT_SESSION, KILL -> tabCount > 1
+            OPEN_FLOAT -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Settings.canDrawOverlays(context)
+                } else true
+            }
+            else -> true
+        }
+    }
+
+    fun refreshButtonStates() {
+        for ((button, view) in buttonStateMap) {
+            val enabled = isButtonEnabled(button)
+            view.alpha = if (enabled) 1.0f else 0.6f
+            (view as? android.widget.Button)?.setTextColor(if (enabled) 0xFF00FF00.toInt() else 0xFF005500.toInt())
+        }
     }
 
     private fun calculateButtonWidth(): Int {

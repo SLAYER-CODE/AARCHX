@@ -1144,6 +1144,10 @@ public final class TerminalView extends View {
 
     public void selectAllText() {
         if (mEmulator == null) return;
+        if (mLeftSelectionHandle == null) {
+            mLeftSelectionHandle = (BitmapDrawable) getContext().getDrawable(R.drawable.text_select_handle_left_material);
+            mRightSelectionHandle = (BitmapDrawable) getContext().getDrawable(R.drawable.text_select_handle_right_material);
+        }
         mIsSelectingText = true;
         mSelX1 = 0;
         mSelY1 = -mEmulator.getScreen().getActiveTranscriptRows();

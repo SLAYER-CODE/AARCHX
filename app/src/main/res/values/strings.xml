@@ -140,6 +140,8 @@
     <string name="pref_general_clear_on_start_desc">Ejecuta clear automaticamente al abrir la terminal</string>
     <string name="pref_general_auto_start">Iniciar terminal al abrir</string>
     <string name="pref_general_auto_start_desc">Abre una terminal automáticamente al iniciar la aplicación</string>
+    <string name="pref_general_same_path">Nueva terminal en mismo directorio</string>
+    <string name="pref_general_same_path_desc">Al crear una nueva terminal usa el directorio actual de la terminal activa</string>
     <string name="pref_keyboard_category">Teclados</string>
     <string name="pref_keyboard_mode">Usar ExtraKeys con teclado</string>
     <string name="pref_keyboard_mode_desc">Requiere hackerskeyboard para activar</string>
