@@ -28,6 +28,9 @@ import org.aarchdroid.dragonterminal.frontend.component.ComponentManager
 import org.aarchdroid.dragonterminal.frontend.config.DefaultValues
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.TermCompleteListener
+import org.aarchdroid.dragonterminal.backend.MandelaSocketServer
+import org.aarchdroid.dragonterminal.backend.TerminalSession
+import org.aarchdroid.dragonterminal.frontend.terminal.MandelaOverlayView
 import org.aarchdroid.dragonterminal.frontend.terminal.TerminalView
 import org.aarchdroid.dragonterminal.frontend.terminal.extrakey.ExtraKeysView
 import org.aarchdroid.dragonterminal.ui.term.NeoTermActivity
@@ -86,11 +89,12 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                 val terminalView =  findViewById<TerminalView>(R.id.terminal_view)
                 if (isQuickPreview || tabSwitcher.isSwitcherShown) {
                     view.findViewById<ExtraKeysView>(R.id.extra_keys)?.visibility = View.GONE
-                    bindTerminalView(termTab, terminalView, null)
+                    bindTerminalView(termTab, terminalView, null, view)
                 } else {
                     val extraKeysView = view.findViewById<ExtraKeysView>(R.id.extra_keys)
                     extraKeysView?.visibility = View.VISIBLE
-                    bindTerminalView(termTab, terminalView, extraKeysView)
+                    extraKeysView?.tabCount = tabSwitcher.count
+                    bindTerminalView(termTab, terminalView, extraKeysView, view)
                     terminalView.requestFocus()
                 }
 
@@ -204,7 +208,8 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
     }
 
     private fun bindTerminalView(tab: TermTab, view: TerminalView?,
-                                 extraKeysView: ExtraKeysView?) {
+                                 extraKeysView: ExtraKeysView?,
+                                 rootView: View? = null) {
         val termView = view ?: return
         val termData = tab.termData
 
@@ -213,6 +218,38 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         termView.setCursorBlinkEnabled(NeoPreference.isCursorBlinkEnabled())
         termView.setTerminalViewClient(termData.viewClient)
         termView.attachSession(termData.termSession)
+
+        // Wire Mandela overlay — now via AF_UNIX socket instead of PTY multiplexing
+        val mandelaOverlay = rootView?.findViewById<MandelaOverlayView>(R.id.mandela_overlay)
+        val session = termData.termSession
+        if (mandelaOverlay != null && session != null) {
+            // Create the socket server that Mandela (C++ inside chroot) connects to.
+            // Using AF_UNIX abstract socket — no filesystem race, no PTY contention.
+            val socketServer = MandelaSocketServer(object : MandelaSocketServer.MandelaFrameListener {
+                override fun onMandelaStart(width: Int, height: Int) {
+                    mandelaOverlay.post { mandelaOverlay.show(width, height) }
+                }
+                override fun onMandelaFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int) {
+                    mandelaOverlay.post { mandelaOverlay.setFrame(argbPixels, width, height) }
+                }
+                override fun onMandelaEnd() {
+                    mandelaOverlay.post { mandelaOverlay.hide() }
+                }
+            })
+            socketServer.start()
+            // Still set the old PTY listener for backward compat (legacy stdout mode)
+            session.setMandelaFrameListener(object : TerminalSession.MandelaFrameListener {
+                override fun onMandelaStart(width: Int, height: Int) {
+                    mandelaOverlay.post { mandelaOverlay.show(width, height) }
+                }
+                override fun onMandelaFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int) {
+                    mandelaOverlay.post { mandelaOverlay.setFrame(argbPixels, width, height) }
+                }
+                override fun onMandelaEnd() {
+                    mandelaOverlay.post { mandelaOverlay.hide() }
+                }
+            })
+        }
 
         if (NeoPreference.loadBoolean(R.string.key_general_auto_completion, false)) {
             if (termData.onAutoCompleteListener == null) {

@@ -148,9 +148,11 @@ SHELL=${D}(grep "^root:" "${D}CHROOT_BASE/etc/passwd" | cut -d: -f7)
 [ -z "${D}SHELL" ] && SHELL="/bin/bash"
 [ ! -x "${D}CHROOT_BASE${D}SHELL" ] && SHELL="/bin/bash"
 export HOME=/root
+export MANDELA_TERMINAL=1
+export MANDELA_SOCKET=mandela-overlay
 case "${D}SHELL" in
-  */bash) exec chroot "${D}CHROOT_BASE" /bin/sh -c "cd /root && exec ${D}SHELL --rcfile /root/.bashrc";;
-  *) exec chroot "${D}CHROOT_BASE" /bin/sh -c "cd /root && exec ${D}SHELL" 2>/dev/null;;
+  */bash) exec chroot "${D}CHROOT_BASE" /bin/sh -c "cd /root && export MANDELA_TERMINAL=1 && export MANDELA_SOCKET=mandela-overlay && exec ${D}SHELL --rcfile /root/.bashrc";;
+  *) exec chroot "${D}CHROOT_BASE" /bin/sh -c "cd /root && export MANDELA_TERMINAL=1 && export MANDELA_SOCKET=mandela-overlay && exec ${D}SHELL" 2>/dev/null;;
 esac
 """
             val tmpFile = java.io.File(context.cacheDir, "aarchrun.sh")
@@ -167,7 +169,7 @@ esac
     }
 
     fun getEntryCommand(): String {
-        return "export HOME=/root; SHELL=\$(grep \"^root:\" $CHROOT_BASE/etc/passwd | cut -d: -f7); [ -z \"\$SHELL\" ] && SHELL=/bin/bash; [ ! -x $CHROOT_BASE/\$SHELL ] && SHELL=/bin/bash; case \"\$SHELL\" in */bash) exec chroot $CHROOT_BASE /bin/sh -c \"cd /root && exec \$SHELL --rcfile /root/.bashrc\";; *) exec chroot $CHROOT_BASE /bin/sh -c \"cd /root && exec \$SHELL\";; esac"
+        return "export HOME=/root; export MANDELA_TERMINAL=1; export MANDELA_SOCKET=mandela-overlay; SHELL=\$(grep \"^root:\" $CHROOT_BASE/etc/passwd | cut -d: -f7); [ -z \"\$SHELL\" ] && SHELL=/bin/bash; [ ! -x $CHROOT_BASE/\$SHELL ] && SHELL=/bin/bash; case \"\$SHELL\" in */bash) exec chroot $CHROOT_BASE /bin/sh -c \"cd /root && export MANDELA_TERMINAL=1 && export MANDELA_SOCKET=mandela-overlay && exec \$SHELL --rcfile /root/.bashrc\";; *) exec chroot $CHROOT_BASE /bin/sh -c \"cd /root && export MANDELA_TERMINAL=1 && export MANDELA_SOCKET=mandela-overlay && exec \$SHELL\";; esac"
     }
 
     fun getSuEntryArgs(): Array<String> {

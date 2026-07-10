@@ -15,6 +15,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.UUID;
@@ -31,6 +33,19 @@ import java.util.UUID;
  * NOTE: The terminal session may outlive the EmulatorView, so be careful with callbacks!
  */
 public class TerminalSession extends TerminalOutput {
+
+    /** Callback for receiving Mandela overlay frames (legacy PTY path, deprecated).
+     *  New code should use MandelaSocketServer for AF_UNIX socket transport. */
+    public interface MandelaFrameListener {
+        void onMandelaStart(int width, int height);
+        void onMandelaFrame(int frameId, int[] argbPixels, int width, int height);
+        void onMandelaEnd();
+    }
+
+    private MandelaFrameListener mMandelaListener = null;
+    public void setMandelaFrameListener(MandelaFrameListener listener) {
+        mMandelaListener = listener;
+    }
 
     /** Callback to be invoked when a {@link TerminalSession} changes. */
     public interface SessionChangedCallback {
@@ -205,11 +220,118 @@ public class TerminalSession extends TerminalOutput {
             public void run() {
                 try (InputStream termIn = new FileInputStream(terminalFileDescriptorWrapped)) {
                     final byte[] buffer = new byte[4096];
+                    final byte[] mandelaBuf = new byte[4 * 1024 * 1024];
+                    int mandelaPos = 0;
+                    boolean inMandela = false;
+                    int frameW = 0, frameH = 0;
+
+                    // Legacy Mandela magic constants (kept for backward compat with stdout mode)
+                    final byte[] MANDELA_MAGIC = new byte[]{
+                        0x1B, 0x5D, 0x4D, 0x41, 0x4E, 0x44, 0x45, 0x4C, 0x41, 0x07
+                    };
+                    final int MAGIC_LEN = MANDELA_MAGIC.length;
+                    final int FRAME_HEADER_SIZE = 12;
+                    final byte[] MANDELA_END_MAGIC = new byte[]{
+                        0x1B, 0x5D, 0x4D, 0x41, 0x4E, 0x44, 0x45, 0x4C, 0x41,
+                        0x3B, 0x45, 0x4E, 0x44, 0x07
+                    };
+                    final int END_MAGIC_LEN = MANDELA_END_MAGIC.length;
+
                     while (true) {
                         int read = termIn.read(buffer);
                         if (read == -1) return;
-                        if (!mProcessToTerminalIOQueue.write(buffer, 0, read)) return;
-                        mMainThreadHandler.sendEmptyMessage(MSG_NEW_INPUT);
+
+                        int offset = 0;
+                        while (offset < read) {
+                            if (inMandela) {
+                                int expectedPixels = frameW * frameH * 4;
+                                int remaining = expectedPixels - mandelaPos;
+                                int toCopy = Math.min(read - offset, remaining);
+                                System.arraycopy(buffer, offset, mandelaBuf, mandelaPos, toCopy);
+                                mandelaPos += toCopy;
+                                offset += toCopy;
+
+                                if (mandelaPos >= expectedPixels) {
+                                    final int[] argbPixels = new int[frameW * frameH];
+                                    ByteBuffer bb = ByteBuffer.wrap(mandelaBuf, 0, expectedPixels).order(ByteOrder.LITTLE_ENDIAN);
+                                    bb.asIntBuffer().get(argbPixels);
+                                    final int fw = frameW, fh = frameH;
+                                    if (mMandelaListener != null) {
+                                        mMandelaListener.onMandelaFrame(0, argbPixels, fw, fh);
+                                    }
+                                    mandelaPos = 0;
+                                    inMandela = false;
+                                }
+                            } else {
+                                if (read - offset >= END_MAGIC_LEN) {
+                                    boolean endMatch = true;
+                                    for (int j = 0; j < END_MAGIC_LEN; j++) {
+                                        if (buffer[offset + j] != MANDELA_END_MAGIC[j]) {
+                                            endMatch = false;
+                                            break;
+                                        }
+                                    }
+                                    if (endMatch) {
+                                        inMandela = false;
+                                        if (mMandelaListener != null) {
+                                            mMandelaListener.onMandelaEnd();
+                                        }
+                                        offset += END_MAGIC_LEN;
+                                        continue;
+                                    }
+                                }
+
+                                int magicStart = -1;
+                                for (int i = offset; i <= read - MAGIC_LEN; i++) {
+                                    boolean match = true;
+                                    for (int j = 0; j < MAGIC_LEN; j++) {
+                                        if (buffer[i + j] != MANDELA_MAGIC[j]) {
+                                            match = false;
+                                            break;
+                                        }
+                                    }
+                                    if (match) {
+                                        magicStart = i;
+                                        break;
+                                    }
+                                }
+
+                                if (magicStart >= 0) {
+                                    if (magicStart > offset) {
+                                        if (!mProcessToTerminalIOQueue.write(buffer, offset, magicStart - offset)) return;
+                                        mMainThreadHandler.sendEmptyMessage(MSG_NEW_INPUT);
+                                    }
+                                    int headerPos = magicStart + MAGIC_LEN;
+                                    if (read - headerPos >= FRAME_HEADER_SIZE) {
+                                        ByteBuffer bb = ByteBuffer.wrap(buffer, headerPos, FRAME_HEADER_SIZE).order(ByteOrder.LITTLE_ENDIAN);
+                                        bb.getInt(); // frameId
+                                        frameW = bb.getInt();
+                                        frameH = bb.getInt();
+                                        inMandela = true;
+                                        mandelaPos = 0;
+                                        final int fw = frameW, fh = frameH;
+                                        if (mMandelaListener != null) {
+                                            mMandelaListener.onMandelaStart(fw, fh);
+                                        }
+                                        int pixelBytes = read - headerPos - FRAME_HEADER_SIZE;
+                                        if (pixelBytes > 0) {
+                                            System.arraycopy(buffer, headerPos + FRAME_HEADER_SIZE, mandelaBuf, 0, pixelBytes);
+                                            mandelaPos = pixelBytes;
+                                        }
+                                        offset = headerPos + FRAME_HEADER_SIZE + pixelBytes;
+                                    } else {
+                                        // Header split — send to terminal (legacy bug, new path uses socket)
+                                        if (!mProcessToTerminalIOQueue.write(buffer, magicStart, read - magicStart)) return;
+                                        mMainThreadHandler.sendEmptyMessage(MSG_NEW_INPUT);
+                                        offset = read;
+                                    }
+                                } else {
+                                    if (!mProcessToTerminalIOQueue.write(buffer, offset, read - offset)) return;
+                                    mMainThreadHandler.sendEmptyMessage(MSG_NEW_INPUT);
+                                    offset = read;
+                                }
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     // Ignore, just shutting down.
@@ -365,6 +487,9 @@ public class TerminalSession extends TerminalOutput {
 
     /** Cleanup resources when the process exits. */
     private void cleanupResources(int exitStatus) {
+        if (mMandelaListener != null) {
+            mMandelaListener.onMandelaEnd();
+        }
         synchronized (this) {
             mShellPid = -1;
             mShellExitStatus = exitStatus;
