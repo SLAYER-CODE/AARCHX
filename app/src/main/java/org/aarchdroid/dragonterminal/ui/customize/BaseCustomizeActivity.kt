@@ -43,24 +43,33 @@ open class BaseCustomizeActivity : AppCompatActivity() {
         TerminalUtils.setupTerminalView(terminalView, viewClient)
         TerminalUtils.setupExtraKeysView(extraKeysView)
 
-        val script = resources.getStringArray(R.array.custom_preview_script_colors)
+        extractTestColorsScript()
+
         val parameter = ShellParameter()
                 .executablePath(AArchDroidApp.get().filesDir.absolutePath + "/bin/testcolors.sh")
-                .arguments(arrayOf("testcolors.sh"))
                 .callback(sessionCallback)
                 .systemShell(true)
 
         session = TerminalUtils.createSession(this, parameter)
 
         Handler().postDelayed({
-
             terminalView.attachSession(session)
-
         }, 1000)
+    }
 
-
-
-
+    private fun extractTestColorsScript() {
+        try {
+            val dst = java.io.File(AArchDroidApp.get().filesDir, "bin/testcolors.sh")
+            if (!dst.exists()) {
+                dst.parentFile?.mkdirs()
+                assets.open("arm/static/bin/testcolors.sh").use { input ->
+                    dst.outputStream().use { output -> input.copyTo(output) }
+                }
+                dst.setExecutable(true)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("BaseCustomize", "Failed to extract testcolors.sh", e)
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

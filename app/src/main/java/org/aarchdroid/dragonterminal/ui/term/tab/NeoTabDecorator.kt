@@ -219,13 +219,14 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         termView.setTerminalViewClient(termData.viewClient)
         termView.attachSession(termData.termSession)
 
-        // Wire Mandela overlay — now via AF_UNIX socket instead of PTY multiplexing
+        // Wire Mandela overlay — singleton socket server + per-tab listener
         val mandelaOverlay = rootView?.findViewById<MandelaOverlayView>(R.id.mandela_overlay)
         val session = termData.termSession
         if (mandelaOverlay != null && session != null) {
-            // Create the socket server that Mandela (C++ inside chroot) connects to.
-            // Using AF_UNIX abstract socket — no filesystem race, no PTY contention.
-            val socketServer = MandelaSocketServer(object : MandelaSocketServer.MandelaFrameListener {
+            // Singleton socket server — one AF_UNIX abstract socket for the whole app.
+            // Update listener to point to this tab's overlay view.
+            val socketServer = MandelaSocketServer.getInstance()
+            socketServer.setListener(object : MandelaSocketServer.MandelaFrameListener {
                 override fun onMandelaStart(width: Int, height: Int) {
                     mandelaOverlay.post { mandelaOverlay.show(width, height) }
                 }
@@ -236,8 +237,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                     mandelaOverlay.post { mandelaOverlay.hide() }
                 }
             })
-            socketServer.start()
-            // Still set the old PTY listener for backward compat (legacy stdout mode)
+            // Keep PTY listener for legacy stdout mode fallback
             session.setMandelaFrameListener(object : TerminalSession.MandelaFrameListener {
                 override fun onMandelaStart(width: Int, height: Int) {
                     mandelaOverlay.post { mandelaOverlay.show(width, height) }

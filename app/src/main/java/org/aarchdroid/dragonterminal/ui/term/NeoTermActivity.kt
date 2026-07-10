@@ -1546,6 +1546,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         if (tab is TermTab) {
             if (tabSwitcher.count > 1) {
                 tabSwitcher.removeTab(tab)
+                if (tabSwitcher.count > 0) {
+                    val remainingTab = tabSwitcher.getTab(0)
+                    tabSwitcher.selectTab(remainingTab)
+                }
             } else {
                 tab.requireHideIme()
                 toggleSwitcher(showSwitcher = true, easterEgg = false)

@@ -9,17 +9,15 @@ import java.nio.ByteOrder
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Servidor de socket AF_UNIX abstracto para recibir frames de Mandela.
+ * Servidor de socket AF_UNIX abstracto singleton para recibir frames de Mandela.
  *
  * Mandela (C++ dentro del chroot) se conecta al socket abstracto "mandela-overlay"
  * y envía frames raw: [u32 frame_id][u32 width][u32 height][BGRA pixels].
  *
- * Este server corre en su propio thread de IO, parsea los frames y los entrega
- * al listener en el main thread.
+ * Singleton por app — un solo socket acepta conexiones de todos los tabs.
+ * El listener se actualiza dinámicamente según el tab activo.
  */
-class MandelaSocketServer(
-    private val listener: MandelaFrameListener
-) {
+class MandelaSocketServer private constructor() {
     interface MandelaFrameListener {
         fun onMandelaStart(width: Int, height: Int)
         fun onMandelaFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int)
@@ -30,17 +28,34 @@ class MandelaSocketServer(
         private const val TAG = "MandelaSocket"
         private const val SOCKET_NAME = "mandela-overlay"
         private const val MAX_FRAME_SIZE = 4 * 1024 * 1024  // 4MB
-
-        // [frame_id:4][width:4][height:4] = 12 bytes header
         private const val HEADER_SIZE = 12
+
+        @Volatile
+        private var instance: MandelaSocketServer? = null
+
+        fun getInstance(): MandelaSocketServer {
+            return instance ?: synchronized(this) {
+                instance ?: MandelaSocketServer().also {
+                    instance = it
+                    it.start()
+                }
+            }
+        }
     }
+
+    @Volatile
+    private var listener: MandelaFrameListener? = null
 
     private val isRunning = AtomicBoolean(false)
     private val mainHandler = Handler(Looper.getMainLooper())
     private var serverSocket: LocalServerSocketExt? = null
     private var readThread: Thread? = null
 
-    fun start() {
+    fun setListener(l: MandelaFrameListener?) {
+        listener = l
+    }
+
+    private fun start() {
         if (!isRunning.compareAndSet(false, true)) return
         val t = Thread {
             try {
@@ -73,8 +88,6 @@ class MandelaSocketServer(
             var frameId = 0
 
             while (isRunning.get()) {
-                // Leer header exactamente (SOCK_SEQPACKET da mensajes completos,
-                // pero leemos con readFully por seguridad)
                 readFully(input, headerBuf)
                 val bb = ByteBuffer.wrap(headerBuf).order(ByteOrder.LITTLE_ENDIAN)
                 frameId = bb.getInt()
@@ -93,7 +106,7 @@ class MandelaSocketServer(
                 val pixelBb = ByteBuffer.wrap(frameBuf, 0, pixelBytes).order(ByteOrder.LITTLE_ENDIAN)
                 pixelBb.asIntBuffer().get(argbPixels)
 
-                // BGRA → ARGB swap (Skia escribe BGRA en little-endian)
+                // BGRA → ARGB swap
                 for (i in argbPixels.indices) {
                     val p = argbPixels[i]
                     argbPixels[i] = (p and 0xFF00FF00.toInt()) or ((p shr 16) and 0xFF) or ((p shl 16) and 0xFF0000.toInt())
@@ -102,9 +115,12 @@ class MandelaSocketServer(
                 val fw = w
                 val fh = h
                 val fid = frameId
-                mainHandler.post {
-                    listener.onMandelaStart(fw, fh)
-                    listener.onMandelaFrame(fid, argbPixels, fw, fh)
+                val l = listener
+                if (l != null) {
+                    mainHandler.post {
+                        l.onMandelaStart(fw, fh)
+                        l.onMandelaFrame(fid, argbPixels, fw, fh)
+                    }
                 }
             }
         } catch (e: java.io.EOFException) {
@@ -113,7 +129,10 @@ class MandelaSocketServer(
             if (isRunning.get()) Log.e(TAG, "Client handler error", e)
         } finally {
             try { client.close() } catch (_: Exception) {}
-            mainHandler.post { listener.onMandelaEnd() }
+            val l = listener
+            if (l != null) {
+                mainHandler.post { l.onMandelaEnd() }
+            }
         }
     }
 

@@ -96,11 +96,7 @@ class MandelaOverlayView @JvmOverloads constructor(
         if (!isActive) return
         frameWidth = w
         frameHeight = h
-        // BGRA → ARGB swap: Skia escribe BGRA en little-endian, Android espera ARGB_8888
-        for (i in argbPixels.indices) {
-            val p = argbPixels[i]
-            argbPixels[i] = (p and 0xFF00FF00.toInt()) or ((p shr 16) and 0xFF) or ((p shl 16) and 0xFF0000.toInt())
-        }
+        // Pixels ya llegan como ARGB_8888 desde MandelaSocketServer (BGRA→ARGB convertido allí)
         frameBitmap?.recycle()
         frameBitmap = Bitmap.createBitmap(argbPixels, w, h, Bitmap.Config.ARGB_8888)
         updateTransform()

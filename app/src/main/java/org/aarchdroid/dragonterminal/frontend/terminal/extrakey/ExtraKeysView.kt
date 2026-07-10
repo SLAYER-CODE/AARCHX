@@ -327,26 +327,27 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
 
     private fun initBuiltinKeys() {
         addBuiltinKey(CTRL_R)
-        addBuiltinKey(KILL)
+        addBuiltinKey(CLEAR_TERMINAL)
         addBuiltinKey(OPEN_FLOAT)
         addBuiltinKey(SELECT_ALL)
-        addBuiltinKey(PREV_SESSION)
-        addBuiltinKey(NEXT_SESSION)
+        addBuiltinKey(KILL)
+        addBuiltinKey(NEW_SESSION)
         addBuiltinKey(TOGGLE_IME)
 
         addBuiltinKey(ESC)
         addBuiltinKey(EXPAND_BUTTONS)
         addBuiltinKey(TOGGLE_HISTORY)
-        addBuiltinKey(NEW_SESSION)
-        addBuiltinKey(CLEAR_TERMINAL)
         addBuiltinKey(FLOAT_CURRENT)
+        addBuiltinKey(PREV_SESSION)
+        addBuiltinKey(NEXT_SESSION)
         addBuiltinKey(TOGGLE_SWITCHER)
     }
 
     private fun isButtonEnabled(button: IExtraButton): Boolean {
         return when (button) {
             TOGGLE_HISTORY -> !NeoPreference.isLoggingDisabled()
-            TOGGLE_SWITCHER, PREV_SESSION, NEXT_SESSION, KILL -> tabCount > 1
+            KILL -> tabCount > 0
+            TOGGLE_SWITCHER, PREV_SESSION, NEXT_SESSION -> tabCount > 1
             OPEN_FLOAT -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     Settings.canDrawOverlays(context)
