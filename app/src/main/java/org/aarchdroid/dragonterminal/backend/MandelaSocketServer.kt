@@ -66,8 +66,10 @@ class MandelaSocketServer private constructor() {
     private var readThread: Thread? = null
 
     fun setListener(l: MandelaFrameListener?) {
+        Log.d(TAG, "setListener connected=$connected l=${l != null}")
         listener = l
         if (connected && l != null) {
+            Log.d(TAG, "setListener: retroactive fire onMandelaStart($lastStartW, $lastStartH)")
             val w = lastStartW; val h = lastStartH
             mainHandler.post { l.onMandelaStart(w, h) }
         }
@@ -110,14 +112,18 @@ class MandelaSocketServer private constructor() {
             val firstId = bb0.getInt()
             val firstW = bb0.getInt()
             val firstH = bb0.getInt()
+            Log.d(TAG, "First frame header: id=$firstId ${firstW}x$firstH")
             lastStartW = firstW; lastStartH = firstH
             val firstPixels = readFrame(input, frameBuf, firstW, firstH)
             connected = true
+            Log.d(TAG, "First frame pixels received: ${firstPixels?.size}")
             if (firstPixels != null) {
                 val l = listener
+                Log.d(TAG, "First frame listener null=${l == null}")
                 if (l != null) {
                     val fw = firstW; val fh = firstH; val fid = firstId
                     mainHandler.post {
+                        Log.d(TAG, "FIRING onMandelaStart+onMandelaFrame")
                         l.onMandelaStart(fw, fh)
                         l.onMandelaFrame(fid, firstPixels, fw, fh)
                     }

@@ -64,7 +64,7 @@ import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.CameraP
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XParameter
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XSession
 import org.aarchdroid.dragonterminal.floatui.FloatService
-import org.aarchdroid.dragonterminal.backend.CameraCaptureManager
+import org.aarchdroid.dragonterminal.backend.Camera2FrameSender
 import org.aarchdroid.dragonterminal.services.NeoTermService
 import org.aarchdroid.dragonterminal.ui.settings.SettingActivity
 import org.aarchdroid.dragonterminal.ui.term.tab.NeoTab
@@ -668,8 +668,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
         tabSessionMap.clear()
 
-        cameraCaptureManager?.stop()
-        cameraCaptureManager = null
+        Camera2FrameSender.getInstance().stop()
 
         if (termService != null) {
             termService = null
@@ -736,10 +735,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             REQUEST_CAMERA -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d("AArchDroid", "CAMERA permission granted, starting camera capture")
-                    cameraCaptureManager?.stop()
-                    cameraCaptureManager = CameraCaptureManager(this).apply {
-                        start(cameraId = getDefaultCameraId(), width = 640, height = 480)
-                    }
+                    Camera2FrameSender.getInstance().start(this)
                 } else {
                     Log.w("AArchDroid", "CAMERA permission denied")
                 }
@@ -1482,17 +1478,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
     }
 
-    private var cameraCaptureManager: CameraCaptureManager? = null
-
     @Suppress("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onCameraPermissionEvent(event: CameraPermissionEvent) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED) {
-            cameraCaptureManager?.stop()
-            cameraCaptureManager = CameraCaptureManager(this).apply {
-                start(cameraId = getDefaultCameraId(), width = 640, height = 480)
-            }
+            Log.d("AArchDroid", "CAMERA already granted, starting Camera2FrameSender")
+            Camera2FrameSender.getInstance().start(this)
             return
         }
         AlertDialog.Builder(this)

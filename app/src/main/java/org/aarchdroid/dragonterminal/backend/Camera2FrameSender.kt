@@ -11,27 +11,15 @@ import android.media.ImageReader
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
-import android.view.Surface
-import java.io.OutputStream
 import android.net.LocalSocket
 import android.net.LocalSocketAddress
+import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
-/**
- * Captura frames de la cámara trasera via Camera2 API y los envía
- * al socket abstracto "cam-0" donde Iris (chroot) los espera.
- *
- * Protocolo: [u32 frame_id][u32 width][u32 height][BGRA pixels]
- * Mismo formato que FrameHeader en iris/types.h.
- */
 class Camera2FrameSender private constructor() {
-
-    interface CameraFrameListener {
-        fun onCameraConnected()
-        fun onCameraDisconnected()
-    }
 
     companion object {
         private const val TAG = "Camera2Frame"
@@ -40,7 +28,7 @@ class Camera2FrameSender private constructor() {
         private const val HEIGHT = 480
         private const val HEADER_SIZE = 12
         private const val RETRY_INTERVAL_MS = 2000L
-        private const val MAX_RETRIES = 5
+        private const val LATCH_TIMEOUT_MS = 20000L
 
         @Volatile
         private var instance: Camera2FrameSender? = null
@@ -53,145 +41,217 @@ class Camera2FrameSender private constructor() {
     }
 
     @Volatile
-    private var listener: CameraFrameListener? = null
-
-    @Volatile
     private var running = false
-    private var connectThread: Thread? = null
+    private var contextRef: Context? = null
+    private var mainThread: Thread? = null
+
     private var socket: LocalSocket? = null
     private var outputStream: OutputStream? = null
-
-    private var cameraThread: HandlerThread? = null
-    private var cameraHandler: Handler? = null
     private var cameraDevice: CameraDevice? = null
     private var imageReader: ImageReader? = null
     private var captureSession: CameraCaptureSession? = null
-    private var previewRequest: CaptureRequest? = null
-
+    private var workerThread: HandlerThread? = null
+    private var workerHandler: Handler? = null
+    private var streamLatch: CountDownLatch? = null
+    @Volatile
     private var frameId = 0
-
-    fun setListener(l: CameraFrameListener?) {
-        listener = l
-    }
 
     fun start(context: Context) {
         if (running) return
         running = true
-        val appCtx = context.applicationContext
-        connectThread = Thread {
-            connectWithRetry(appCtx)
-        }.also { it.name = "Camera2Connect"; it.start() }
+        contextRef = context.applicationContext
+        mainThread = Thread {
+            mainLoop()
+        }.also { it.name = "Camera2Main"; it.start() }
     }
 
-    private fun connectWithRetry(context: Context) {
-        var attempts = 0
-        while (running && attempts < MAX_RETRIES) {
-            try {
-                val sock = LocalSocket()
-                sock.connect(LocalSocketAddress(SOCKET_NAME, LocalSocketAddress.Namespace.ABSTRACT))
-                socket = sock
-                outputStream = sock.outputStream
-                Log.d(TAG, "Connected to $SOCKET_NAME")
-                listener?.onCameraConnected()
-                openCamera(context)
-                return
-            } catch (e: Exception) {
-                attempts++
-                Log.w(TAG, "Connect attempt $attempts/$MAX_RETRIES failed: ${e.message}")
-                if (!running) return
+    // ── Main loop ────────────────────────────────────────────────────
+
+    private fun mainLoop() {
+        Log.d(TAG, "Main loop started")
+        while (running) {
+            workerThread = HandlerThread("Camera2Worker").also { it.start() }
+            workerHandler = Handler(workerThread!!.looper)
+
+            val sock = connectSocket() ?: break
+            streamCamera(sock)
+            cleanupAll()
+
+            workerThread?.quitSafely()
+            workerThread = null
+            workerHandler = null
+
+            if (running) {
+                Log.d(TAG, "Reconnecting in ${RETRY_INTERVAL_MS}ms...")
                 Thread.sleep(RETRY_INTERVAL_MS)
             }
         }
-        Log.w(TAG, "Failed to connect after $MAX_RETRIES attempts")
-        running = false
-        listener?.onCameraDisconnected()
+        cleanupAll()
+        Log.d(TAG, "Main loop ended")
     }
 
-    private fun openCamera(context: Context) {
-        cameraThread = HandlerThread("Camera2Thread").also { it.start() }
-        cameraHandler = Handler(cameraThread!!.looper)
+    // ── Socket ───────────────────────────────────────────────────────
 
-        cameraHandler!!.post {
+    private fun connectSocket(): LocalSocket? {
+        while (running) {
             try {
-                val manager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-                val cameraId = "0"  // back camera
-
-                //noinspection MissingPermission
-                manager.openCamera(cameraId, object : CameraDevice.StateCallback() {
-                    override fun onOpened(camera: CameraDevice) {
-                        Log.d(TAG, "Camera opened: $cameraId")
-                        cameraDevice = camera
-                        createCaptureSession(camera)
-                    }
-
-                    override fun onDisconnected(camera: CameraDevice) {
-                        Log.w(TAG, "Camera disconnected")
-                        stop()
-                    }
-
-                    override fun onError(camera: CameraDevice, error: Int) {
-                        Log.e(TAG, "Camera error: $error")
-                        stop()
-                    }
-                }, cameraHandler)
-            } catch (e: SecurityException) {
-                Log.e(TAG, "Camera permission not granted", e)
-                stop()
+                val sock = LocalSocket()
+                sock.connect(LocalSocketAddress(SOCKET_NAME,
+                    LocalSocketAddress.Namespace.ABSTRACT))
+                socket = sock
+                outputStream = sock.outputStream
+                Log.d(TAG, "Connected to $SOCKET_NAME")
+                return sock
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to open camera", e)
-                stop()
+                if (!running) return null
+                Thread.sleep(RETRY_INTERVAL_MS)
             }
         }
+        return null
     }
 
-    private fun createCaptureSession(camera: CameraDevice) {
-        val reader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.YUV_420_888, 3)
-        imageReader = reader
+    // ── Camera ───────────────────────────────────────────────────────
 
-        reader.setOnImageAvailableListener({ reader ->
-            if (!running) return@setOnImageAvailableListener
-            val image = reader.acquireLatestImage()
-            if (image == null) return@setOnImageAvailableListener
+    private fun streamCamera(sock: LocalSocket) {
+        val ctx = contextRef ?: return
+        val handler = workerHandler ?: return
+        frameId = 0
 
-            try {
-                val bgra = yuv420ToBgra(image)
-                sendFrame(bgra)
-            } catch (e: Exception) {
-                Log.e(TAG, "Frame processing error", e)
-            } finally {
-                image.close()
-            }
-        }, cameraHandler)
+        streamLatch = CountDownLatch(1)
+        var camera: CameraDevice? = null
 
         try {
-            val surface: Surface = reader.surface
-            camera.createCaptureSession(listOf(surface), object : CameraCaptureSession.StateCallback() {
-                override fun onConfigured(session: CameraCaptureSession) {
-                    Log.d(TAG, "Capture session configured")
-                    captureSession = session
-                    try {
-                        val requestBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-                        requestBuilder.addTarget(surface)
-                        requestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
-                        previewRequest = requestBuilder.build()
-                        session.setRepeatingRequest(previewRequest!!, null, cameraHandler)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to start repeating request", e)
-                        stop()
-                    }
-                }
+            val manager = ctx.getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
-                override fun onConfigureFailed(session: CameraCaptureSession) {
-                    Log.e(TAG, "Capture session configure failed")
-                    stop()
+            // ── Open camera (async → callback on HandlerThread) ──
+            val openLatch = CountDownLatch(1)
+            var openError: String? = null
+
+            //noinspection MissingPermission
+            manager.openCamera("0", object : CameraDevice.StateCallback() {
+                override fun onOpened(cam: CameraDevice) {
+                    camera = cam
+                    openLatch.countDown()
                 }
-            }, cameraHandler)
+                override fun onDisconnected(cam: CameraDevice) {
+                    openError = "disconnected"
+                    openLatch.countDown()
+                }
+                override fun onError(cam: CameraDevice, error: Int) {
+                    openError = "error:$error"
+                    openLatch.countDown()
+                }
+            }, handler)
+
+            if (!openLatch.await(LATCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                Log.e(TAG, "Timeout opening camera")
+                return
+            }
+            if (!running) return
+            if (openError != null) {
+                Log.e(TAG, "Camera open failed: $openError")
+                return
+            }
+
+            val cam = camera ?: return
+            cameraDevice = cam
+
+            // ── Image reader (callback on HandlerThread) ──
+            val reader = ImageReader.newInstance(WIDTH, HEIGHT,
+                ImageFormat.YUV_420_888, 3)
+            imageReader = reader
+
+            reader.setOnImageAvailableListener({ r ->
+                if (!running) return@setOnImageAvailableListener
+                val img = r.acquireLatestImage() ?: return@setOnImageAvailableListener
+                try {
+                    val bgra = yuv420ToBgra(img)
+                    if (!writeFrame(bgra)) {
+                        streamLatch?.countDown()
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Frame error", e)
+                } finally {
+                    img.close()
+                }
+            }, handler)
+
+            // ── Capture session (callback on HandlerThread) ──
+            val configLatch = CountDownLatch(1)
+            var configOk = false
+
+            cam.createCaptureSession(listOf(reader.surface),
+                object : CameraCaptureSession.StateCallback() {
+                    override fun onConfigured(session: CameraCaptureSession) {
+                        captureSession = session
+                        try {
+                            val req = cam.createCaptureRequest(
+                                CameraDevice.TEMPLATE_PREVIEW).apply {
+                                addTarget(reader.surface)
+                                set(CaptureRequest.CONTROL_AF_MODE,
+                                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
+                            }.build()
+                            session.setRepeatingRequest(req, null, handler)
+                            configOk = true
+                            configLatch.countDown()
+                            Log.d(TAG, "Streaming started")
+                        } catch (e: Exception) {
+                            configLatch.countDown()
+                        }
+                    }
+                    override fun onConfigureFailed(session: CameraCaptureSession) {
+                        Log.e(TAG, "Session configure failed")
+                        configLatch.countDown()
+                    }
+                }, handler)
+
+            if (!configLatch.await(LATCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                Log.e(TAG, "Timeout configuring session")
+                return
+            }
+            if (!running) return
+            if (!configOk) return
+
+            Log.d(TAG, "Streaming active, waiting for stop signal")
+
+            // Block Camera2Main until error or stop()
+            streamLatch?.await()
+
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Camera permission denied", e)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to create capture session", e)
-            stop()
+            Log.e(TAG, "Stream error", e)
         }
     }
+
+    // ── Write frame ─────────────────────────────────────────────────
+
+    private fun writeFrame(bgra: ByteBuffer): Boolean {
+        val os = outputStream ?: return false
+        try {
+            val header = ByteBuffer.allocate(HEADER_SIZE)
+                .order(ByteOrder.LITTLE_ENDIAN)
+            header.putInt(frameId++)
+            header.putInt(WIDTH)
+            header.putInt(HEIGHT)
+            header.flip()
+
+            val hdr = ByteArray(HEADER_SIZE)
+            header.get(hdr)
+            os.write(hdr)
+
+            val pixels = ByteArray(bgra.remaining())
+            bgra.get(pixels)
+            os.write(pixels)
+            os.flush()
+            return true
+        } catch (e: Exception) {
+            Log.w(TAG, "Send error: ${e.message}")
+            return false
+        }
+    }
+
+    // ── YUV420 → BGRA ───────────────────────────────────────────────
 
     private fun yuv420ToBgra(image: Image): ByteBuffer {
         val planes = image.planes
@@ -212,7 +272,6 @@ class Camera2FrameSender private constructor() {
         val w = image.width
         val h = image.height
 
-        // Copy planes to byte arrays for fast access
         val yBytes = ByteArray(yBuf.remaining()).also { yBuf.get(it) }
         val uBytes = ByteArray(uBuf.remaining()).also { uBuf.get(it) }
         val vBytes = ByteArray(vBuf.remaining()).also { vBuf.get(it) }
@@ -239,7 +298,6 @@ class Camera2FrameSender private constructor() {
                 val g = ((298 * c - 100 * d - 208 * e + 128) shr 8).coerceIn(0, 255)
                 val b = ((298 * c + 516 * d + 128) shr 8).coerceIn(0, 255)
 
-                // BGRA little-endian (matching iris::Canvas format)
                 outBuf.putInt(-0x1000000 or (b shl 16) or (g shl 8) or r)
             }
         }
@@ -248,45 +306,27 @@ class Camera2FrameSender private constructor() {
         return outBuf
     }
 
-    private fun sendFrame(bgra: ByteBuffer) {
-        val os = outputStream ?: return
-        try {
-            val header = ByteBuffer.allocate(HEADER_SIZE).order(ByteOrder.LITTLE_ENDIAN)
-            header.putInt(frameId++)
-            header.putInt(WIDTH)
-            header.putInt(HEIGHT)
-            header.flip()
+    // ── Cleanup ─────────────────────────────────────────────────────
 
-            val hdr = ByteArray(HEADER_SIZE)
-            header.get(hdr)
-            os.write(hdr)
-
-            val pixels = ByteArray(bgra.remaining())
-            bgra.get(pixels)
-            os.write(pixels)
-            os.flush()
-        } catch (e: Exception) {
-            Log.e(TAG, "Send error: ${e.message}")
-            stop()
-        }
-    }
-
-    fun stop() {
-        running = false
+    private fun cleanupAll() {
         try { captureSession?.close() } catch (_: Exception) {}
         try { imageReader?.close() } catch (_: Exception) {}
         try { cameraDevice?.close() } catch (_: Exception) {}
-        try { cameraThread?.quitSafely() } catch (_: Exception) {}
         try { socket?.close() } catch (_: Exception) {}
-        outputStream = null
         captureSession = null
         imageReader = null
         cameraDevice = null
-        cameraThread = null
-        cameraHandler = null
         socket = null
-        connectThread = null
-        instance = null
-        Log.d(TAG, "Stopped")
+        outputStream = null
+        streamLatch = null
+        frameId = 0
+    }
+
+    fun stop() {
+        Log.d(TAG, "Stop requested")
+        running = false
+        streamLatch?.countDown()
+        mainThread?.interrupt()
+        try { socket?.close() } catch (_: Exception) {}
     }
 }
