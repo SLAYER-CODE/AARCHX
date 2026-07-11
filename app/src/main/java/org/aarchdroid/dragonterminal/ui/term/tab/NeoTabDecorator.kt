@@ -1,7 +1,9 @@
 package org.aarchdroid.dragonterminal.ui.term.tab
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Rect
 import android.os.Build
@@ -28,6 +30,7 @@ import org.aarchdroid.dragonterminal.frontend.component.ComponentManager
 import org.aarchdroid.dragonterminal.frontend.config.DefaultValues
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.TermCompleteListener
+import org.aarchdroid.dragonterminal.backend.Camera2FrameSender
 import org.aarchdroid.dragonterminal.backend.MandelaSocketServer
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.frontend.terminal.MandelaOverlayView
@@ -68,7 +71,8 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
             }
 
             else -> {
-                throw RuntimeException("Unknown view type")
+                android.util.Log.w("NeoTabDecor", "Unknown view type: $viewType, inflating term")
+                inflater.inflate(R.layout.ui_term, parent, false)
             }
         }
     }
@@ -84,7 +88,8 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
 
         when (viewType) {
             VIEW_TYPE_TERM -> {
-                val termTab = tab as TermTab
+                if (tab !is TermTab) return
+                val termTab = tab
                 termTab.toolbar = toolbar
                 val terminalView =  findViewById<TerminalView>(R.id.terminal_view)
                 if (isQuickPreview || tabSwitcher.isSwitcherShown) {
@@ -237,6 +242,10 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                     mandelaOverlay.post { mandelaOverlay.hide() }
                 }
             })
+            // Minimize button (—) just hides overlay, keeps mandela running
+            mandelaOverlay.setOnMinimizeListener {
+                // overlay.hide() called internally — no process kill
+            }
             // Keep PTY listener for legacy stdout mode fallback
             session.setMandelaFrameListener(object : TerminalSession.MandelaFrameListener {
                 override fun onMandelaStart(width: Int, height: Int) {
@@ -249,6 +258,14 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                     mandelaOverlay.post { mandelaOverlay.hide() }
                 }
             })
+        }
+
+        // Start Camera2 frame sender (camera → cam-0 socket for Iris)
+        // Only if CAMERA permission is granted at runtime
+        if (context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            Camera2FrameSender.getInstance().start(context)
+        } else {
+            Log.w("NeoTabDecor", "CAMERA permission not granted — camera feed disabled")
         }
 
         if (NeoPreference.loadBoolean(R.string.key_general_auto_completion, false)) {
@@ -272,11 +289,10 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
     }
 
     override fun getViewType(tab: Tab, index: Int): Int {
-        if (tab is TermTab) {
-            return VIEW_TYPE_TERM
-        } else if (tab is XSessionTab) {
-            return VIEW_TYPE_X
+        return when (tab) {
+            is TermTab -> VIEW_TYPE_TERM
+            is XSessionTab -> VIEW_TYPE_X
+            else -> VIEW_TYPE_TERM
         }
-        return -1
     }
 }

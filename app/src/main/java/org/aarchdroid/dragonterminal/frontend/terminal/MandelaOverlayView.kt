@@ -13,6 +13,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
+import org.aarchdroid.dragonterminal.backend.MandelaSocketServer
 
 class MandelaOverlayView @JvmOverloads constructor(
     context: Context,
@@ -25,6 +26,7 @@ class MandelaOverlayView @JvmOverloads constructor(
     private var frameHeight = 0
 
     private val transformMatrix = Matrix()
+    private val canvasScreenRect = RectF()
     private val paint = Paint(Paint.FILTER_BITMAP_FLAG).apply {
         isDither = true
     }
@@ -37,6 +39,14 @@ class MandelaOverlayView @JvmOverloads constructor(
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var isActive = false
+    private var touchOwned = false
+
+    private val btnSize = 34f
+    private val btnMargin = 8f
+    private val btnRect = RectF()
+    private lateinit var btnBorderPaint: Paint
+    private lateinit var btnBgPaint: Paint
+    private lateinit var btnMinusPaint: Paint
 
     private val scaleDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
@@ -70,14 +80,43 @@ class MandelaOverlayView @JvmOverloads constructor(
     init {
         setBackgroundColor(Color.TRANSPARENT)
         visibility = GONE
+        btnBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFFCC3333.toInt()
+            style = Paint.Style.STROKE
+            strokeWidth = 2f
+        }
+        btnBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xCC000000.toInt()
+            setShadowLayer(3f, 1f, 1f, 0x80000000.toInt())
+        }
+        btnMinusPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFFCC3333.toInt()
+            strokeWidth = 3f
+            strokeCap = Paint.Cap.ROUND
+        }
     }
+
+    fun setOnMinimizeListener(cb: () -> Unit) {
+        onMinimize = cb
+    }
+
+    private var onMinimize: (() -> Unit)? = null
 
     fun show(width: Int, height: Int) {
         frameWidth = width
         frameHeight = height
-        scaleFactor = 1f
-        offsetX = 0f
-        offsetY = 0f
+        if (!isActive) {
+            val srv = MandelaSocketServer.getInstanceOpt()
+            if (srv != null) {
+                scaleFactor = srv.persistedScale
+                offsetX = srv.persistedOffsetX
+                offsetY = srv.persistedOffsetY
+            } else {
+                scaleFactor = 1f
+                offsetX = 0f
+                offsetY = 0f
+            }
+        }
         isActive = true
         visibility = VISIBLE
         bringToFront()
@@ -86,9 +125,16 @@ class MandelaOverlayView @JvmOverloads constructor(
     }
 
     fun hide() {
+        val srv = MandelaSocketServer.getInstanceOpt()
+        srv?.let {
+            it.persistedScale = scaleFactor
+            it.persistedOffsetX = offsetX
+            it.persistedOffsetY = offsetY
+        }
         isActive = false
         frameBitmap = null
         visibility = GONE
+        touchOwned = false
         postInvalidateOnAnimation()
     }
 
@@ -96,7 +142,6 @@ class MandelaOverlayView @JvmOverloads constructor(
         if (!isActive) return
         frameWidth = w
         frameHeight = h
-        // Pixels ya llegan como ARGB_8888 desde MandelaSocketServer (BGRA→ARGB convertido allí)
         frameBitmap?.recycle()
         frameBitmap = Bitmap.createBitmap(argbPixels, w, h, Bitmap.Config.ARGB_8888)
         updateTransform()
@@ -105,16 +150,18 @@ class MandelaOverlayView @JvmOverloads constructor(
 
     private fun updateTransform() {
         transformMatrix.reset()
-        val viewW = width.toFloat()
-        val viewH = height.toFloat()
-        if (frameWidth <= 0 || frameHeight <= 0 || viewW <= 0 || viewH <= 0) return
+        if (frameWidth <= 0 || frameHeight <= 0) return
+        transformMatrix.postScale(scaleFactor, scaleFactor)
+        transformMatrix.postTranslate(offsetX, offsetY)
 
-        val baseScale = Math.min(viewW / frameWidth, viewH / frameHeight)
-        val cx = viewW / 2f
-        val cy = viewH / 2f
-        transformMatrix.postTranslate(-frameWidth / 2f, -frameHeight / 2f)
-        transformMatrix.postScale(baseScale * scaleFactor, baseScale * scaleFactor, 0f, 0f)
-        transformMatrix.postTranslate(cx + offsetX, cy + offsetY)
+        MandelaSocketServer.getInstanceOpt()?.let {
+            it.persistedScale = scaleFactor
+            it.persistedOffsetX = offsetX
+            it.persistedOffsetY = offsetY
+        }
+
+        val src = RectF(0f, 0f, frameWidth.toFloat(), frameHeight.toFloat())
+        transformMatrix.mapRect(canvasScreenRect, src)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -122,12 +169,18 @@ class MandelaOverlayView @JvmOverloads constructor(
         val bmp = frameBitmap ?: return
         if (!isActive) return
 
-        // Subtle backdrop only behind the graph, not full screen
-        val src = RectF(0f, 0f, frameWidth.toFloat(), frameHeight.toFloat())
-        val dst = RectF()
-        transformMatrix.mapRect(dst, src)
-        canvas.drawRoundRect(dst, 8f, 8f, backdropPaint)
+        canvas.drawRoundRect(canvasScreenRect, 8f, 8f, backdropPaint)
         canvas.drawBitmap(bmp, transformMatrix, paint)
+
+        // Minimize button (—) — square peeking out from top-right of the canvas rect
+        val btnRight = canvasScreenRect.right + btnSize / 3
+        val btnTop = canvasScreenRect.top - btnSize / 3
+        btnRect.set(btnRight - btnSize, btnTop, btnRight, btnTop + btnSize)
+        canvas.drawRect(btnRect, btnBgPaint)
+        canvas.drawRect(btnRect, btnBorderPaint)
+        val cx = btnRect.centerX()
+        val cy = btnRect.centerY()
+        canvas.drawLine(cx - btnSize * 0.28f, cy, cx + btnSize * 0.28f, cy, btnMinusPaint)
     }
 
     private val backdropPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -137,18 +190,27 @@ class MandelaOverlayView @JvmOverloads constructor(
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (!isActive) return false
-        scaleDetector.onTouchEvent(event)
-        gestureDetector.onTouchEvent(event)
 
         when (event.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
+                if (!canvasScreenRect.contains(event.x, event.y) &&
+                    !btnRect.contains(event.x, event.y)) {
+                    touchOwned = false
+                    return false  // pass through to terminal
+                }
+                touchOwned = true
                 downX = event.x
                 downY = event.y
                 lastTouchX = event.x
                 lastTouchY = event.y
+                scaleDetector.onTouchEvent(event)
+                gestureDetector.onTouchEvent(event)
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
+                if (!touchOwned) return false
+                scaleDetector.onTouchEvent(event)
+                gestureDetector.onTouchEvent(event)
                 if (!scaleDetector.isInProgress) {
                     val dx = event.x - lastTouchX
                     val dy = event.y - lastTouchY
@@ -162,17 +224,25 @@ class MandelaOverlayView @JvmOverloads constructor(
                 return true
             }
             MotionEvent.ACTION_UP -> {
-                val dx = event.x - downX
-                val dy = event.y - downY
-                val dist = Math.sqrt((dx * dx + dy * dy).toDouble())
-                if (dist < 10.0) {
-                    // Single tap = dismiss overlay
+                if (!touchOwned) return false
+                scaleDetector.onTouchEvent(event)
+                gestureDetector.onTouchEvent(event)
+                touchOwned = false
+                val upX = event.x
+                val upY = event.y
+                if (btnRect.contains(upX, upY)) {
+                    onMinimize?.invoke()
                     hide()
                 }
                 return true
             }
+            else -> {
+                if (!touchOwned) return false
+                scaleDetector.onTouchEvent(event)
+                gestureDetector.onTouchEvent(event)
+                return true
+            }
         }
-        return super.onTouchEvent(event)
     }
 
     fun dismiss() {

@@ -41,6 +41,8 @@ import android.widget.ListView
 import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 
 import org.aarchdroid.AArchDroidApp
 import org.aarchdroid.R
@@ -58,9 +60,11 @@ import org.aarchdroid.dragonterminal.frontend.session.shell.ShellProfile
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.TermSessionCallback
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.TermViewClient
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.*
+import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.CameraPermissionEvent
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XParameter
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XSession
 import org.aarchdroid.dragonterminal.floatui.FloatService
+import org.aarchdroid.dragonterminal.backend.CameraCaptureManager
 import org.aarchdroid.dragonterminal.services.NeoTermService
 import org.aarchdroid.dragonterminal.ui.settings.SettingActivity
 import org.aarchdroid.dragonterminal.ui.term.tab.NeoTab
@@ -90,6 +94,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     companion object {
         const val KEY_NO_RESTORE = "no_restore"
         const val REQUEST_SETUP = 22313
+        const val REQUEST_CAMERA = 10088
         const val ACTION_ANCHOR = "aarchdroid.terminal.action.anchor"
         const val INTERNA_TARGET = "/data/local/aarchdroid/root/Interna"
         const val EXTERNA_TARGET = "/data/local/aarchdroid/root/Externa"
@@ -663,6 +668,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
         tabSessionMap.clear()
 
+        cameraCaptureManager?.stop()
+        cameraCaptureManager = null
+
         if (termService != null) {
             termService = null
         }
@@ -724,6 +732,17 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             NeoPermission.REQUEST_NOTIFICATION_PERMISSION -> {
                 val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
                 Log.d("AArchDroid", "onRequestPermissionsResult: POST_NOTIFICATIONS granted=$granted")
+            }
+            REQUEST_CAMERA -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("AArchDroid", "CAMERA permission granted, starting camera capture")
+                    cameraCaptureManager?.stop()
+                    cameraCaptureManager = CameraCaptureManager(this).apply {
+                        start(cameraId = getDefaultCameraId(), width = 640, height = 480)
+                    }
+                } else {
+                    Log.w("AArchDroid", "CAMERA permission denied")
+                }
             }
         }
     }
@@ -1461,6 +1480,42 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             toggleSwitcher(showSwitcher = true, easterEgg = false)
             tabSwitcher.removeTab(tab)
         }
+    }
+
+    private var cameraCaptureManager: CameraCaptureManager? = null
+
+    @Suppress("unused")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onCameraPermissionEvent(event: CameraPermissionEvent) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED) {
+            cameraCaptureManager?.stop()
+            cameraCaptureManager = CameraCaptureManager(this).apply {
+                start(cameraId = getDefaultCameraId(), width = 640, height = 480)
+            }
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Acceso a cámara")
+            .setMessage("Iris necesita la cámara para capturar frames. ¿Permitir acceso?")
+            .setPositiveButton("Permitir") { _, _ ->
+                ActivityCompat.requestPermissions(this,
+                    arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun getDefaultCameraId(): String {
+        return try {
+            val manager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            for (id in manager.cameraIdList) {
+                val facing = manager.getCameraCharacteristics(id)
+                    .get(CameraCharacteristics.LENS_FACING)
+                if (facing == CameraCharacteristics.LENS_FACING_BACK) return id
+            }
+            manager.cameraIdList.firstOrNull() ?: "0"
+        } catch (_: Exception) { "0" }
     }
 
     @Suppress("unused", "UNUSED_PARAMETER")

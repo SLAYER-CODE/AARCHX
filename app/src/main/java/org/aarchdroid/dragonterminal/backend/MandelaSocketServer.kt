@@ -41,10 +41,24 @@ class MandelaSocketServer private constructor() {
                 }
             }
         }
+
+        fun getInstanceOpt(): MandelaSocketServer? = instance
     }
 
     @Volatile
+    var persistedScale: Float = 1f
+    @Volatile
+    var persistedOffsetX: Float = 0f
+    @Volatile
+    var persistedOffsetY: Float = 0f
+
+    @Volatile
     private var listener: MandelaFrameListener? = null
+
+    @Volatile
+    private var connected = false
+    private var lastStartW = 0
+    private var lastStartH = 0
 
     private val isRunning = AtomicBoolean(false)
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -53,6 +67,10 @@ class MandelaSocketServer private constructor() {
 
     fun setListener(l: MandelaFrameListener?) {
         listener = l
+        if (connected && l != null) {
+            val w = lastStartW; val h = lastStartH
+            mainHandler.post { l.onMandelaStart(w, h) }
+        }
     }
 
     private fun start() {
@@ -85,41 +103,40 @@ class MandelaSocketServer private constructor() {
             val input: InputStream = client.inputStream
             val headerBuf = ByteArray(HEADER_SIZE)
             val frameBuf = ByteArray(MAX_FRAME_SIZE)
-            var frameId = 0
 
+            // First frame: decode and fire onMandelaStart + onMandelaFrame
+            readFully(input, headerBuf)
+            val bb0 = ByteBuffer.wrap(headerBuf).order(ByteOrder.LITTLE_ENDIAN)
+            val firstId = bb0.getInt()
+            val firstW = bb0.getInt()
+            val firstH = bb0.getInt()
+            lastStartW = firstW; lastStartH = firstH
+            val firstPixels = readFrame(input, frameBuf, firstW, firstH)
+            connected = true
+            if (firstPixels != null) {
+                val l = listener
+                if (l != null) {
+                    val fw = firstW; val fh = firstH; val fid = firstId
+                    mainHandler.post {
+                        l.onMandelaStart(fw, fh)
+                        l.onMandelaFrame(fid, firstPixels, fw, fh)
+                    }
+                }
+            }
+
+            // Subsequent frames: onMandelaFrame only
             while (isRunning.get()) {
                 readFully(input, headerBuf)
                 val bb = ByteBuffer.wrap(headerBuf).order(ByteOrder.LITTLE_ENDIAN)
-                frameId = bb.getInt()
+                val frameId = bb.getInt()
                 val w = bb.getInt()
                 val h = bb.getInt()
-
-                val pixelBytes = w * h * 4
-                if (pixelBytes <= 0 || pixelBytes > MAX_FRAME_SIZE) {
-                    Log.w(TAG, "Invalid frame size: $w x $h = $pixelBytes")
-                    continue
-                }
-
-                readFully(input, frameBuf, pixelBytes)
-
-                val argbPixels = IntArray(w * h)
-                val pixelBb = ByteBuffer.wrap(frameBuf, 0, pixelBytes).order(ByteOrder.LITTLE_ENDIAN)
-                pixelBb.asIntBuffer().get(argbPixels)
-
-                // BGRA → ARGB swap
-                for (i in argbPixels.indices) {
-                    val p = argbPixels[i]
-                    argbPixels[i] = (p and 0xFF00FF00.toInt()) or ((p shr 16) and 0xFF) or ((p shl 16) and 0xFF0000.toInt())
-                }
-
-                val fw = w
-                val fh = h
-                val fid = frameId
+                val pixels = readFrame(input, frameBuf, w, h) ?: continue
                 val l = listener
                 if (l != null) {
+                    val fw = w; val fh = h; val fid = frameId
                     mainHandler.post {
-                        l.onMandelaStart(fw, fh)
-                        l.onMandelaFrame(fid, argbPixels, fw, fh)
+                        l.onMandelaFrame(fid, pixels, fw, fh)
                     }
                 }
             }
@@ -128,11 +145,38 @@ class MandelaSocketServer private constructor() {
         } catch (e: Exception) {
             if (isRunning.get()) Log.e(TAG, "Client handler error", e)
         } finally {
+            connected = false
             try { client.close() } catch (_: Exception) {}
             val l = listener
             if (l != null) {
                 mainHandler.post { l.onMandelaEnd() }
             }
+        }
+    }
+
+    private fun readFrame(input: InputStream, buf: ByteArray, w: Int, h: Int): IntArray? {
+        val pixelBytes = w * h * 4
+        if (pixelBytes <= 0 || pixelBytes > MAX_FRAME_SIZE) {
+            Log.w(TAG, "Invalid frame size: $w x $h = $pixelBytes")
+            return null
+        }
+        readFully(input, buf, pixelBytes)
+        val argbPixels = IntArray(w * h)
+        val pixelBb = ByteBuffer.wrap(buf, 0, pixelBytes).order(ByteOrder.LITTLE_ENDIAN)
+        pixelBb.asIntBuffer().get(argbPixels)
+        for (i in argbPixels.indices) {
+            val p = argbPixels[i]
+            argbPixels[i] = (p and 0xFF00FF00.toInt()) or ((p shr 16) and 0xFF) or ((p shl 16) and 0xFF0000.toInt())
+        }
+        return argbPixels
+    }
+
+    private fun readFully(input: InputStream, buf: ByteArray, len: Int = buf.size) {
+        var offset = 0
+        while (offset < len) {
+            val n = input.read(buf, offset, len - offset)
+            if (n == -1) throw java.io.EOFException("Stream closed reading ${len - offset} more bytes")
+            offset += n
         }
     }
 
@@ -146,14 +190,5 @@ class MandelaSocketServer private constructor() {
     private fun cleanup() {
         try { serverSocket?.close() } catch (_: Exception) {}
         serverSocket = null
-    }
-
-    private fun readFully(input: InputStream, buf: ByteArray, len: Int = buf.size) {
-        var offset = 0
-        while (offset < len) {
-            val n = input.read(buf, offset, len - offset)
-            if (n == -1) throw java.io.EOFException("Stream closed reading ${len - offset} more bytes")
-            offset += n
-        }
     }
 }
