@@ -29,10 +29,4 @@
 
     </RelativeLayout>
 
-    <org.aarchdroid.dragonterminal.frontend.terminal.MandelaOverlayView
-        android:id="@+id/mandela_overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone" />
-
 </FrameLayout>

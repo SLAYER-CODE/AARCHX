@@ -64,7 +64,6 @@ import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.CameraP
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XParameter
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XSession
 import org.aarchdroid.dragonterminal.floatui.FloatService
-import org.aarchdroid.dragonterminal.backend.Camera2FrameSender
 import org.aarchdroid.dragonterminal.services.NeoTermService
 import org.aarchdroid.dragonterminal.ui.settings.SettingActivity
 import org.aarchdroid.dragonterminal.ui.term.tab.NeoTab
@@ -668,7 +667,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
         tabSessionMap.clear()
 
-        Camera2FrameSender.getInstance().stop()
+        NeoTabDecorator.stopCameraServer()
 
         if (termService != null) {
             termService = null
@@ -735,7 +734,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             REQUEST_CAMERA -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d("AArchDroid", "CAMERA permission granted, starting camera capture")
-                    Camera2FrameSender.getInstance().start(this)
+                    NeoTabDecorator.startCameraServer(this)
                 } else {
                     Log.w("AArchDroid", "CAMERA permission denied")
                 }
@@ -1483,8 +1482,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     fun onCameraPermissionEvent(event: CameraPermissionEvent) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED) {
-            Log.d("AArchDroid", "CAMERA already granted, starting Camera2FrameSender")
-            Camera2FrameSender.getInstance().start(this)
+            Log.d("AArchDroid", "CAMERA already granted, starting camera server")
+            NeoTabDecorator.startCameraServer(this)
             return
         }
         AlertDialog.Builder(this)

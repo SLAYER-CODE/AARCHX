@@ -30,7 +30,7 @@ import org.aarchdroid.dragonterminal.frontend.component.ComponentManager
 import org.aarchdroid.dragonterminal.frontend.config.DefaultValues
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.TermCompleteListener
-import org.aarchdroid.dragonterminal.backend.Camera2FrameSender
+import org.aarchdroid.dragonterminal.backend.CameraControlServer
 import org.aarchdroid.dragonterminal.backend.MandelaSocketServer
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.frontend.terminal.MandelaOverlayView
@@ -47,6 +47,22 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         private var VIEW_TYPE_COUNT = 0
         private val VIEW_TYPE_TERM = VIEW_TYPE_COUNT++
         private val VIEW_TYPE_X = VIEW_TYPE_COUNT++
+
+        @Volatile
+        private var cameraControlServer: CameraControlServer? = null
+
+        fun startCameraServer(context: Context) {
+            if (cameraControlServer != null) return
+            CameraControlServer(context.applicationContext).also {
+                cameraControlServer = it
+                it.start()
+            }
+        }
+
+        fun stopCameraServer() {
+            cameraControlServer?.stop()
+            cameraControlServer = null
+        }
     }
 
     private fun setViewLayerType(view: View?) = view?.setLayerType(View.LAYER_TYPE_NONE, null)
@@ -224,46 +240,64 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         termView.setTerminalViewClient(termData.viewClient)
         termView.attachSession(termData.termSession)
 
-        // Wire Mandela overlay — singleton socket server + per-tab listener
-        val mandelaOverlay = rootView?.findViewById<MandelaOverlayView>(R.id.mandela_overlay)
+        // Wire Mandela overlay — singleton server, global multi-overlay container
         val session = termData.termSession
-        if (mandelaOverlay != null && session != null) {
-            // Singleton socket server — one AF_UNIX abstract socket for the whole app.
-            // Update listener to point to this tab's overlay view.
+        if (session != null) {
             val socketServer = MandelaSocketServer.getInstance()
-            socketServer.setListener(object : MandelaSocketServer.MandelaFrameListener {
-                override fun onMandelaStart(width: Int, height: Int) {
-                    mandelaOverlay.post { mandelaOverlay.show(width, height) }
+            val overlayContainer = context.findViewById<FrameLayout>(R.id.overlay_container)
+
+            // Register onNewConnection (solo la primera vez): cada tool recibe su propio overlay
+            if (overlayContainer != null && socketServer.onNewConnection == null) {
+                socketServer.onNewConnection = { connId ->
+                    val latch = java.util.concurrent.CountDownLatch(1)
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        val v = MandelaOverlayView(context)
+                        overlayContainer.addView(v, FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.WRAP_CONTENT,
+                            FrameLayout.LayoutParams.WRAP_CONTENT
+                        ))
+                        v.initialScale = 1f
+                        v.initialOffsetX = 20f
+                        v.initialOffsetY = 20f
+                        v.setOnMinimizeListener {
+                            overlayContainer.removeView(v)
+                        }
+                        v.tag = connId
+                        latch.countDown()
+                    }
+                    latch.await()
+                    val ov = overlayContainer.findViewWithTag<MandelaOverlayView>(connId)!!
+                    object : MandelaSocketServer.MandelaFrameListener {
+                        override fun onMandelaStart(width: Int, height: Int) {
+                            ov.post { ov.show(width, height) }
+                        }
+                        override fun onMandelaFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int) {
+                            ov.post { ov.setFrame(argbPixels, width, height) }
+                        }
+                        override fun onMandelaEnd() {
+                            ov.post {
+                                ov.hide()
+                                overlayContainer.removeView(ov)
+                            }
+                        }
+                    }
                 }
-                override fun onMandelaFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int) {
-                    mandelaOverlay.post { mandelaOverlay.setFrame(argbPixels, width, height) }
-                }
-                override fun onMandelaEnd() {
-                    mandelaOverlay.post { mandelaOverlay.hide() }
-                }
-            })
-            // Minimize button (—) just hides overlay, keeps mandela running
-            mandelaOverlay.setOnMinimizeListener {
-                // overlay.hide() called internally — no process kill
             }
+
             // Keep PTY listener for legacy stdout mode fallback
             session.setMandelaFrameListener(object : TerminalSession.MandelaFrameListener {
                 override fun onMandelaStart(width: Int, height: Int) {
-                    mandelaOverlay.post { mandelaOverlay.show(width, height) }
                 }
                 override fun onMandelaFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int) {
-                    mandelaOverlay.post { mandelaOverlay.setFrame(argbPixels, width, height) }
                 }
                 override fun onMandelaEnd() {
-                    mandelaOverlay.post { mandelaOverlay.hide() }
                 }
             })
         }
 
-        // Start Camera2 frame sender (camera → cam-0 socket for Iris)
-        // Only if CAMERA permission is granted at runtime
+        // Start Camera2 frame sender (controlado por iris vía cam-ctrl)
         if (context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            Camera2FrameSender.getInstance().start(context)
+            startCameraServer(context)
         } else {
             Log.w("NeoTabDecor", "CAMERA permission not granted — camera feed disabled")
         }

@@ -19,30 +19,23 @@ import java.nio.ByteOrder
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-class Camera2FrameSender private constructor() {
-
+class Camera2FrameSender(
+    private val cameraId: String = "0",
+    private val socketName: String = "cam-0",
+    private val width: Int = 640,
+    private val height: Int = 480
+) {
     companion object {
         private const val TAG = "Camera2Frame"
-        private const val SOCKET_NAME = "cam-0"
-        private const val WIDTH = 640
-        private const val HEIGHT = 480
         private const val HEADER_SIZE = 12
         private const val RETRY_INTERVAL_MS = 2000L
         private const val LATCH_TIMEOUT_MS = 20000L
-
-        @Volatile
-        private var instance: Camera2FrameSender? = null
-
-        fun getInstance(): Camera2FrameSender {
-            return instance ?: synchronized(this) {
-                instance ?: Camera2FrameSender().also { instance = it }
-            }
-        }
     }
 
     @Volatile
     private var running = false
     private var contextRef: Context? = null
+    private val tag = "$TAG-$socketName"
     private var mainThread: Thread? = null
 
     private var socket: LocalSocket? = null
@@ -62,15 +55,15 @@ class Camera2FrameSender private constructor() {
         contextRef = context.applicationContext
         mainThread = Thread {
             mainLoop()
-        }.also { it.name = "Camera2Main"; it.start() }
+        }.also { it.name = "Camera2Main-$socketName"; it.start() }
     }
 
     // ── Main loop ────────────────────────────────────────────────────
 
     private fun mainLoop() {
-        Log.d(TAG, "Main loop started")
+        Log.d(tag, "Main loop started (cam=$cameraId socket=$socketName)")
         while (running) {
-            workerThread = HandlerThread("Camera2Worker").also { it.start() }
+            workerThread = HandlerThread("Camera2Worker-$socketName").also { it.start() }
             workerHandler = Handler(workerThread!!.looper)
 
             val sock = connectSocket() ?: break
@@ -82,12 +75,12 @@ class Camera2FrameSender private constructor() {
             workerHandler = null
 
             if (running) {
-                Log.d(TAG, "Reconnecting in ${RETRY_INTERVAL_MS}ms...")
+                Log.d(tag, "Reconnecting in ${RETRY_INTERVAL_MS}ms...")
                 Thread.sleep(RETRY_INTERVAL_MS)
             }
         }
         cleanupAll()
-        Log.d(TAG, "Main loop ended")
+        Log.d(tag, "Main loop ended")
     }
 
     // ── Socket ───────────────────────────────────────────────────────
@@ -96,11 +89,11 @@ class Camera2FrameSender private constructor() {
         while (running) {
             try {
                 val sock = LocalSocket()
-                sock.connect(LocalSocketAddress(SOCKET_NAME,
+                sock.connect(LocalSocketAddress(socketName,
                     LocalSocketAddress.Namespace.ABSTRACT))
                 socket = sock
                 outputStream = sock.outputStream
-                Log.d(TAG, "Connected to $SOCKET_NAME")
+                Log.d(tag, "Connected to $socketName")
                 return sock
             } catch (e: Exception) {
                 if (!running) return null
@@ -128,7 +121,7 @@ class Camera2FrameSender private constructor() {
             var openError: String? = null
 
             //noinspection MissingPermission
-            manager.openCamera("0", object : CameraDevice.StateCallback() {
+            manager.openCamera(cameraId, object : CameraDevice.StateCallback() {
                 override fun onOpened(cam: CameraDevice) {
                     camera = cam
                     openLatch.countDown()
@@ -144,12 +137,12 @@ class Camera2FrameSender private constructor() {
             }, handler)
 
             if (!openLatch.await(LATCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                Log.e(TAG, "Timeout opening camera")
+                Log.e(tag, "Timeout opening camera $cameraId")
                 return
             }
             if (!running) return
             if (openError != null) {
-                Log.e(TAG, "Camera open failed: $openError")
+                Log.e(tag, "Camera $cameraId open failed: $openError")
                 return
             }
 
@@ -157,7 +150,7 @@ class Camera2FrameSender private constructor() {
             cameraDevice = cam
 
             // ── Image reader (callback on HandlerThread) ──
-            val reader = ImageReader.newInstance(WIDTH, HEIGHT,
+            val reader = ImageReader.newInstance(width, height,
                 ImageFormat.YUV_420_888, 3)
             imageReader = reader
 
@@ -170,7 +163,7 @@ class Camera2FrameSender private constructor() {
                         streamLatch?.countDown()
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Frame error", e)
+                    Log.e(tag, "Frame error", e)
                 } finally {
                     img.close()
                 }
@@ -194,33 +187,33 @@ class Camera2FrameSender private constructor() {
                             session.setRepeatingRequest(req, null, handler)
                             configOk = true
                             configLatch.countDown()
-                            Log.d(TAG, "Streaming started")
+                            Log.d(tag, "Streaming started ($width x $height)")
                         } catch (e: Exception) {
                             configLatch.countDown()
                         }
                     }
                     override fun onConfigureFailed(session: CameraCaptureSession) {
-                        Log.e(TAG, "Session configure failed")
+                        Log.e(tag, "Session configure failed")
                         configLatch.countDown()
                     }
                 }, handler)
 
             if (!configLatch.await(LATCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                Log.e(TAG, "Timeout configuring session")
+                Log.e(tag, "Timeout configuring session")
                 return
             }
             if (!running) return
             if (!configOk) return
 
-            Log.d(TAG, "Streaming active, waiting for stop signal")
+            Log.d(tag, "Streaming active, waiting for stop signal")
 
             // Block Camera2Main until error or stop()
             streamLatch?.await()
 
         } catch (e: SecurityException) {
-            Log.e(TAG, "Camera permission denied", e)
+            Log.e(tag, "Camera permission denied", e)
         } catch (e: Exception) {
-            Log.e(TAG, "Stream error", e)
+            Log.e(tag, "Stream error", e)
         }
     }
 
@@ -232,8 +225,8 @@ class Camera2FrameSender private constructor() {
             val header = ByteBuffer.allocate(HEADER_SIZE)
                 .order(ByteOrder.LITTLE_ENDIAN)
             header.putInt(frameId++)
-            header.putInt(WIDTH)
-            header.putInt(HEIGHT)
+            header.putInt(width)
+            header.putInt(height)
             header.flip()
 
             val hdr = ByteArray(HEADER_SIZE)
@@ -246,7 +239,7 @@ class Camera2FrameSender private constructor() {
             os.flush()
             return true
         } catch (e: Exception) {
-            Log.w(TAG, "Send error: ${e.message}")
+            Log.w(tag, "Send error: ${e.message}")
             return false
         }
     }
@@ -323,7 +316,7 @@ class Camera2FrameSender private constructor() {
     }
 
     fun stop() {
-        Log.d(TAG, "Stop requested")
+        Log.d(tag, "Stop requested")
         running = false
         streamLatch?.countDown()
         mainThread?.interrupt()

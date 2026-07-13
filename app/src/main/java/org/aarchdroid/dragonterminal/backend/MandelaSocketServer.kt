@@ -7,15 +7,16 @@ import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Servidor de socket AF_UNIX abstracto singleton para recibir frames de Mandela.
  *
- * Mandela (C++ dentro del chroot) se conecta al socket abstracto "mandela-overlay"
- * y envía frames raw: [u32 frame_id][u32 width][u32 height][BGRA pixels].
+ * Acepta múltiples clientes concurrentes. Cada cliente corre en su propio hilo
+ * y tiene su propio listener, permitiendo que múltiples tools (Mandela, Iris)
+ * envíen frames simultáneamente al singleton.
  *
- * Singleton por app — un solo socket acepta conexiones de todos los tabs.
- * El listener se actualiza dinámicamente según el tab activo.
+ * El listener se asigna por conexión vía [onNewConnection].
  */
 class MandelaSocketServer private constructor() {
     interface MandelaFrameListener {
@@ -41,37 +42,26 @@ class MandelaSocketServer private constructor() {
                 }
             }
         }
-
-        fun getInstanceOpt(): MandelaSocketServer? = instance
     }
 
+    /**
+     * Callback invoked cada vez que un nuevo cliente se conecta.
+     * Debe retornar un [MandelaFrameListener] para ese cliente, o null para ignorarlo.
+     */
     @Volatile
-    var persistedScale: Float = 1f
-    @Volatile
-    var persistedOffsetX: Float = 0f
-    @Volatile
-    var persistedOffsetY: Float = 0f
+    var onNewConnection: ((connectionId: Int) -> MandelaFrameListener?)? = null
 
-    @Volatile
-    private var listener: MandelaFrameListener? = null
-
-    @Volatile
-    private var connected = false
-    private var lastStartW = 0
-    private var lastStartH = 0
-
+    private val nextConnectionId = AtomicInteger(0)
     private val isRunning = AtomicBoolean(false)
     private val mainHandler = Handler(Looper.getMainLooper())
     private var serverSocket: LocalServerSocketExt? = null
-    private var readThread: Thread? = null
+    private var acceptThread: Thread? = null
 
     fun setListener(l: MandelaFrameListener?) {
-        Log.d(TAG, "setListener connected=$connected l=${l != null}")
-        listener = l
-        if (connected && l != null) {
-            Log.d(TAG, "setListener: retroactive fire onMandelaStart($lastStartW, $lastStartH)")
-            val w = lastStartW; val h = lastStartH
-            mainHandler.post { l.onMandelaStart(w, h) }
+        onNewConnection = if (l != null) {
+            { _ -> l }
+        } else {
+            null
         }
     }
 
@@ -84,8 +74,13 @@ class MandelaSocketServer private constructor() {
 
                 while (isRunning.get()) {
                     val client = serverSocket?.accept() ?: break
-                    Log.d(TAG, "Client connected")
-                    handleClient(client)
+                    val connId = nextConnectionId.getAndIncrement()
+                    Log.d(TAG, "Client #$connId connected")
+                    val handler = Thread {
+                        handleClient(client, connId)
+                    }
+                    handler.name = "Mandela-$connId"
+                    handler.start()
                 }
             } catch (e: Exception) {
                 if (isRunning.get()) {
@@ -95,12 +90,19 @@ class MandelaSocketServer private constructor() {
                 cleanup()
             }
         }
-        t.name = "MandelaSocketReader"
-        readThread = t
+        t.name = "MandelaSocketAccept"
+        acceptThread = t
         t.start()
     }
 
-    private fun handleClient(client: android.net.LocalSocket) {
+    private fun handleClient(client: android.net.LocalSocket, connId: Int) {
+        val listener = onNewConnection?.invoke(connId)
+        if (listener == null) {
+            Log.w(TAG, "No listener for client #$connId — closing")
+            try { client.close() } catch (_: Exception) {}
+            return
+        }
+
         try {
             val input: InputStream = client.inputStream
             val headerBuf = ByteArray(HEADER_SIZE)
@@ -112,21 +114,13 @@ class MandelaSocketServer private constructor() {
             val firstId = bb0.getInt()
             val firstW = bb0.getInt()
             val firstH = bb0.getInt()
-            Log.d(TAG, "First frame header: id=$firstId ${firstW}x$firstH")
-            lastStartW = firstW; lastStartH = firstH
+            Log.d(TAG, "[#$connId] First frame header: id=$firstId ${firstW}x$firstH")
             val firstPixels = readFrame(input, frameBuf, firstW, firstH)
-            connected = true
-            Log.d(TAG, "First frame pixels received: ${firstPixels?.size}")
             if (firstPixels != null) {
-                val l = listener
-                Log.d(TAG, "First frame listener null=${l == null}")
-                if (l != null) {
-                    val fw = firstW; val fh = firstH; val fid = firstId
-                    mainHandler.post {
-                        Log.d(TAG, "FIRING onMandelaStart+onMandelaFrame")
-                        l.onMandelaStart(fw, fh)
-                        l.onMandelaFrame(fid, firstPixels, fw, fh)
-                    }
+                val fw = firstW; val fh = firstH; val fid = firstId
+                mainHandler.post {
+                    listener.onMandelaStart(fw, fh)
+                    listener.onMandelaFrame(fid, firstPixels, fw, fh)
                 }
             }
 
@@ -138,25 +132,18 @@ class MandelaSocketServer private constructor() {
                 val w = bb.getInt()
                 val h = bb.getInt()
                 val pixels = readFrame(input, frameBuf, w, h) ?: continue
-                val l = listener
-                if (l != null) {
-                    val fw = w; val fh = h; val fid = frameId
-                    mainHandler.post {
-                        l.onMandelaFrame(fid, pixels, fw, fh)
-                    }
+                val fw = w; val fh = h; val fid = frameId
+                mainHandler.post {
+                    listener.onMandelaFrame(fid, pixels, fw, fh)
                 }
             }
         } catch (e: java.io.EOFException) {
-            Log.d(TAG, "Client disconnected")
+            Log.d(TAG, "[#$connId] Client disconnected")
         } catch (e: Exception) {
-            if (isRunning.get()) Log.e(TAG, "Client handler error", e)
+            if (isRunning.get()) Log.e(TAG, "[#$connId] Client handler error", e)
         } finally {
-            connected = false
             try { client.close() } catch (_: Exception) {}
-            val l = listener
-            if (l != null) {
-                mainHandler.post { l.onMandelaEnd() }
-            }
+            mainHandler.post { listener.onMandelaEnd() }
         }
     }
 
@@ -170,10 +157,6 @@ class MandelaSocketServer private constructor() {
         val argbPixels = IntArray(w * h)
         val pixelBb = ByteBuffer.wrap(buf, 0, pixelBytes).order(ByteOrder.LITTLE_ENDIAN)
         pixelBb.asIntBuffer().get(argbPixels)
-        for (i in argbPixels.indices) {
-            val p = argbPixels[i]
-            argbPixels[i] = (p and 0xFF00FF00.toInt()) or ((p shr 16) and 0xFF) or ((p shl 16) and 0xFF0000.toInt())
-        }
         return argbPixels
     }
 
@@ -189,8 +172,8 @@ class MandelaSocketServer private constructor() {
     fun stop() {
         isRunning.set(false)
         cleanup()
-        readThread?.interrupt()
-        readThread = null
+        acceptThread?.interrupt()
+        acceptThread = null
     }
 
     private fun cleanup() {
