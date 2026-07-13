@@ -22,3 +22,6 @@
 0	36	0	clean	a40f73ebf6034374
 0	7849	1782960948115642007	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	edfa6f01ffede3ce
 7849	8648	1782960948944662683	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a/libneoterm.so	59ab631e295e26db
+0	34	0	clean	a40f73ebf6034374
+1	8285	1783606087671590310	CMakeFiles/neoterm.dir/src/main/cpp/neoterm.cpp.o	edfa6f01ffede3ce
+8285	9225	1783606088641614834	../../../../build/intermediates/cxx/Debug/eld4y2g5/obj/arm64-v8a/libneoterm.so	59ab631e295e26db

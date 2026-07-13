@@ -19,6 +19,8 @@ import java.nio.ByteOrder
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
+private data class FrameData(val buffer: ByteBuffer, val width: Int, val height: Int)
+
 class Camera2FrameSender(
     private val cameraId: String = "0",
     private val socketName: String = "cam-0",
@@ -158,8 +160,8 @@ class Camera2FrameSender(
                 if (!running) return@setOnImageAvailableListener
                 val img = r.acquireLatestImage() ?: return@setOnImageAvailableListener
                 try {
-                    val bgra = yuv420ToBgra(img)
-                    if (!writeFrame(bgra)) {
+                    val frame = yuv420ToBgra(img)
+                    if (!writeFrame(frame)) {
                         streamLatch?.countDown()
                     }
                 } catch (e: Exception) {
@@ -219,22 +221,22 @@ class Camera2FrameSender(
 
     // ── Write frame ─────────────────────────────────────────────────
 
-    private fun writeFrame(bgra: ByteBuffer): Boolean {
+    private fun writeFrame(frame: FrameData): Boolean {
         val os = outputStream ?: return false
         try {
             val header = ByteBuffer.allocate(HEADER_SIZE)
                 .order(ByteOrder.LITTLE_ENDIAN)
             header.putInt(frameId++)
-            header.putInt(width)
-            header.putInt(height)
+            header.putInt(frame.width)
+            header.putInt(frame.height)
             header.flip()
 
             val hdr = ByteArray(HEADER_SIZE)
             header.get(hdr)
             os.write(hdr)
 
-            val pixels = ByteArray(bgra.remaining())
-            bgra.get(pixels)
+            val pixels = ByteArray(frame.buffer.remaining())
+            frame.buffer.get(pixels)
             os.write(pixels)
             os.flush()
             return true
@@ -246,7 +248,7 @@ class Camera2FrameSender(
 
     // ── YUV420 → BGRA ───────────────────────────────────────────────
 
-    private fun yuv420ToBgra(image: Image): ByteBuffer {
+    private fun yuv420ToBgra(image: Image): FrameData {
         val planes = image.planes
         val yPlane = planes[0]
         val uPlane = planes[1]
@@ -296,7 +298,7 @@ class Camera2FrameSender(
         }
 
         outBuf.flip()
-        return outBuf
+        return FrameData(outBuf, w, h)
     }
 
     // ── Cleanup ─────────────────────────────────────────────────────
