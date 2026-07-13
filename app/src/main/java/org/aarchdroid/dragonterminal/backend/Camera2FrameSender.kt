@@ -302,6 +302,11 @@ class Camera2FrameSender(
     // ── Cleanup ─────────────────────────────────────────────────────
 
     private fun cleanupAll() {
+        // Cerrar worker handler PRIMERO para no recibir más callbacks de ImageReader
+        workerThread?.quitSafely()
+        workerThread = null
+        workerHandler = null
+
         try { captureSession?.close() } catch (_: Exception) {}
         try { imageReader?.close() } catch (_: Exception) {}
         try { cameraDevice?.close() } catch (_: Exception) {}
@@ -318,8 +323,9 @@ class Camera2FrameSender(
     fun stop() {
         Log.d(tag, "Stop requested")
         running = false
+        // Cerrar socket primero para desbloquear mainLoop() rápido
+        try { socket?.close() } catch (_: Exception) {}
         streamLatch?.countDown()
         mainThread?.interrupt()
-        try { socket?.close() } catch (_: Exception) {}
     }
 }
