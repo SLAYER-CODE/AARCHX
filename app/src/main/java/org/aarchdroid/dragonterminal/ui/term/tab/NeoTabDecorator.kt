@@ -1,9 +1,7 @@
 package org.aarchdroid.dragonterminal.ui.term.tab
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Rect
 import android.os.Build
@@ -31,9 +29,9 @@ import org.aarchdroid.dragonterminal.frontend.config.DefaultValues
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.TermCompleteListener
 import org.aarchdroid.dragonterminal.backend.CameraControlServer
-import org.aarchdroid.dragonterminal.backend.MandelaSocketServer
+import org.aarchdroid.dragonterminal.backend.CanvasSocketServer
 import org.aarchdroid.dragonterminal.backend.TerminalSession
-import org.aarchdroid.dragonterminal.frontend.terminal.MandelaOverlayView
+import org.aarchdroid.dragonterminal.frontend.terminal.CanvasOverlayView
 import org.aarchdroid.dragonterminal.frontend.terminal.TerminalView
 import org.aarchdroid.dragonterminal.frontend.terminal.extrakey.ExtraKeysView
 import org.aarchdroid.dragonterminal.ui.term.NeoTermActivity
@@ -57,6 +55,10 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                 cameraControlServer = it
                 it.start()
             }
+        }
+
+        fun retryCamera() {
+            cameraControlServer?.retryCamera()
         }
 
         fun stopCameraServer() {
@@ -240,10 +242,10 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         termView.setTerminalViewClient(termData.viewClient)
         termView.attachSession(termData.termSession)
 
-        // Wire Mandela overlay — singleton server, global multi-overlay container
+        // Wire Canvas overlay — singleton server, global multi-overlay container
         val session = termData.termSession
         if (session != null) {
-            val socketServer = MandelaSocketServer.getInstance()
+            val socketServer = CanvasSocketServer.getInstance()
             val overlayContainer = context.findViewById<FrameLayout>(R.id.overlay_container)
 
             // Register onNewConnection (solo la primera vez): cada tool recibe su propio overlay
@@ -251,7 +253,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                 socketServer.onNewConnection = { connId ->
                     val latch = java.util.concurrent.CountDownLatch(1)
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        val v = MandelaOverlayView(context)
+                        val v = CanvasOverlayView(context)
                         overlayContainer.addView(v, FrameLayout.LayoutParams(
                             FrameLayout.LayoutParams.WRAP_CONTENT,
                             FrameLayout.LayoutParams.WRAP_CONTENT
@@ -259,22 +261,23 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                         v.initialScale = 1f
                         v.initialOffsetX = 20f
                         v.initialOffsetY = 20f
-                        v.setOnMinimizeListener {
-                            overlayContainer.removeView(v)
-                        }
                         v.tag = connId
                         latch.countDown()
                     }
                     latch.await()
-                    val ov = overlayContainer.findViewWithTag<MandelaOverlayView>(connId)!!
-                    object : MandelaSocketServer.MandelaFrameListener {
-                        override fun onMandelaStart(width: Int, height: Int) {
-                            ov.post { ov.show(width, height) }
+                    val ov = overlayContainer.findViewWithTag<CanvasOverlayView>(connId)!!
+                    object : CanvasSocketServer.CanvasFrameListener {
+                        override fun onStart(width: Int, height: Int, scale: Float) {
+                            Log.w("CanvasSocket", "[#$connId] onStart called: ${width}x${height} scale=$scale")
+                            ov.post {
+                                Log.w("CanvasSocket", "[#$connId] show() executing on main thread")
+                                ov.show(width, height, scale)
+                            }
                         }
-                        override fun onMandelaFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int) {
+                        override fun onFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int) {
                             ov.post { ov.setFrame(argbPixels, width, height) }
                         }
-                        override fun onMandelaEnd() {
+                        override fun onEnd() {
                             ov.post {
                                 ov.hide()
                                 overlayContainer.removeView(ov)
@@ -295,12 +298,8 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
             })
         }
 
-        // Start Camera2 frame sender (controlado por iris vía cam-ctrl)
-        if (context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            startCameraServer(context)
-        } else {
-            Log.w("NeoTabDecor", "CAMERA permission not granted — camera feed disabled")
-        }
+        // Start camera control server (iris se conecta a cam-ctrl → restartCamera)
+        startCameraServer(context)
 
         if (NeoPreference.loadBoolean(R.string.key_general_auto_completion, false)) {
             if (termData.onAutoCompleteListener == null) {

@@ -1,6 +1,7 @@
 package org.aarchdroid.dragonterminal.backend
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.ImageFormat
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraDevice
@@ -13,6 +14,9 @@ import android.os.HandlerThread
 import android.util.Log
 import android.net.LocalSocket
 import android.net.LocalSocketAddress
+import androidx.core.content.ContextCompat
+import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.CameraPermissionEvent
+import org.greenrobot.eventbus.EventBus
 import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -99,7 +103,12 @@ class CameraFrameSender(
                 return sock
             } catch (e: Exception) {
                 if (!running) return null
-                Thread.sleep(RETRY_INTERVAL_MS)
+                try {
+                    Thread.sleep(RETRY_INTERVAL_MS)
+                } catch (_: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    return null
+                }
             }
         }
         return null
@@ -213,7 +222,8 @@ class CameraFrameSender(
             streamLatch?.await()
 
         } catch (e: SecurityException) {
-            Log.e(tag, "Camera permission denied", e)
+            Log.e(tag, "Camera permission denied — posting event")
+            EventBus.getDefault().post(CameraPermissionEvent())
         } catch (e: Exception) {
             Log.e(tag, "Stream error", e)
         }
@@ -306,6 +316,7 @@ class CameraFrameSender(
     private fun cleanupAll() {
         // Cerrar worker handler PRIMERO para no recibir más callbacks de ImageReader
         workerThread?.quitSafely()
+        workerThread?.join(1000)
         workerThread = null
         workerHandler = null
 

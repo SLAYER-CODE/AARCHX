@@ -733,8 +733,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             }
             REQUEST_CAMERA -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d("AArchDroid", "CAMERA permission granted, starting camera capture")
-                    NeoTabDecorator.startCameraServer(this)
+                    Log.d("AArchDroid", "CAMERA permission granted, retrying camera")
+                    NeoTabDecorator.retryCamera()
                 } else {
                     Log.w("AArchDroid", "CAMERA permission denied")
                 }
@@ -1482,8 +1482,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     fun onCameraPermissionEvent(event: CameraPermissionEvent) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED) {
-            Log.d("AArchDroid", "CAMERA already granted, starting camera server")
-            NeoTabDecorator.startCameraServer(this)
+            Log.d("AArchDroid", "CAMERA already granted, retrying camera")
+            NeoTabDecorator.retryCamera()
             return
         }
         AlertDialog.Builder(this)

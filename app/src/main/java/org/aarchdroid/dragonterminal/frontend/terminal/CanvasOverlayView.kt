@@ -13,6 +13,7 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import android.widget.FrameLayout
+import org.aarchdroid.dragonterminal.backend.OverlayButtonState
 
 class CanvasOverlayView @JvmOverloads constructor(
     context: Context,
@@ -42,10 +43,10 @@ class CanvasOverlayView @JvmOverloads constructor(
     private var lastTouchY = 0f
 
     private val btnSize = 34f
-    private val btnRect = RectF()
+    private val btnFrameRect = RectF()
+    private val btnScreenRect = RectF()
     private val btnPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val backdropPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-
+    private var btnVisible = false
     private val scaleDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
             val cx = offsetX + frameWidth * scaleFactor / 2f
@@ -62,11 +63,7 @@ class CanvasOverlayView @JvmOverloads constructor(
 
     private val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onDoubleTap(e: MotionEvent): Boolean {
-            scaleFactor = 1f
-            offsetX = 0f
-            offsetY = 0f
-            updateTransform()
-            postInvalidateOnAnimation()
+            hide()
             return true
         }
     })
@@ -77,16 +74,18 @@ class CanvasOverlayView @JvmOverloads constructor(
         btnPaint.apply {
             isAntiAlias = true
         }
-        backdropPaint.apply {
-            color = 0xBB111111.toInt()
-            setShadowLayer(12f, 0f, 0f, 0x80000000.toInt())
+        OverlayButtonState.observe { visible, x, y ->
+            btnVisible = visible
+            if (x >= 0 && y >= 0) {
+                btnFrameRect.set(
+                    x.toFloat() - btnSize / 2f,
+                    y.toFloat() - btnSize / 2f,
+                    x.toFloat() + btnSize / 2f,
+                    y.toFloat() + btnSize / 2f
+                )
+            }
+            postInvalidateOnAnimation()
         }
-    }
-
-    private var onMinimize: (() -> Unit)? = null
-
-    fun setOnMinimizeListener(cb: () -> Unit) {
-        onMinimize = cb
     }
 
     fun show(width: Int, height: Int, scale: Float = initialScale) {
@@ -134,6 +133,17 @@ class CanvasOverlayView @JvmOverloads constructor(
         canvasScreenRect.set(offsetX, offsetY,
             offsetX + frameWidth * scaleFactor,
             offsetY + frameHeight * scaleFactor)
+        // Map button from frame coords to screen coords
+        val (bfx, bfy) = if (btnFrameRect.left > 0 || btnFrameRect.top > 0)
+            Pair(btnFrameRect.left, btnFrameRect.top)
+        else
+            Pair(frameWidth.toFloat() - btnSize - 6f, 6f)
+        btnScreenRect.set(
+            offsetX + bfx * scaleFactor,
+            offsetY + bfy * scaleFactor,
+            offsetX + (bfx + btnSize) * scaleFactor,
+            offsetY + (bfy + btnSize) * scaleFactor
+        )
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -141,25 +151,23 @@ class CanvasOverlayView @JvmOverloads constructor(
         val bmp = frameBitmap ?: return
         if (!isActive) return
 
-        canvas.drawRoundRect(canvasScreenRect, 8f, 8f, backdropPaint)
         canvas.drawBitmap(bmp, transformMatrix, paint)
 
-        // Minimize button (—) at top-right of the canvas rect
-        btnRect.set(canvasScreenRect.right - btnSize, canvasScreenRect.top,
-            canvasScreenRect.right, canvasScreenRect.top + btnSize)
-        btnPaint.color = 0xCC000000.toInt()
-        btnPaint.style = Paint.Style.FILL
-        canvas.drawRect(btnRect, btnPaint)
-        btnPaint.color = 0xFFCC3333.toInt()
-        btnPaint.style = Paint.Style.STROKE
-        btnPaint.strokeWidth = 2f
-        canvas.drawRect(btnRect, btnPaint)
-        btnPaint.color = 0xFFCC3333.toInt()
-        btnPaint.style = Paint.Style.FILL
-        btnPaint.strokeWidth = 3f
-        val cx = btnRect.centerX()
-        val cy = btnRect.centerY()
-        canvas.drawLine(cx - btnSize * 0.28f, cy, cx + btnSize * 0.28f, cy, btnPaint)
+        if (btnVisible) {
+            btnPaint.color = 0xCC000000.toInt()
+            btnPaint.style = Paint.Style.FILL
+            canvas.drawRoundRect(btnScreenRect, 8f, 8f, btnPaint)
+            btnPaint.color = 0xFFCC3333.toInt()
+            btnPaint.style = Paint.Style.STROKE
+            btnPaint.strokeWidth = 2f
+            canvas.drawRoundRect(btnScreenRect, 8f, 8f, btnPaint)
+            btnPaint.color = 0xFFCC3333.toInt()
+            btnPaint.style = Paint.Style.FILL
+            btnPaint.strokeWidth = 3f
+            val cx = btnScreenRect.centerX()
+            val cy = btnScreenRect.centerY()
+            canvas.drawLine(cx - btnSize * 0.28f, cy, cx + btnSize * 0.28f, cy, btnPaint)
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -168,7 +176,7 @@ class CanvasOverlayView @JvmOverloads constructor(
         when (event.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
                 if (!canvasScreenRect.contains(event.x, event.y) &&
-                    !btnRect.contains(event.x, event.y)) {
+                    !(btnVisible && btnScreenRect.contains(event.x, event.y))) {
                     touchOwned = false
                     return false
                 }
@@ -199,8 +207,7 @@ class CanvasOverlayView @JvmOverloads constructor(
                 scaleDetector.onTouchEvent(event)
                 gestureDetector.onTouchEvent(event)
                 touchOwned = false
-                if (btnRect.contains(event.x, event.y)) {
-                    onMinimize?.invoke()
+                if (btnVisible && btnScreenRect.contains(event.x, event.y)) {
                     hide()
                 }
                 return true

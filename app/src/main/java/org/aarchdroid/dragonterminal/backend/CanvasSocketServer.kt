@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * Servidor de socket AF_UNIX abstracto singleton para recibir frames de display.
  *
  * Acepta múltiples clientes concurrentes. Cada cliente corre en su propio hilo
- * y tiene su propio listener, permitiendo que múltiples tools (iris, mandela, etc.)
+ * y tiene su propio listener, permitiendo que múltiples tools (iris, canvas, etc.)
  * envíen frames simultáneamente al singleton.
  *
  * El listener se asigna por conexión vía [onNewConnection].

@@ -35,7 +35,7 @@ import java.util.UUID;
 public class TerminalSession extends TerminalOutput {
 
     /** Callback for receiving Mandela overlay frames (legacy PTY path, deprecated).
-     *  New code should use MandelaSocketServer for AF_UNIX socket transport. */
+ * New code should use CanvasSocketServer for AF_UNIX socket transport. */
     public interface MandelaFrameListener {
         void onMandelaStart(int width, int height);
         void onMandelaFrame(int frameId, int[] argbPixels, int width, int height);

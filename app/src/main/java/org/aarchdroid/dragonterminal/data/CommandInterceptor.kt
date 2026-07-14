@@ -6,8 +6,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.aarchdroid.dragonterminal.backend.TerminalSession
-import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.CameraPermissionEvent
-import org.greenrobot.eventbus.EventBus
 
 object CommandInterceptor {
     @Volatile
@@ -59,14 +57,6 @@ object CommandInterceptor {
             ctx.currentDir = normalizePath(ctx.currentDir)
         }
         Log.d("AArchDroid", "CommandInterceptor: cmd='$cmd' dir='${ctx.currentDir}'")
-
-        // Detect iris --listen and request camera permission
-        if ((cmd.startsWith("iris") || cmd.startsWith("./iris")) && cmd.contains("--listen=")) {
-            Log.d("AArchDroid", "CommandInterceptor: iris --listen detected, requesting camera permission")
-            ioScope.launch {
-                EventBus.getDefault().post(CameraPermissionEvent())
-            }
-        }
 
         // Save to session history on IO (skip if suppressed or disabled)
         if (!suppressLogging && !org.aarchdroid.dragonterminal.frontend.config.NeoPreference.isLoggingDisabled()) {

@@ -1,7 +1,12 @@
 package org.aarchdroid.dragonterminal.backend
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Log
+import androidx.core.content.ContextCompat
+import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.CameraPermissionEvent
+import org.greenrobot.eventbus.EventBus
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -11,7 +16,7 @@ import java.io.InputStreamReader
  *   "size WxH"   — cambiar resolución
  *   "stop"       — apagar cámara
  *
- * Posee un único Camera2FrameSender que se reconfigure según los comandos.
+ * Posee un único CameraFrameSender que se reconfigure según los comandos.
  */
 class CameraControlServer(private val context: Context) {
     companion object {
@@ -22,7 +27,7 @@ class CameraControlServer(private val context: Context) {
     @Volatile
     private var running = false
     private var serverThread: Thread? = null
-    private var sender: Camera2FrameSender? = null
+    private var sender: CameraFrameSender? = null
 
     @Volatile
     private var pendingCameraId: String = "0"
@@ -34,9 +39,16 @@ class CameraControlServer(private val context: Context) {
     fun start() {
         if (running) return
         running = true
-        restartCamera()
         serverThread = Thread({ run() }, "cam-ctrl-server")
         serverThread?.start()
+        // No iniciar cámara aquí — esperar a que iris se conecte a cam-ctrl
+    }
+
+    /**
+     * Llamar desde NeoTabDecorator cuando se concede el permiso de cámara.
+     */
+    fun retryCamera() {
+        if (running) restartCamera()
     }
 
     fun stop() {
@@ -84,6 +96,19 @@ class CameraControlServer(private val context: Context) {
                             Log.w(TAG, "Invalid camera id: $id")
                         }
                     }
+                    cmd == "btn hide" -> {
+                        OverlayButtonState.hide()
+                    }
+                    cmd.startsWith("btn ") -> {
+                        val parts = cmd.removePrefix("btn ").trim().split(" ")
+                        if (parts.size == 2) {
+                            val bx = parts[0].toIntOrNull()
+                            val by = parts[1].toIntOrNull()
+                            if (bx != null && by != null) {
+                                OverlayButtonState.show(bx, by)
+                            }
+                        }
+                    }
                     cmd.startsWith("size ") -> {
                         val parts = cmd.removePrefix("size ").trim().split("x")
                         if (parts.size == 2) {
@@ -118,11 +143,17 @@ class CameraControlServer(private val context: Context) {
     }
 
     private fun restartCamera() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED) {
+            Log.w(TAG, "CAMERA permission not granted — posting event")
+            EventBus.getDefault().post(CameraPermissionEvent())
+            return
+        }
         sender?.stop()
         sender = null
         try { Thread.sleep(200) } catch (_: InterruptedException) {}
         val socketName = "cam-$pendingCameraId"
-        Camera2FrameSender(pendingCameraId, socketName, pendingWidth, pendingHeight).also {
+        CameraFrameSender(pendingCameraId, socketName, pendingWidth, pendingHeight).also {
             sender = it
             it.start(context)
         }
