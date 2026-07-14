@@ -17,7 +17,5 @@ local.properties
 *.swp
 *.swo
 
-# C/C++ build directories
-Herramientas/**/build_*/
-Herramientas/**/*.ppm
-Herramientas/oneshot_aarch64
+# Herramientas (tools external to this app)
+Herramientas/

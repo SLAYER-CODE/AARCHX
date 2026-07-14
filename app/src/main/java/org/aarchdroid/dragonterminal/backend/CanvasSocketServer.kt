@@ -10,33 +10,34 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Servidor de socket AF_UNIX abstracto singleton para recibir frames de Mandela.
+ * Servidor de socket AF_UNIX abstracto singleton para recibir frames de display.
  *
  * Acepta múltiples clientes concurrentes. Cada cliente corre en su propio hilo
- * y tiene su propio listener, permitiendo que múltiples tools (Mandela, Iris)
+ * y tiene su propio listener, permitiendo que múltiples tools (iris, mandela, etc.)
  * envíen frames simultáneamente al singleton.
  *
  * El listener se asigna por conexión vía [onNewConnection].
  */
-class MandelaSocketServer private constructor() {
-    interface MandelaFrameListener {
-        fun onMandelaStart(width: Int, height: Int)
-        fun onMandelaFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int)
-        fun onMandelaEnd()
+class CanvasSocketServer private constructor() {
+    interface CanvasFrameListener {
+        fun onStart(width: Int, height: Int, scale: Float = 1f)
+        fun onFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int)
+        fun onEnd()
     }
 
     companion object {
-        private const val TAG = "MandelaSocket"
-        private const val SOCKET_NAME = "mandela-overlay"
+        private const val TAG = "CanvasSocket"
+        private const val SOCKET_NAME = "canvas-display"
         private const val MAX_FRAME_SIZE = 4 * 1024 * 1024  // 4MB
-        private const val HEADER_SIZE = 12
+        private const val HEADER_SIZE = 20
+        private const val MAGIC = 0x4D4E444C  // "MNDL"
 
         @Volatile
-        private var instance: MandelaSocketServer? = null
+        private var instance: CanvasSocketServer? = null
 
-        fun getInstance(): MandelaSocketServer {
+        fun getInstance(): CanvasSocketServer {
             return instance ?: synchronized(this) {
-                instance ?: MandelaSocketServer().also {
+                instance ?: CanvasSocketServer().also {
                     instance = it
                     it.start()
                 }
@@ -46,10 +47,10 @@ class MandelaSocketServer private constructor() {
 
     /**
      * Callback invoked cada vez que un nuevo cliente se conecta.
-     * Debe retornar un [MandelaFrameListener] para ese cliente, o null para ignorarlo.
+     * Debe retornar un [CanvasFrameListener] para ese cliente, o null para ignorarlo.
      */
     @Volatile
-    var onNewConnection: ((connectionId: Int) -> MandelaFrameListener?)? = null
+    var onNewConnection: ((connectionId: Int) -> CanvasFrameListener?)? = null
 
     private val nextConnectionId = AtomicInteger(0)
     private val isRunning = AtomicBoolean(false)
@@ -57,7 +58,7 @@ class MandelaSocketServer private constructor() {
     private var serverSocket: LocalServerSocketExt? = null
     private var acceptThread: Thread? = null
 
-    fun setListener(l: MandelaFrameListener?) {
+    fun setListener(l: CanvasFrameListener?) {
         onNewConnection = if (l != null) {
             { _ -> l }
         } else {
@@ -70,16 +71,16 @@ class MandelaSocketServer private constructor() {
         val t = Thread {
             try {
                 serverSocket = LocalServerSocketExt(SOCKET_NAME)
-                Log.d(TAG, "Server listening on abstract socket: $SOCKET_NAME")
+                Log.w(TAG, "Server listening on abstract socket: $SOCKET_NAME")
 
                 while (isRunning.get()) {
                     val client = serverSocket?.accept() ?: break
                     val connId = nextConnectionId.getAndIncrement()
-                    Log.d(TAG, "Client #$connId connected")
+                    Log.w(TAG, "Client #$connId connected (fd=${client.fileDescriptor})")
                     val handler = Thread {
                         handleClient(client, connId)
                     }
-                    handler.name = "Mandela-$connId"
+                    handler.name = "Canvas-$connId"
                     handler.start()
                 }
             } catch (e: Exception) {
@@ -90,7 +91,7 @@ class MandelaSocketServer private constructor() {
                 cleanup()
             }
         }
-        t.name = "MandelaSocketAccept"
+        t.name = "CanvasSocketAccept"
         acceptThread = t
         t.start()
     }
@@ -108,33 +109,64 @@ class MandelaSocketServer private constructor() {
             val headerBuf = ByteArray(HEADER_SIZE)
             val frameBuf = ByteArray(MAX_FRAME_SIZE)
 
-            // First frame: decode and fire onMandelaStart + onMandelaFrame
+            // First frame: read header, validate magic
             readFully(input, headerBuf)
             val bb0 = ByteBuffer.wrap(headerBuf).order(ByteOrder.LITTLE_ENDIAN)
+            val magic = bb0.getInt()
+            if (magic != MAGIC) {
+                val hex = headerBuf.joinToString("") { "%02x".format(it) }
+                Log.w(TAG, "[#$connId] Bad magic: expected ${"0x%x".format(MAGIC)} got ${"0x%x".format(magic)} raw=[$hex]")
+                Log.w(TAG, "[#$connId] If raw shows pixel values (e.g. 00 00 00 FF), the C binary is not sending valid headers")
+                return
+            }
             val firstId = bb0.getInt()
             val firstW = bb0.getInt()
             val firstH = bb0.getInt()
-            Log.d(TAG, "[#$connId] First frame header: id=$firstId ${firstW}x$firstH")
+            val firstScaleDenom = bb0.getInt()
+            val firstScale = if (firstScaleDenom > 0) firstScaleDenom / 100f else 1f
+            Log.w(TAG, "[#$connId] First frame: id=$firstId ${firstW}x$firstH scale=$firstScale")
             val firstPixels = readFrame(input, frameBuf, firstW, firstH)
-            if (firstPixels != null) {
-                val fw = firstW; val fh = firstH; val fid = firstId
-                mainHandler.post {
-                    listener.onMandelaStart(fw, fh)
-                    listener.onMandelaFrame(fid, firstPixels, fw, fh)
-                }
+            if (firstPixels == null) {
+                Log.e(TAG, "[#$connId] Invalid first frame dimensions: $firstW x $firstH")
+                return
+            }
+            val fw = firstW; val fh = firstH; val fid = firstId; val fs = firstScale
+            mainHandler.post {
+                listener.onStart(fw, fh, fs)
+                listener.onFrame(fid, firstPixels, fw, fh)
             }
 
-            // Subsequent frames: onMandelaFrame only
+            // Subsequent frames: verify magic too
+            var consecutiveErrors = 0
             while (isRunning.get()) {
                 readFully(input, headerBuf)
                 val bb = ByteBuffer.wrap(headerBuf).order(ByteOrder.LITTLE_ENDIAN)
+                val magic = bb.getInt()
+                if (magic != MAGIC) {
+                    consecutiveErrors++
+                    if (consecutiveErrors > 3) {
+                        val hex = headerBuf.joinToString("") { "%02x".format(it) }
+                        Log.e(TAG, "[#$connId] Too many bad frames, last raw=[$hex]")
+                        break
+                    }
+                    continue
+                }
                 val frameId = bb.getInt()
                 val w = bb.getInt()
                 val h = bb.getInt()
-                val pixels = readFrame(input, frameBuf, w, h) ?: continue
-                val fw = w; val fh = h; val fid = frameId
+                val pixels = readFrame(input, frameBuf, w, h)
+                if (pixels == null) {
+                    consecutiveErrors++
+                    if (consecutiveErrors > 3) {
+                        Log.e(TAG, "[#$connId] Too many invalid frame dimensions")
+                        break
+                    }
+                    continue
+                }
+                consecutiveErrors = 0
+                val nfw = w; val nfh = h; val nfid = frameId
                 mainHandler.post {
-                    listener.onMandelaFrame(fid, pixels, fw, fh)
+                    listener.onFrame(nfid, pixels, nfw, nfh)
                 }
             }
         } catch (e: java.io.EOFException) {
@@ -143,7 +175,7 @@ class MandelaSocketServer private constructor() {
             if (isRunning.get()) Log.e(TAG, "[#$connId] Client handler error", e)
         } finally {
             try { client.close() } catch (_: Exception) {}
-            mainHandler.post { listener.onMandelaEnd() }
+            mainHandler.post { listener.onEnd() }
         }
     }
 

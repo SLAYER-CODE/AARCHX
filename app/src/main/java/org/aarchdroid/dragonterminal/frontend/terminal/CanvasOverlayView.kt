@@ -14,7 +14,7 @@ import android.view.ScaleGestureDetector
 import android.view.View
 import android.widget.FrameLayout
 
-class MandelaOverlayView @JvmOverloads constructor(
+class CanvasOverlayView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -89,7 +89,7 @@ class MandelaOverlayView @JvmOverloads constructor(
         onMinimize = cb
     }
 
-    fun show(width: Int, height: Int) {
+    fun show(width: Int, height: Int, scale: Float = initialScale) {
         frameWidth = width
         frameHeight = height
         layoutParams = FrameLayout.LayoutParams(
@@ -97,7 +97,7 @@ class MandelaOverlayView @JvmOverloads constructor(
             FrameLayout.LayoutParams.MATCH_PARENT
         )
         if (!isActive) {
-            scaleFactor = initialScale
+            scaleFactor = scale
             offsetX = initialOffsetX
             offsetY = initialOffsetY
         }

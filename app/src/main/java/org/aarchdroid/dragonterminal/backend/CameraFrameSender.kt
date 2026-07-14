@@ -21,14 +21,14 @@ import java.util.concurrent.TimeUnit
 
 private data class FrameData(val buffer: ByteBuffer, val width: Int, val height: Int)
 
-class Camera2FrameSender(
+class CameraFrameSender(
     private val cameraId: String = "0",
     private val socketName: String = "cam-0",
     private val width: Int = 640,
     private val height: Int = 480
 ) {
     companion object {
-        private const val TAG = "Camera2Frame"
+        private const val TAG = "CameraFrame"
         private const val HEADER_SIZE = 12
         private const val RETRY_INTERVAL_MS = 2000L
         private const val LATCH_TIMEOUT_MS = 20000L
@@ -57,7 +57,7 @@ class Camera2FrameSender(
         contextRef = context.applicationContext
         mainThread = Thread {
             mainLoop()
-        }.also { it.name = "Camera2Main-$socketName"; it.start() }
+        }.also { it.name = "CameraMain-$socketName"; it.start() }
     }
 
     // ── Main loop ────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ class Camera2FrameSender(
     private fun mainLoop() {
         Log.d(tag, "Main loop started (cam=$cameraId socket=$socketName)")
         while (running) {
-            workerThread = HandlerThread("Camera2Worker-$socketName").also { it.start() }
+            workerThread = HandlerThread("CameraWorker-$socketName").also { it.start() }
             workerHandler = Handler(workerThread!!.looper)
 
             val sock = connectSocket() ?: break
@@ -209,7 +209,7 @@ class Camera2FrameSender(
 
             Log.d(tag, "Streaming active, waiting for stop signal")
 
-            // Block Camera2Main until error or stop()
+            // Block CameraMain until error or stop()
             streamLatch?.await()
 
         } catch (e: SecurityException) {
