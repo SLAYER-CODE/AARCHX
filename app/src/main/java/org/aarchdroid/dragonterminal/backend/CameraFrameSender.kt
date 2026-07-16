@@ -55,6 +55,13 @@ class CameraFrameSender(
     @Volatile
     private var frameId = 0
 
+    // Buffers reusables para evitar alocar memoria en cada frame
+    private var reuseYBuf: ByteArray? = null
+    private var reuseUBuf: ByteArray? = null
+    private var reuseVBuf: ByteArray? = null
+    private var reuseOutBuf: ByteBuffer? = null
+    private var reuseHeader: ByteArray? = null
+
     fun start(context: Context) {
         if (running) return
         running = true
@@ -234,20 +241,19 @@ class CameraFrameSender(
     private fun writeFrame(frame: FrameData): Boolean {
         val os = outputStream ?: return false
         try {
-            val header = ByteBuffer.allocate(HEADER_SIZE)
-                .order(ByteOrder.LITTLE_ENDIAN)
-            header.putInt(frameId++)
-            header.putInt(frame.width)
-            header.putInt(frame.height)
-            header.flip()
-
-            val hdr = ByteArray(HEADER_SIZE)
-            header.get(hdr)
+            var hdr = reuseHeader
+            if (hdr == null) {
+                hdr = ByteArray(HEADER_SIZE).also { reuseHeader = it }
+            }
+            val buf = ByteBuffer.wrap(hdr).order(ByteOrder.LITTLE_ENDIAN)
+            buf.putInt(frameId++)
+            buf.putInt(frame.width)
+            buf.putInt(frame.height)
             os.write(hdr)
 
-            val pixels = ByteArray(frame.buffer.remaining())
-            frame.buffer.get(pixels)
-            os.write(pixels)
+            // frame.buffer es heap-based (ByteBuffer.allocate), tiene array()
+            val fb = frame.buffer
+            os.write(fb.array(), fb.arrayOffset(), fb.remaining())
             os.flush()
             return true
         } catch (e: Exception) {
@@ -277,12 +283,45 @@ class CameraFrameSender(
         val w = image.width
         val h = image.height
 
-        val yBytes = ByteArray(yBuf.remaining()).also { yBuf.get(it) }
-        val uBytes = ByteArray(uBuf.remaining()).also { uBuf.get(it) }
-        val vBytes = ByteArray(vBuf.remaining()).also { vBuf.get(it) }
+        // Reusar o redimensionar buffers Y/U/V
+        val yRem = yBuf.remaining()
+        val uRem = uBuf.remaining()
+        val vRem = vBuf.remaining()
 
-        val outBuf = ByteBuffer.allocateDirect(w * h * 4)
-        outBuf.order(ByteOrder.LITTLE_ENDIAN)
+        val yb: ByteArray
+        if (reuseYBuf == null || reuseYBuf!!.size < yRem) {
+            yb = ByteArray(yRem).also { reuseYBuf = it }
+        } else {
+            yb = reuseYBuf!!
+        }
+        yBuf.get(yb, 0, yRem)
+
+        val ub: ByteArray
+        if (reuseUBuf == null || reuseUBuf!!.size < uRem) {
+            ub = ByteArray(uRem).also { reuseUBuf = it }
+        } else {
+            ub = reuseUBuf!!
+        }
+        uBuf.get(ub, 0, uRem)
+
+        val vb: ByteArray
+        if (reuseVBuf == null || reuseVBuf!!.size < vRem) {
+            vb = ByteArray(vRem).also { reuseVBuf = it }
+        } else {
+            vb = reuseVBuf!!
+        }
+        vBuf.get(vb, 0, vRem)
+
+        // Reusar o redimensionar buffer de salida (heap para poder usar array() en writeFrame)
+        val outCap = w * h * 4
+        val out: ByteBuffer
+        if (reuseOutBuf == null || reuseOutBuf!!.capacity() < outCap) {
+            out = ByteBuffer.allocate(outCap).also { reuseOutBuf = it }
+        } else {
+            out = reuseOutBuf!!
+            out.clear()
+        }
+        out.order(ByteOrder.LITTLE_ENDIAN)
 
         for (row in 0 until h) {
             val yRowOff = row * yRowStride
@@ -291,10 +330,10 @@ class CameraFrameSender(
             val vRowOff = uvRow * vRowStride
 
             for (col in 0 until w) {
-                val y = yBytes[yRowOff + col].toInt() and 0xFF
+                val y = yb[yRowOff + col].toInt() and 0xFF
                 val uvCol = col / 2
-                val u = uBytes[uRowOff + uvCol * uPixelStride].toInt() and 0xFF
-                val v = vBytes[vRowOff + uvCol * vPixelStride].toInt() and 0xFF
+                val u = ub[uRowOff + uvCol * uPixelStride].toInt() and 0xFF
+                val v = vb[vRowOff + uvCol * vPixelStride].toInt() and 0xFF
 
                 val c = y - 16
                 val d = u - 128
@@ -303,12 +342,12 @@ class CameraFrameSender(
                 val g = ((298 * c - 100 * d - 208 * e + 128) shr 8).coerceIn(0, 255)
                 val b = ((298 * c + 516 * d + 128) shr 8).coerceIn(0, 255)
 
-                outBuf.putInt(-0x1000000 or (b shl 16) or (g shl 8) or r)
+                out.putInt(-0x1000000 or (b shl 16) or (g shl 8) or r)
             }
         }
 
-        outBuf.flip()
-        return FrameData(outBuf, w, h)
+        out.flip()
+        return FrameData(out, w, h)
     }
 
     // ── Cleanup ─────────────────────────────────────────────────────
@@ -331,6 +370,11 @@ class CameraFrameSender(
         outputStream = null
         streamLatch = null
         frameId = 0
+        reuseYBuf = null
+        reuseUBuf = null
+        reuseVBuf = null
+        reuseOutBuf = null
+        reuseHeader = null
     }
 
     fun stop() {

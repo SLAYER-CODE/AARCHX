@@ -13,13 +13,19 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import android.view.View
 import android.util.Log
+import android.widget.Button
+import android.widget.RemoteViews
+import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.backend.EmulatorDebug
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.frontend.logging.NLog
+import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.KillTerminalEvent
+import org.greenrobot.eventbus.EventBus
 import org.aarchdroid.dragonterminal.frontend.session.shell.ShellParameter
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XParameter
 import org.aarchdroid.dragonterminal.frontend.session.xorg.XSession
@@ -106,9 +112,50 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         val action = intent.action
         when (action) {
             ACTION_SERVICE_STOP -> {
-                for (i in mTerminalSessions.indices)
-                    mTerminalSessions[i].finishIfRunning()
+                val sessions = synchronized(mTerminalSessions) {
+                    ArrayList(mTerminalSessions)
+                }
+                for (s in sessions) {
+                    s.finishIfRunning()
+                    EventBus.getDefault().post(KillTerminalEvent(s.mHandle))
+                }
+                synchronized(mTerminalSessions) {
+                    mTerminalSessions.clear()
+                }
+                updateNotification()
+            }
+
+            ACTION_FORCE_STOP -> {
+                val sessions = synchronized(mTerminalSessions) {
+                    ArrayList(mTerminalSessions)
+                }
+                for (s in sessions) {
+                    s.finishIfRunning()
+                    EventBus.getDefault().post(KillTerminalEvent(s.mHandle))
+                }
+                synchronized(mTerminalSessions) {
+                    mTerminalSessions.clear()
+                }
+                stopForeground(true)
                 stopSelf()
+            }
+
+            ACTION_KILL_SESSION -> {
+                val handle = intent.getStringExtra("handle")
+                if (handle != null) {
+                    val session = synchronized(mTerminalSessions) {
+                        mTerminalSessions.find { it.mHandle == handle }
+                    }
+                    session?.let {
+                        it.finishIfRunning()
+                        synchronized(mTerminalSessions) {
+                            mTerminalSessions.remove(it)
+                        }
+                        EventBus.getDefault().post(KillTerminalEvent(it.mHandle))
+                    }
+                }
+                updateNotification()
+                checkStopSelf()
             }
 
             ACTION_ACQUIRE_LOCK -> acquireLock()
@@ -235,7 +282,7 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         return session
     }
 
-    private fun updateNotification() {
+    fun updateNotification() {
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         service.notify(NOTIFICATION_ID, createNotification())
     }
@@ -252,21 +299,18 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         val channelId = if (silent) CHANNEL_ID_LOW else CHANNEL_ID_HIGH
         val priority = if (silent) Notification.PRIORITY_LOW else Notification.PRIORITY_HIGH
 
-        val sessionCount = synchronized(mTerminalSessions) {
+        val termSessions: List<TerminalSession>
+        val xSessionsCount: Int
+        synchronized(mTerminalSessions) {
             synchronized(mXSessions) {
-                mTerminalSessions.size + mXSessions.size
+                termSessions = ArrayList(mTerminalSessions)
+                xSessionsCount = mXSessions.size
             }
         }
-        val contentText = if (sessionCount == 0) {
-            "Andrax Ejecutándose"
-        } else {
-            "Arch | $sessionCount sesión" + if (sessionCount != 1) "es" else ""
-        }
+        val sessionCount = termSessions.size + xSessionsCount
 
         val builder = NotificationCompat.Builder(this, channelId)
         builder.setContentTitle("Arch")
-        builder.setContentText(contentText)
-        builder.setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
         builder.setSmallIcon(R.drawable.ic_terminal_running)
         builder.setContentIntent(pendingIntent)
         builder.setOngoing(true)
@@ -274,12 +318,114 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         builder.color = 0xFF000000.toInt()
         builder.priority = priority
 
-        val exitIntent = Intent(this, NeoTermService::class.java).setAction(ACTION_SERVICE_STOP)
-        builder.addAction(android.R.drawable.ic_delete, getString(R.string.exit),
-                PendingIntent.getService(this, 0, exitIntent, PendingIntent.FLAG_IMMUTABLE))
+        val compactText = if (sessionCount == 0) "Esperando Terminales" else "AArchx segundo plano"
+        builder.setContentText(compactText)
+        builder.setStyle(NotificationCompat.BigTextStyle().bigText(compactText))
 
-        builder.addAction(0, getString(R.string.hide),
-                PendingIntent.getActivity(this, 1, notifyIntent, PendingIntent.FLAG_IMMUTABLE))
+        val newTermIntent = Intent(this, NeoTermActivity::class.java).setAction(ACTION_NEW_TERMINAL)
+        newTermIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val newTermPi = PendingIntent.getActivity(this, 98, newTermIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
+        if (Build.VERSION.SDK_INT >= 24) {
+            val compact = RemoteViews(packageName, R.layout.notification_compact)
+            compact.setTextViewText(R.id.compact_text, compactText)
+
+            val forceStopIntent = Intent(this, NeoTermService::class.java).setAction(ACTION_FORCE_STOP)
+            val forceStopPi = PendingIntent.getService(this, 99, forceStopIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
+            if (sessionCount == 0) {
+                compact.setViewVisibility(R.id.compact_new, View.VISIBLE)
+                compact.setOnClickPendingIntent(R.id.compact_new, newTermPi)
+            } else {
+                compact.setViewVisibility(R.id.compact_new, View.GONE)
+            }
+            compact.setOnClickPendingIntent(R.id.compact_kill, forceStopPi)
+
+            val hidePi = PendingIntent.getActivity(this, 1, notifyIntent, PendingIntent.FLAG_IMMUTABLE)
+            compact.setOnClickPendingIntent(R.id.compact_hide, hidePi)
+
+            builder.setCustomContentView(compact)
+
+            if (sessionCount > 0) {
+                // Big (expanded) — session rows + [Kill All] [Ocultar]
+                val big = RemoteViews(packageName, R.layout.notification_terminals)
+
+                val killAllIntent = Intent(this, NeoTermService::class.java).setAction(ACTION_SERVICE_STOP)
+                val killAllPi = PendingIntent.getService(this, 0, killAllIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+                big.setOnClickPendingIntent(R.id.big_kill_all, killAllPi)
+
+                val bigHidePi = PendingIntent.getActivity(this, 1, notifyIntent, PendingIntent.FLAG_IMMUTABLE)
+                big.setOnClickPendingIntent(R.id.big_hide, bigHidePi)
+
+                val rowIds = intArrayOf(R.id.row_0, R.id.row_1, R.id.row_2, R.id.row_3)
+                val titleIds = intArrayOf(R.id.title_0, R.id.title_1, R.id.title_2, R.id.title_3)
+                val killIds = intArrayOf(R.id.kill_0, R.id.kill_1, R.id.kill_2, R.id.kill_3)
+
+                for (i in rowIds.indices) {
+                    if (i < termSessions.size) {
+                        val session = termSessions[i]
+                        big.setViewVisibility(rowIds[i], View.VISIBLE)
+                        big.setTextViewText(titleIds[i], session.title ?: "Terminal")
+                        val killSessionIntent = Intent(this, NeoTermService::class.java)
+                            .setAction(ACTION_KILL_SESSION)
+                            .putExtra("handle", session.mHandle)
+                        val pi = PendingIntent.getService(this, i + 100, killSessionIntent,
+                            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+                        big.setOnClickPendingIntent(killIds[i], pi)
+                    } else {
+                        big.setViewVisibility(rowIds[i], View.GONE)
+                    }
+                }
+
+                builder.setCustomBigContentView(big)
+            } else {
+                // No sessions — expanded shows same as compact
+                val big = RemoteViews(packageName, R.layout.notification_compact)
+                big.setTextViewText(R.id.compact_text, compactText)
+                big.setOnClickPendingIntent(R.id.compact_new, newTermPi)
+                big.setOnClickPendingIntent(R.id.compact_kill, forceStopPi)
+                big.setOnClickPendingIntent(R.id.compact_hide, hidePi)
+                builder.setCustomBigContentView(big)
+            }
+            builder.setStyle(NotificationCompat.DecoratedCustomViewStyle())
+        } else {
+            // Fallback for old API — addAction buttons
+            if (sessionCount > 0) {
+                val inbox = NotificationCompat.InboxStyle()
+                inbox.setBigContentTitle("Arch - $sessionCount sesión(es)")
+                for (session in termSessions) {
+                    inbox.addLine("• ${session.title ?: "Terminal"}")
+                }
+                if (xSessionsCount > 0) {
+                    inbox.addLine("• X ($xSessionsCount)")
+                }
+                builder.setStyle(inbox)
+
+                for ((i, session) in termSessions.withIndex()) {
+                    val title = session.title ?: "Terminal ${i + 1}"
+                    val killSessionIntent = Intent(this, NeoTermService::class.java)
+                        .setAction(ACTION_KILL_SESSION)
+                        .putExtra("handle", session.mHandle)
+                    builder.addAction(android.R.drawable.ic_delete,
+                        getString(R.string.kill) + " $title",
+                        PendingIntent.getService(this, i + 100, killSessionIntent,
+                            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+                }
+            }
+
+            builder.addAction(0, "New", newTermPi)
+
+            val forceStopIntent = Intent(this, NeoTermService::class.java).setAction(ACTION_FORCE_STOP)
+            builder.addAction(android.R.drawable.ic_delete, getString(R.string.kill),
+                PendingIntent.getService(this, 99, forceStopIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+
+            val hidePi = PendingIntent.getActivity(this, 1, notifyIntent, PendingIntent.FLAG_IMMUTABLE)
+            builder.addAction(0, getString(R.string.hide), hidePi)
+        }
 
         return builder.build()
     }
@@ -329,6 +475,9 @@ class NeoTermService : Service(), SharedPreferences.OnSharedPreferenceChangeList
 
     companion object {
         val ACTION_SERVICE_STOP = "neoterm.action.service.stop"
+        val ACTION_FORCE_STOP = "neoterm.action.service.force.stop"
+        val ACTION_KILL_SESSION = "neoterm.action.service.kill.session"
+        val ACTION_NEW_TERMINAL = "neoterm.action.new.terminal"
         val ACTION_ACQUIRE_LOCK = "neoterm.action.service.lock.acquire"
         val ACTION_RELEASE_LOCK = "neoterm.action.service.lock.release"
         private val NOTIFICATION_ID = 52019

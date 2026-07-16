@@ -164,6 +164,8 @@
     <string name="pref_package_source">Source</string>
 
     <string name="exit">Exit</string>
+    <string name="kill_all">Kill All</string>
+    <string name="kill">Kill</string>
     <string name="hide">Ocultar</string>
     <string name="term_here">Term Here</string>
     <string name="user_script">User Script</string>

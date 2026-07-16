@@ -3,6 +3,8 @@
 
 -keep class org.aarchdroid.dragonterminal.** { *; }
 -keep class com.thecrackertechnology.dragonterminal.** { *; }
+-keep class org.aarchdroid.ToolInfo { *; }
+-keep class org.aarchdroid.CategoryInfo { *; }
 -keep class * implements android.os.Parcelable {
   public static final android.os.Parcelable$Creator *;
 }

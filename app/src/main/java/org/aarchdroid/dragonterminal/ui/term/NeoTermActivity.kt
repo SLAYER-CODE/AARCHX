@@ -138,6 +138,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     @Volatile
     var transferringHandle: String? = null
 
+    @Volatile
+    var pendingFloatHandle: String? = null
+
     private var pendingAnchorSession: TerminalSession? = null
 
     private var sessionHistoryAdapter: SessionHistoryAdapter? = null
@@ -232,9 +235,16 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         ViewCompat.setOnApplyWindowInsetsListener(tabSwitcher, createWindowInsetsListener())
         tabSwitcher.showToolbars(false)
 
-        Log.d("AArchDroid", "NeoTermActivity: starting and binding NeoTermService")
+        Log.d("AArchDroid", "NeoTermActivity: starting (foreground) and binding NeoTermService")
         val serviceIntent = Intent(this, NeoTermService::class.java)
-        startService(serviceIntent)
+        try {
+            startForegroundService(serviceIntent)
+        } catch (e: Exception) {
+            Log.w("AArchDroid", "startForegroundService failed: ${e.message}")
+            // fallback: bindService with BIND_AUTO_CREATE will start the service
+            bindService(serviceIntent, this, Context.BIND_AUTO_CREATE)
+            return
+        }
         bindService(serviceIntent, this, 0)
 
         if (savedInstanceState == null) {
@@ -492,6 +502,21 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         super.onResume()
         processToolExitFiles(this)
         Log.d("NeoTermAct", "onResume: tabCount=${tabSwitcher.count}, selectedTab=null? ${tabSwitcher.selectedTab == null}, termView=null? ${(tabSwitcher.selectedTab as? TermTab)?.termData?.termView == null}")
+
+        // Execute pending float transfer if overlay was just granted
+        pendingFloatHandle?.let { handle ->
+            pendingFloatHandle = null
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)) {
+                for (i in 0 until tabSwitcher.count) {
+                    val tab = tabSwitcher.getTab(i)
+                    if (tab is TermTab && tab.termData.termSession?.mHandle == handle) {
+                        transferringHandle = handle
+                        tabSwitcher.removeTab(tab)
+                        break
+                    }
+                }
+            }
+        }
 
         try {
 
@@ -804,21 +829,27 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         Log.d("AArchDroid", "NeoTermActivity: onNewIntent — action=" + (intent.action ?: "null"))
-        if (intent.action == ACTION_ANCHOR) {
-            pendingAnchorSession = AArchDroidApp.transferredSession
-            AArchDroidApp.transferredSession = null
-            Log.d("AArchDroid", "NeoTermActivity: onNewIntent — pending session=${pendingAnchorSession != null}")
-            if (termService != null) {
-                processPendingAnchor()
+        when (intent.action) {
+            NeoTermService.ACTION_NEW_TERMINAL -> {
+                addNewSession()
             }
-        } else if (termService != null) {
-            Log.d("AArchDroid", "NeoTermActivity: onNewIntent — picking up new sessions, count=" + termService!!.sessions.size)
-            val stored = NeoPreference.getCurrentSession(termService)
-            for (session in termService!!.sessions) {
-                addNewSessionFromExisting(session)
+            ACTION_ANCHOR -> {
+                pendingAnchorSession = AArchDroidApp.transferredSession
+                AArchDroidApp.transferredSession = null
+                Log.d("AArchDroid", "NeoTermActivity: onNewIntent — pending session=${pendingAnchorSession != null}")
+                if (termService != null) {
+                    processPendingAnchor()
+                }
             }
-            if (stored != null) {
-                switchToSession(stored)
+            else -> if (termService != null) {
+                Log.d("AArchDroid", "NeoTermActivity: onNewIntent — picking up new sessions, count=" + termService!!.sessions.size)
+                val stored = NeoPreference.getCurrentSession(termService)
+                for (session in termService!!.sessions) {
+                    addNewSessionFromExisting(session)
+                }
+                if (stored != null) {
+                    switchToSession(stored)
+                }
             }
         }
     }
@@ -1526,12 +1557,12 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
     }
 
-    @Suppress("unused", "UNUSED_PARAMETER")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onTitleChangedEvent(titleChangedEvent: TitleChangedEvent) {
         if (!tabSwitcher.isSwitcherShown) {
             toolbar.title = titleChangedEvent.title
         }
+        termService?.updateNotification()
     }
 
     @Suppress("unused", "UNUSED_PARAMETER")
@@ -1585,22 +1616,25 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
     }
 
-    @Suppress("unused", "UNUSED_PARAMETER")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onKillTerminalEvent(event: KillTerminalEvent) {
-        val tab = tabSwitcher.selectedTab
-        if (tab is TermTab) {
-            if (tabSwitcher.count > 1) {
-                tabSwitcher.removeTab(tab)
-                if (tabSwitcher.count > 0) {
-                    val remainingTab = tabSwitcher.getTab(0)
-                    tabSwitcher.selectTab(remainingTab)
-                }
-            } else {
-                tab.requireHideIme()
-                toggleSwitcher(showSwitcher = true, easterEgg = false)
-                tabSwitcher.removeTab(tab)
+        val termTab = if (event.handle != null) {
+            (0 until tabSwitcher.count)
+                .map { tabSwitcher.getTab(it) }
+                .find { it is TermTab && it.termData.termSession?.mHandle == event.handle } as? TermTab
+        } else {
+            tabSwitcher.selectedTab as? TermTab
+        } ?: return
+        if (tabSwitcher.count > 1) {
+            tabSwitcher.removeTab(termTab)
+            if (tabSwitcher.count > 0) {
+                val remainingTab = tabSwitcher.getTab(0)
+                tabSwitcher.selectTab(remainingTab)
             }
+        } else {
+            termTab.requireHideIme()
+            toggleSwitcher(showSwitcher = true, easterEgg = false)
+            tabSwitcher.removeTab(termTab)
         }
     }
 
@@ -1667,6 +1701,15 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         if (tab is TermTab) {
             val session = tab.termData.termSession
             if (session != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                    pendingFloatHandle = session.mHandle
+                    val intent = Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:$packageName")
+                    )
+                    startActivity(intent)
+                    return
+                }
                 transferringHandle = session.mHandle
                 tabSwitcher.removeTab(tab)
             }

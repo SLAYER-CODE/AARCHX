@@ -1,3 +1,3 @@
 package org.aarchdroid.dragonterminal.frontend.session.shell.client.event
 
-class KillTerminalEvent
+class KillTerminalEvent(val handle: String? = null)

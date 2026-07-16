@@ -4,8 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Rect
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -132,7 +134,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                         Log.d("NeoTabDecor", "creating float button")
                         floatBtn = TextView(context)
                         floatBtn.tag = "float_button_tag"
-                        floatBtn.text = "↗"
+                        floatBtn.text = "⬈"
                         floatBtn.setTextColor(Color.parseColor("#FF08FF00"))
                         floatBtn.textSize = 18f
                         floatBtn.gravity = Gravity.CENTER
@@ -157,6 +159,15 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                         floatBtn.setOnClickListener {
                             Log.d("NeoTabDecor", "float button clicked, handle=${session.mHandle}")
                             val act = this@NeoTabDecorator.context
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(act)) {
+                                act.pendingFloatHandle = session.mHandle
+                                val intent = Intent(
+                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                    Uri.parse("package:${act.packageName}")
+                                )
+                                act.startActivity(intent)
+                                return@setOnClickListener
+                            }
                             act.transferringHandle = session.mHandle
                             tabSwitcher.removeTab(tab)
                         }

@@ -3607,9 +3607,11 @@ public class PhoneTabSwitcherLayout extends AbstractTabSwitcherLayout
 
             toolbar.setAlpha(getModel().areToolbarsShown() ? 1 : 0);
         } else if (getModel().getSelectedTab() != null) {
-            TabItem tabItem = TabItem.create(getTabSwitcher(), viewRecycler,
-                    getModel().getSelectedTabIndex());
-            viewRecycler.inflate(tabItem);
+            int selIdx = getModel().getSelectedTabIndex();
+            if (selIdx >= 0) {
+                TabItem tabItem = TabItem.create(getTabSwitcher(), viewRecycler, selIdx);
+                viewRecycler.inflate(tabItem);
+            }
         }
     }
 

@@ -22,7 +22,7 @@ object DefaultValues {
     val enableBackButtonBeMappedToEscape = false
     val enableSpecialVolumeKeys = false
     val enableWordBasedIme = false
-    val disableLogs = true
+    val disableLogs = false
     val commandLimit = 5
     val clearOnStart = false
     val autoStart = true

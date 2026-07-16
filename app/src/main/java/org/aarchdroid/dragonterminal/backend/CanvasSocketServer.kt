@@ -67,11 +67,16 @@ class CanvasSocketServer private constructor() {
     }
 
     private fun start() {
-        if (!isRunning.compareAndSet(false, true)) return
+        if (!isRunning.compareAndSet(false, true)) {
+            Log.w(TAG, "start() called but already running (isRunning=$isRunning)")
+            return
+        }
         val t = Thread {
             try {
+                Log.w(TAG, "Creating LocalServerSocket on '$SOCKET_NAME'...")
                 serverSocket = LocalServerSocketExt(SOCKET_NAME)
                 Log.w(TAG, "Server listening on abstract socket: $SOCKET_NAME")
+                Log.w(TAG, "Socket FD: ${serverSocket?.let { "ok" } ?: "null"}")
 
                 while (isRunning.get()) {
                     val client = serverSocket?.accept() ?: break
@@ -84,9 +89,9 @@ class CanvasSocketServer private constructor() {
                     handler.start()
                 }
             } catch (e: Exception) {
-                if (isRunning.get()) {
-                    Log.e(TAG, "Server error", e)
-                }
+                Log.e(TAG, "CanvasSocketServer failed to start: ${e.message}", e)
+                // Reseteamos isRunning para permitir reintento
+                isRunning.set(false)
             } finally {
                 cleanup()
             }
