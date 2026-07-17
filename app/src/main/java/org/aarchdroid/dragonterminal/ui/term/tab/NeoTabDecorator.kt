@@ -257,46 +257,50 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         val session = termData.termSession
         if (session != null) {
             val socketServer = CanvasSocketServer.getInstance()
-            val overlayContainer = context.findViewById<FrameLayout>(R.id.overlay_container)
 
-            // Register onNewConnection (solo la primera vez): cada tool recibe su propio overlay
-            if (overlayContainer != null && socketServer.onNewConnection == null) {
-                socketServer.onNewConnection = { connId ->
-                    val latch = java.util.concurrent.CountDownLatch(1)
-                    android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        val v = CanvasOverlayView(context)
-                        overlayContainer.addView(v, FrameLayout.LayoutParams(
-                            FrameLayout.LayoutParams.WRAP_CONTENT,
-                            FrameLayout.LayoutParams.WRAP_CONTENT
+            // Update onNewConnection cada vez con el activity fresco
+            // (si activity se recrea, el lambda captura el nuevo context)
+            val ctx = context
+            val TAG_OVERLAY = "overlay_reusable"
+            socketServer.onNewConnection = lambda@{ connId ->
+                val latch = java.util.concurrent.CountDownLatch(1)
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    val container = ctx.findViewById<FrameLayout>(R.id.terminal_container) ?: return@post
+                    var v = container.findViewWithTag<CanvasOverlayView>(TAG_OVERLAY)
+                    if (v == null) {
+                        v = CanvasOverlayView(ctx)
+                        container.addView(v, FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
+                            FrameLayout.LayoutParams.MATCH_PARENT
                         ))
                         v.initialScale = 1f
                         v.initialOffsetX = 20f
                         v.initialOffsetY = 20f
-                        v.tag = connId
-                        latch.countDown()
+                        v.tag = TAG_OVERLAY
                     }
-                    latch.await()
-                    val ov = overlayContainer.findViewWithTag<CanvasOverlayView>(connId)!!
-                    object : CanvasSocketServer.CanvasFrameListener {
-                        override fun onStart(width: Int, height: Int, scale: Float) {
-                            Log.w("CanvasSocket", "[#$connId] onStart called: ${width}x${height} scale=$scale")
-                            ov.post {
-                                Log.w("CanvasSocket", "[#$connId] show() executing on main thread")
-                                ov.show(width, height, scale)
-                            }
-                        }
-                        override fun onFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int) {
-                            ov.post { ov.setFrame(argbPixels, width, height) }
-                        }
-                        override fun onEnd() {
-                            ov.post {
-                                ov.hide()
-                                overlayContainer.removeView(ov)
-                            }
-                        }
+                    v.overlaySession = session
+                    latch.countDown()
+                }
+                latch.await()
+                val container = ctx.findViewById<FrameLayout>(R.id.terminal_container)
+                val ov = container?.findViewWithTag<CanvasOverlayView>(TAG_OVERLAY) ?: return@lambda null
+                val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+                object : CanvasSocketServer.CanvasFrameListener {
+                    override fun onStart(width: Int, height: Int, scale: Float) {
+                        Log.w("CanvasSocket", "[#$connId] onStart called: ${width}x${height} scale=$scale")
+                        mainHandler.post { ov.show(width, height, scale) }
+                    }
+                    override fun onFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int) {
+                        mainHandler.post { ov.setFrame(argbPixels, width, height) }
+                    }
+                    override fun onEnd() {
+                        mainHandler.post { ov.hide() }
                     }
                 }
             }
+
+            // Start server AFTER setting callback para evitar race condition
+            socketServer.start()
 
             // Keep PTY listener for legacy stdout mode fallback
             session.setMandelaFrameListener(object : TerminalSession.MandelaFrameListener {

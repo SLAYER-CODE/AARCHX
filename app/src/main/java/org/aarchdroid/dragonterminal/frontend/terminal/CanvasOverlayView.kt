@@ -13,7 +13,11 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import android.widget.FrameLayout
+import org.aarchdroid.dragonterminal.backend.HiddenOverlayRegistry
 import org.aarchdroid.dragonterminal.backend.OverlayButtonState
+import org.aarchdroid.dragonterminal.backend.TerminalSession
+import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.OverlayHiddenEvent
+import org.greenrobot.eventbus.EventBus
 
 class CanvasOverlayView @JvmOverloads constructor(
     context: Context,
@@ -42,6 +46,9 @@ class CanvasOverlayView @JvmOverloads constructor(
     private var lastTouchX = 0f
     private var lastTouchY = 0f
 
+    var overlaySession: TerminalSession? = null
+    val createdAt: Long = System.currentTimeMillis()
+
     private val btnSize = 34f
     private val btnFrameRect = RectF()
     private val btnScreenRect = RectF()
@@ -63,7 +70,7 @@ class CanvasOverlayView @JvmOverloads constructor(
 
     private val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onDoubleTap(e: MotionEvent): Boolean {
-            hide()
+            minimize()
             return true
         }
     })
@@ -112,15 +119,40 @@ class CanvasOverlayView @JvmOverloads constructor(
         frameBitmap = null
         visibility = GONE
         touchOwned = false
+        HiddenOverlayRegistry.unregister(this)
         postInvalidateOnAnimation()
     }
+
+    fun minimize() {
+        isActive = false
+        visibility = GONE
+        touchOwned = false
+        HiddenOverlayRegistry.register(this)
+        EventBus.getDefault().post(OverlayHiddenEvent())
+        postInvalidateOnAnimation()
+    }
+
+    fun restore() {
+        isActive = true
+        visibility = VISIBLE
+        bringToFront()
+        HiddenOverlayRegistry.unregister(this)
+        EventBus.getDefault().post(OverlayHiddenEvent())
+        updateTransform()
+        postInvalidateOnAnimation()
+    }
+
+    fun getFrameBitmap(): Bitmap? = frameBitmap
 
     fun setFrame(argbPixels: IntArray, w: Int, h: Int) {
         if (!isActive) return
         frameWidth = w
         frameHeight = h
-        frameBitmap?.recycle()
-        frameBitmap = Bitmap.createBitmap(argbPixels, w, h, Bitmap.Config.ARGB_8888)
+        if (frameBitmap == null || frameBitmap!!.width != w || frameBitmap!!.height != h) {
+            frameBitmap?.recycle()
+            frameBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        }
+        frameBitmap!!.setPixels(argbPixels, 0, w, 0, 0, w, h)
         updateTransform()
         postInvalidateOnAnimation()
     }
@@ -190,13 +222,13 @@ class CanvasOverlayView @JvmOverloads constructor(
             MotionEvent.ACTION_MOVE -> {
                 if (!touchOwned) return false
                 scaleDetector.onTouchEvent(event)
+                val dx = event.x - lastTouchX
+                val dy = event.y - lastTouchY
+                lastTouchX = event.x
+                lastTouchY = event.y
                 if (!scaleDetector.isInProgress) {
-                    val dx = event.x - lastTouchX
-                    val dy = event.y - lastTouchY
                     offsetX += dx
                     offsetY += dy
-                    lastTouchX = event.x
-                    lastTouchY = event.y
                     updateTransform()
                     postInvalidateOnAnimation()
                 }
@@ -208,7 +240,7 @@ class CanvasOverlayView @JvmOverloads constructor(
                 gestureDetector.onTouchEvent(event)
                 touchOwned = false
                 if (btnVisible && btnScreenRect.contains(event.x, event.y)) {
-                    hide()
+                    minimize()
                 }
                 return true
             }

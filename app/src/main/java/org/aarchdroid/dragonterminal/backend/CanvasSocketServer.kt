@@ -39,7 +39,6 @@ class CanvasSocketServer private constructor() {
             return instance ?: synchronized(this) {
                 instance ?: CanvasSocketServer().also {
                     instance = it
-                    it.start()
                 }
             }
         }
@@ -66,7 +65,7 @@ class CanvasSocketServer private constructor() {
         }
     }
 
-    private fun start() {
+    fun start() {
         if (!isRunning.compareAndSet(false, true)) {
             Log.w(TAG, "start() called but already running (isRunning=$isRunning)")
             return
@@ -113,6 +112,14 @@ class CanvasSocketServer private constructor() {
             val input: InputStream = client.inputStream
             val headerBuf = ByteArray(HEADER_SIZE)
             val frameBuf = ByteArray(MAX_FRAME_SIZE)
+            val pixelPool = Array(3) { IntArray(MAX_FRAME_SIZE / 4) }
+            var poolIdx = 0
+
+            fun nextBuffer(): IntArray {
+                val buf = pixelPool[poolIdx]
+                poolIdx = (poolIdx + 1) % 3
+                return buf
+            }
 
             // First frame: read header, validate magic
             readFully(input, headerBuf)
@@ -130,15 +137,15 @@ class CanvasSocketServer private constructor() {
             val firstScaleDenom = bb0.getInt()
             val firstScale = if (firstScaleDenom > 0) firstScaleDenom / 100f else 1f
             Log.w(TAG, "[#$connId] First frame: id=$firstId ${firstW}x$firstH scale=$firstScale")
-            val firstPixels = readFrame(input, frameBuf, firstW, firstH)
-            if (firstPixels == null) {
+            val firstBuf = nextBuffer()
+            if (!readFrame(input, frameBuf, firstW, firstH, firstBuf)) {
                 Log.e(TAG, "[#$connId] Invalid first frame dimensions: $firstW x $firstH")
                 return
             }
             val fw = firstW; val fh = firstH; val fid = firstId; val fs = firstScale
             mainHandler.post {
                 listener.onStart(fw, fh, fs)
-                listener.onFrame(fid, firstPixels, fw, fh)
+                listener.onFrame(fid, firstBuf, fw, fh)
             }
 
             // Subsequent frames: verify magic too
@@ -156,11 +163,12 @@ class CanvasSocketServer private constructor() {
                     }
                     continue
                 }
+                consecutiveErrors = 0
                 val frameId = bb.getInt()
                 val w = bb.getInt()
                 val h = bb.getInt()
-                val pixels = readFrame(input, frameBuf, w, h)
-                if (pixels == null) {
+                val frameBuf2 = nextBuffer()
+                if (!readFrame(input, frameBuf, w, h, frameBuf2)) {
                     consecutiveErrors++
                     if (consecutiveErrors > 3) {
                         Log.e(TAG, "[#$connId] Too many invalid frame dimensions")
@@ -168,10 +176,9 @@ class CanvasSocketServer private constructor() {
                     }
                     continue
                 }
-                consecutiveErrors = 0
                 val nfw = w; val nfh = h; val nfid = frameId
                 mainHandler.post {
-                    listener.onFrame(nfid, pixels, nfw, nfh)
+                    listener.onFrame(nfid, frameBuf2, nfw, nfh)
                 }
             }
         } catch (e: java.io.EOFException) {
@@ -184,17 +191,16 @@ class CanvasSocketServer private constructor() {
         }
     }
 
-    private fun readFrame(input: InputStream, buf: ByteArray, w: Int, h: Int): IntArray? {
+    private fun readFrame(input: InputStream, buf: ByteArray, w: Int, h: Int, outPixels: IntArray): Boolean {
         val pixelBytes = w * h * 4
-        if (pixelBytes <= 0 || pixelBytes > MAX_FRAME_SIZE) {
+        if (pixelBytes <= 0 || pixelBytes > MAX_FRAME_SIZE || w * h > outPixels.size) {
             Log.w(TAG, "Invalid frame size: $w x $h = $pixelBytes")
-            return null
+            return false
         }
         readFully(input, buf, pixelBytes)
-        val argbPixels = IntArray(w * h)
         val pixelBb = ByteBuffer.wrap(buf, 0, pixelBytes).order(ByteOrder.LITTLE_ENDIAN)
-        pixelBb.asIntBuffer().get(argbPixels)
-        return argbPixels
+        pixelBb.asIntBuffer().get(outPixels, 0, w * h)
+        return true
     }
 
     private fun readFully(input: InputStream, buf: ByteArray, len: Int = buf.size) {
