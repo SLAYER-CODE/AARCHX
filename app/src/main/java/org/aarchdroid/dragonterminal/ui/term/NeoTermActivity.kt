@@ -1718,6 +1718,12 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     @Suppress("unused", "UNUSED_PARAMETER")
     @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onOverlayHiddenEvent(event: OverlayHiddenEvent) {
+        updateExtraKeysButtonStates()
+    }
+
+    @Suppress("unused", "UNUSED_PARAMETER")
+    @Subscribe(threadMode = ThreadMode.MAIN)
     fun onToggleTerminalSwitcherEvent(event: ToggleTerminalSwitcherEvent) {
         if (tabSwitcher.count <= 1) return
         val rangedInt = RangedInt(tabSwitcher.selectedTabIndex, (0 until tabSwitcher.count))

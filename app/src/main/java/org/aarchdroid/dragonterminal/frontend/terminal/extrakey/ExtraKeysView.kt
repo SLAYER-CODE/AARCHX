@@ -1,15 +1,23 @@
 package org.aarchdroid.dragonterminal.frontend.terminal.extrakey
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Typeface
 import android.os.Build
 import android.provider.Settings
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.*
+import android.graphics.drawable.GradientDrawable
 import android.widget.GridLayout
+import android.widget.HorizontalScrollView
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import org.aarchdroid.AArchDroidApp
 import org.aarchdroid.R
+import org.aarchdroid.dragonterminal.backend.HiddenOverlayRegistry
+import org.aarchdroid.dragonterminal.frontend.terminal.CanvasOverlayView
 import org.aarchdroid.dragonterminal.component.extrakey.ExtraKeyComponent
 import org.aarchdroid.dragonterminal.frontend.component.ComponentManager
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
@@ -152,9 +160,12 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
     }
 
     private var buttonPanelExpanded = false
+    private var overlayPanelShown = false
+    private var overlayPanelContainer: View? = null
+
     private val EXPAND_BUTTONS = object : ControlButton(IExtraButton.KEY_SHOW_ALL_BUTTONS) {
         override fun onClick(view: View) {
-            expandButtonPanel()
+            toggleExpansionOrOverlays()
         }
     }
 
@@ -176,8 +187,8 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK && event?.action == KeyEvent.ACTION_DOWN) {
-            if (buttonPanelExpanded) {
-                expandButtonPanel()
+            if (overlayPanelShown) {
+                hideOverlayPanel()
                 return true
             }
             return false
@@ -239,6 +250,166 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
 
         buttonBars.asReversed()
                 .forEach { addView(it) }
+    }
+
+    private fun toggleExpansionOrOverlays() {
+        if (overlayPanelShown) {
+            hideOverlayPanel()
+            return
+        }
+        if (HiddenOverlayRegistry.hasOverlays()) {
+            showOverlayPanel()
+            return
+        }
+    }
+
+    private fun showOverlayPanel() {
+        overlayPanelShown = true
+        buttonPanelExpanded = false
+
+        IntRange(USER_KEYS_BUTTON_LINE_START, buttonBars.size - 1)
+            .map { buttonBars[it] }
+            .forEach { it.visibility = View.GONE }
+
+        alpha = EXPANDED_ALPHA
+
+        overlayPanelContainer?.let {
+            if (it.parent == this) removeView(it)
+        }
+
+        val dp = resources.displayMetrics.density
+        val panelH = (95 * dp).toInt()
+        val maxTw = (120 * dp).toInt()
+
+        val panel = LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            orientation = LinearLayout.HORIZONTAL
+            setPadding((4 * dp).toInt(), 0, (4 * dp).toInt(), 0)
+        }
+
+        val scrollView = HorizontalScrollView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                panelH
+            )
+            isHorizontalScrollBarEnabled = true
+            setBackgroundColor(0x88000000.toInt())
+            addView(panel)
+        }
+
+        val insertIndex = (buttonBars.size - 2).coerceAtLeast(0)
+        addView(scrollView, insertIndex)
+        overlayPanelContainer = scrollView
+
+        val hiddenOverlays = HiddenOverlayRegistry.getOverlays()
+        val screenW = context.resources.displayMetrics.widthPixels
+        val perWidth = (screenW / hiddenOverlays.size).coerceAtMost(maxTw)
+
+        for (overlay in hiddenOverlays) {
+            panel.addView(createOverlayEntry(overlay, perWidth))
+        }
+    }
+
+    private fun createOverlayEntry(overlay: CanvasOverlayView, width: Int): View {
+        val dp = resources.displayMetrics.density
+        val margin = (3 * dp).toInt()
+        val stroke = (1 * dp).toInt()
+        val p = (4 * dp).toInt()
+
+        val entry = LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            gravity = Gravity.CENTER_VERTICAL
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 0, margin, margin)
+            setOnClickListener {
+                overlay.restore()
+                refreshOverlayPanel()
+            }
+        }
+
+        val bmp = overlay.getFrameBitmap()
+        val thumb = if (bmp != null) {
+            ImageView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT)
+                setImageBitmap(bmp)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                setBackgroundColor(0x44000000.toInt())
+            }
+        } else null
+
+        val title = overlay.overlaySession?.title ?: "Canvas"
+        val winTag = overlay.tag?.toString() ?: "?"
+        val date = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+            .format(java.util.Date(overlay.createdAt))
+
+        val infoCard = LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT)
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.START
+            setPadding(p, p, p, p)
+            setBackgroundColor(0x44000000.toInt())
+            addView(TextView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                text = title
+                textSize = 13f
+                setTextColor(0xFF00FF00.toInt())
+            })
+            addView(TextView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                text = "Win #$winTag · $date"
+                textSize = 10f
+                setTextColor(0xFF00CC00.toInt())
+            })
+        }
+
+        val inner = LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            gravity = Gravity.CENTER_VERTICAL
+            orientation = LinearLayout.HORIZONTAL
+            if (thumb != null) addView(thumb)
+            addView(infoCard)
+        }
+
+        val bg = GradientDrawable().apply {
+            setStroke(stroke, 0xFF00FF00.toInt())
+            setColor(0x00000000.toInt())
+            cornerRadius = (4 * dp)
+        }
+        inner.background = bg
+        entry.addView(inner)
+
+        return entry
+    }
+
+    private fun hideOverlayPanel() {
+        overlayPanelShown = false
+        overlayPanelContainer?.visibility = View.GONE
+        alpha = DEFAULT_ALPHA
+    }
+
+    private fun refreshOverlayPanel() {
+        if (!overlayPanelShown) return
+        if (!HiddenOverlayRegistry.hasOverlays()) {
+            hideOverlayPanel()
+            return
+        }
+        showOverlayPanel()
     }
 
     private fun expandButtonPanel(forceSetExpanded: Boolean? = null) {
@@ -348,6 +519,7 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
             TOGGLE_HISTORY -> !NeoPreference.isLoggingDisabled()
             KILL -> tabCount > 0
             TOGGLE_SWITCHER, PREV_SESSION, NEXT_SESSION -> tabCount > 1
+            EXPAND_BUTTONS -> HiddenOverlayRegistry.hasOverlays()
             OPEN_FLOAT -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     Settings.canDrawOverlays(context)
@@ -358,10 +530,16 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
     }
 
     fun refreshButtonStates() {
+        val overlayCount = HiddenOverlayRegistry.getOverlays().size
+        EXPAND_BUTTONS.displayText = if (overlayCount > 0) overlayCount.toString() else "···"
         for ((button, view) in buttonStateMap) {
             val enabled = isButtonEnabled(button)
             view.alpha = if (enabled) 1.0f else 0.6f
-            (view as? android.widget.Button)?.setTextColor(if (enabled) 0xFF00FF00.toInt() else 0xFF005500.toInt())
+            val btn = view as? android.widget.Button
+            btn?.setTextColor(if (enabled) 0xFF00FF00.toInt() else 0xFF005500.toInt())
+            if (button === EXPAND_BUTTONS) {
+                btn?.text = EXPAND_BUTTONS.displayText
+            }
         }
     }
 
