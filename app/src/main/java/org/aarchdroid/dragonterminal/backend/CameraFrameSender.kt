@@ -62,6 +62,8 @@ class CameraFrameSender(
     private var reuseOutBuf: ByteBuffer? = null
     private var reuseHeader: ByteArray? = null
 
+    private var sensorOrientation: Int = 0
+
     fun start(context: Context) {
         if (running) return
         running = true
@@ -134,6 +136,11 @@ class CameraFrameSender(
         try {
             val manager = ctx.getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
+            // Leer orientación del sensor
+            val characteristics = manager.getCameraCharacteristics(cameraId)
+            sensorOrientation = characteristics.get(
+                android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+
             // ── Open camera (async → callback on HandlerThread) ──
             val openLatch = CountDownLatch(1)
             var openError: String? = null
@@ -176,7 +183,10 @@ class CameraFrameSender(
                 if (!running) return@setOnImageAvailableListener
                 val img = r.acquireLatestImage() ?: return@setOnImageAvailableListener
                 try {
-                    val frame = yuv420ToBgra(img)
+                    var frame = yuv420ToBgra(img)
+                    if (sensorOrientation != 0) {
+                        frame = rotateBuffer(frame, sensorOrientation)
+                    }
                     if (!writeFrame(frame)) {
                         streamLatch?.countDown()
                     }
@@ -262,6 +272,65 @@ class CameraFrameSender(
         }
     }
 
+    // ── Rotación ────────────────────────────────────────────────────
+
+    private fun rotateBuffer(frame: FrameData, degrees: Int): FrameData {
+        if (degrees == 0) return frame
+
+        val srcW = frame.width
+        val srcH = frame.height
+        val src = frame.buffer
+
+        when (degrees) {
+            180 -> {
+                val dst = ByteBuffer.allocate(srcW * srcH * 4)
+                dst.order(ByteOrder.LITTLE_ENDIAN)
+                for (row in 0 until srcH) {
+                    val dstRow = srcH - 1 - row
+                    for (col in 0 until srcW) {
+                        val srcOff = (row * srcW + col) * 4
+                        val dstOff = (dstRow * srcW + (srcW - 1 - col)) * 4
+                        dst.putInt(dstOff, src.getInt(srcOff))
+                    }
+                }
+                return FrameData(dst, srcW, srcH)
+            }
+            90 -> {
+                val dstW = srcH
+                val dstH = srcW
+                val dst = ByteBuffer.allocate(dstW * dstH * 4)
+                dst.order(ByteOrder.LITTLE_ENDIAN)
+                for (row in 0 until srcH) {
+                    for (col in 0 until srcW) {
+                        val srcOff = (row * srcW + col) * 4
+                        val dstCol = srcH - 1 - row
+                        val dstRow = col
+                        val dstOff = (dstRow * dstW + dstCol) * 4
+                        dst.putInt(dstOff, src.getInt(srcOff))
+                    }
+                }
+                return FrameData(dst, dstW, dstH)
+            }
+            270 -> {
+                val dstW = srcH
+                val dstH = srcW
+                val dst = ByteBuffer.allocate(dstW * dstH * 4)
+                dst.order(ByteOrder.LITTLE_ENDIAN)
+                for (row in 0 until srcH) {
+                    for (col in 0 until srcW) {
+                        val srcOff = (row * srcW + col) * 4
+                        val dstCol = row
+                        val dstRow = srcW - 1 - col
+                        val dstOff = (dstRow * dstW + dstCol) * 4
+                        dst.putInt(dstOff, src.getInt(srcOff))
+                    }
+                }
+                return FrameData(dst, dstW, dstH)
+            }
+            else -> return frame
+        }
+    }
+
     // ── YUV420 → BGRA ───────────────────────────────────────────────
 
     private fun yuv420ToBgra(image: Image): FrameData {
@@ -342,7 +411,7 @@ class CameraFrameSender(
                 val g = ((298 * c - 100 * d - 208 * e + 128) shr 8).coerceIn(0, 255)
                 val b = ((298 * c + 516 * d + 128) shr 8).coerceIn(0, 255)
 
-                out.putInt(-0x1000000 or (b shl 16) or (g shl 8) or r)
+                out.putInt(-0x1000000 or (r shl 16) or (g shl 8) or b)
             }
         }
 

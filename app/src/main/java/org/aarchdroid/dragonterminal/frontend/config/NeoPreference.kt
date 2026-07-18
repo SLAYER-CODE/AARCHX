@@ -231,6 +231,11 @@ object NeoPreference {
                 DefaultValues.enableSwitchNextTab)
     }
 
+    fun isAnimationsDisabled() :Boolean {
+        return loadBoolean(R.string.key_ui_disable_animations,
+                DefaultValues.disableAnimations)
+    }
+
     fun isWordBasedImeEnabled() : Boolean {
         return loadBoolean(R.string.key_general_enable_word_based_ime,
                 DefaultValues.enableWordBasedIme)

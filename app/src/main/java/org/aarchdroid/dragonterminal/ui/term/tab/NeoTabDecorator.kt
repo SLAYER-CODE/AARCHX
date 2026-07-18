@@ -258,15 +258,14 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         if (session != null) {
             val socketServer = CanvasSocketServer.getInstance()
 
-            // Update onNewConnection cada vez con el activity fresco
-            // (si activity se recrea, el lambda captura el nuevo context)
+            // onNewConnection: cada conexión obtiene su propio overlay view
             val ctx = context
-            val TAG_OVERLAY = "overlay_reusable"
             socketServer.onNewConnection = lambda@{ connId ->
                 val latch = java.util.concurrent.CountDownLatch(1)
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
                     val container = ctx.findViewById<FrameLayout>(R.id.terminal_container) ?: return@post
-                    var v = container.findViewWithTag<CanvasOverlayView>(TAG_OVERLAY)
+                    val tag = "overlay_$connId"
+                    var v = container.findViewWithTag<CanvasOverlayView>(tag)
                     if (v == null) {
                         v = CanvasOverlayView(ctx)
                         container.addView(v, FrameLayout.LayoutParams(
@@ -276,14 +275,14 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                         v.initialScale = 1f
                         v.initialOffsetX = 20f
                         v.initialOffsetY = 20f
-                        v.tag = TAG_OVERLAY
+                        v.tag = tag
                     }
                     v.overlaySession = session
                     latch.countDown()
                 }
                 latch.await()
                 val container = ctx.findViewById<FrameLayout>(R.id.terminal_container)
-                val ov = container?.findViewWithTag<CanvasOverlayView>(TAG_OVERLAY) ?: return@lambda null
+                val ov = container?.findViewWithTag<CanvasOverlayView>("overlay_$connId") ?: return@lambda null
                 val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
                 object : CanvasSocketServer.CanvasFrameListener {
                     override fun onStart(width: Int, height: Int, scale: Float) {

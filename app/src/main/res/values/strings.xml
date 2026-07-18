@@ -159,6 +159,8 @@
     <string name="pref_customization_color_scheme">Color Scheme</string>
     <string name="pref_ui_cursor_blink">Cursor blink</string>
     <string name="pref_ui_cursor_blink_desc">Parpadeo del cursor</string>
+    <string name="pref_ui_disable_animations">Disable animations</string>
+    <string name="pref_ui_disable_animations_desc">Disable tab opening and closing animations</string>
 
     <string name="pref_customization_eks">Extra Keys</string>
     <string name="pref_package_source">Source</string>

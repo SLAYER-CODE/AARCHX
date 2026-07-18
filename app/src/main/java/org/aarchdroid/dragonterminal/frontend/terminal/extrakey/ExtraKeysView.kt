@@ -281,6 +281,7 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
         val panelH = (95 * dp).toInt()
         val maxTw = (120 * dp).toInt()
 
+        val vPad = (3 * dp).toInt()
         val panel = LinearLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -288,7 +289,7 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
             )
             gravity = Gravity.START or Gravity.CENTER_VERTICAL
             orientation = LinearLayout.HORIZONTAL
-            setPadding((4 * dp).toInt(), 0, (4 * dp).toInt(), 0)
+            setPadding((4 * dp).toInt(), vPad, (4 * dp).toInt(), vPad)
         }
 
         val scrollView = HorizontalScrollView(context).apply {
@@ -301,8 +302,7 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
             addView(panel)
         }
 
-        val insertIndex = (buttonBars.size - 2).coerceAtLeast(0)
-        addView(scrollView, insertIndex)
+        addView(scrollView, 0)
         overlayPanelContainer = scrollView
 
         val hiddenOverlays = HiddenOverlayRegistry.getOverlays()
@@ -323,11 +323,10 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
         val entry = LinearLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
+                ViewGroup.LayoutParams.WRAP_CONTENT
             )
             gravity = Gravity.CENTER_VERTICAL
             orientation = LinearLayout.HORIZONTAL
-            setPadding(0, 0, margin, margin)
             setOnClickListener {
                 overlay.restore()
                 refreshOverlayPanel()
@@ -337,10 +336,15 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
         val bmp = overlay.getFrameBitmap()
         val thumb = if (bmp != null) {
             ImageView(context).apply {
-                layoutParams = LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT)
+                layoutParams = LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.WRAP_CONTENT)
                 setImageBitmap(bmp)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 setBackgroundColor(0x44000000.toInt())
+                val b = GradientDrawable().apply {
+                    setStroke((1 * dp).toInt(), 0xFFFF0000.toInt())
+                    setColor(0x00000000.toInt())
+                }
+                background = b
             }
         } else null
 
@@ -350,7 +354,7 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
             .format(java.util.Date(overlay.createdAt))
 
         val infoCard = LinearLayout(context).apply {
-            layoutParams = LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT)
+            layoutParams = LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.WRAP_CONTENT)
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.START
             setPadding(p, p, p, p)
@@ -378,10 +382,11 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
         val inner = LinearLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
+                ViewGroup.LayoutParams.WRAP_CONTENT
             )
             gravity = Gravity.CENTER_VERTICAL
             orientation = LinearLayout.HORIZONTAL
+            setPadding(p, p, p, p)
             if (thumb != null) addView(thumb)
             addView(infoCard)
         }

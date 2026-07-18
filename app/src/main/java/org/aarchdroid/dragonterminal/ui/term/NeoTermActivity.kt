@@ -942,7 +942,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         } else if (pendingAnchorSession == null) {
             if (NeoPreference.isAutoStartEnabled()) {
                 Log.d("AArchDroid", "NeoTermActivity: no existing sessions — creating first session")
-                toggleSwitcher(showSwitcher = true, easterEgg = false)
 
                 rootAvailable = isRooted(this)
                 Log.d("AArchDroid", "NeoTermActivity: synchronous root check — rootAvailable=" + rootAvailable)
@@ -1409,6 +1408,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     }
 
     private fun createRevealAnimation(): Animation {
+        if (NeoPreference.isAnimationsDisabled()) {
+            return SwipeAnimation.Builder().create()
+        }
         var x = 0f
         var y = 0f
         val view = getNavigationMenuItem()

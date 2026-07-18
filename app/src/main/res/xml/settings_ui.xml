@@ -34,4 +34,10 @@
         android:key="@string/key_ui_cursor_blink"
         android:title="@string/pref_ui_cursor_blink"
         android:summary="@string/pref_ui_cursor_blink_desc" />
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="@string/key_ui_disable_animations"
+        android:title="@string/pref_ui_disable_animations"
+        android:summary="@string/pref_ui_disable_animations_desc" />
 </PreferenceScreen>

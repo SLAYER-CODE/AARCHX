@@ -54,26 +54,33 @@ class CanvasOverlayView @JvmOverloads constructor(
     private val btnScreenRect = RectF()
     private val btnPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var btnVisible = false
-    private val scaleDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-        override fun onScale(detector: ScaleGestureDetector): Boolean {
-            val cx = offsetX + frameWidth * scaleFactor / 2f
-            val cy = offsetY + frameHeight * scaleFactor / 2f
-            scaleFactor *= detector.scaleFactor
-            scaleFactor = scaleFactor.coerceIn(0.1f, 10f)
-            offsetX = cx - frameWidth * scaleFactor / 2f
-            offsetY = cy - frameHeight * scaleFactor / 2f
-            updateTransform()
-            postInvalidateOnAnimation()
-            return true
-        }
-    })
+    private var scaleDetector = createScaleDetector()
+    private var gestureDetector = createGestureDetector()
 
-    private val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-        override fun onDoubleTap(e: MotionEvent): Boolean {
-            minimize()
-            return true
-        }
-    })
+    private fun createScaleDetector(): ScaleGestureDetector {
+        return ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            override fun onScale(detector: ScaleGestureDetector): Boolean {
+                val cx = offsetX + frameWidth * scaleFactor / 2f
+                val cy = offsetY + frameHeight * scaleFactor / 2f
+                scaleFactor *= detector.scaleFactor
+                scaleFactor = scaleFactor.coerceIn(0.1f, 10f)
+                offsetX = cx - frameWidth * scaleFactor / 2f
+                offsetY = cy - frameHeight * scaleFactor / 2f
+                updateTransform()
+                postInvalidateOnAnimation()
+                return true
+            }
+        })
+    }
+
+    private fun createGestureDetector(): GestureDetector {
+        return GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                minimize()
+                return true
+            }
+        })
+    }
 
     init {
         setBackgroundColor(Color.TRANSPARENT)
@@ -136,6 +143,9 @@ class CanvasOverlayView @JvmOverloads constructor(
         isActive = true
         visibility = VISIBLE
         bringToFront()
+        scaleDetector = createScaleDetector()
+        gestureDetector = createGestureDetector()
+        touchOwned = false
         HiddenOverlayRegistry.unregister(this)
         EventBus.getDefault().post(OverlayHiddenEvent())
         updateTransform()
@@ -148,11 +158,8 @@ class CanvasOverlayView @JvmOverloads constructor(
         if (!isActive) return
         frameWidth = w
         frameHeight = h
-        if (frameBitmap == null || frameBitmap!!.width != w || frameBitmap!!.height != h) {
-            frameBitmap?.recycle()
-            frameBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        }
-        frameBitmap!!.setPixels(argbPixels, 0, w, 0, 0, w, h)
+        frameBitmap?.recycle()
+        frameBitmap = Bitmap.createBitmap(argbPixels, w, h, Bitmap.Config.ARGB_8888)
         updateTransform()
         postInvalidateOnAnimation()
     }
@@ -213,6 +220,7 @@ class CanvasOverlayView @JvmOverloads constructor(
                     return false
                 }
                 touchOwned = true
+                bringToFront()
                 lastTouchX = event.x
                 lastTouchY = event.y
                 scaleDetector.onTouchEvent(event)
