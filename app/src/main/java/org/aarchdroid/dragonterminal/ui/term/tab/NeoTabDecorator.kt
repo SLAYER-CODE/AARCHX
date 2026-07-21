@@ -38,6 +38,7 @@ import org.aarchdroid.dragonterminal.frontend.terminal.TerminalView
 import org.aarchdroid.dragonterminal.frontend.terminal.extrakey.ExtraKeysView
 import org.aarchdroid.dragonterminal.ui.term.NeoTermActivity
 import org.aarchdroid.dragonterminal.utils.TerminalUtils
+import de.mrapp.android.tabswitcher.SwipeAnimation
 
 /**
  * @author kiva
@@ -47,6 +48,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         private var VIEW_TYPE_COUNT = 0
         private val VIEW_TYPE_TERM = VIEW_TYPE_COUNT++
         private val VIEW_TYPE_X = VIEW_TYPE_COUNT++
+        private val VIEW_TYPE_CANVAS = VIEW_TYPE_COUNT++
 
         @Volatile
         private var cameraControlServer: CameraControlServer? = null
@@ -88,6 +90,16 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
 
             VIEW_TYPE_X -> {
                 inflater.inflate(R.layout.ui_xorg, parent, false)
+            }
+
+            VIEW_TYPE_CANVAS -> {
+                FrameLayout(context).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    setBackgroundColor(Color.BLACK)
+                }
             }
 
             else -> {
@@ -175,6 +187,32 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                         floatBtn.visibility = View.GONE
                         floatBtn.setOnClickListener(null)
                     }
+
+                    // Red indicator when overlay is in fullscreen
+                    val ctx = this@NeoTabDecorator.context
+                    val container = ctx.findViewById<FrameLayout>(R.id.terminal_container)
+                    if (container != null && session != null) {
+                        val fullscreenOv = (0 until container.childCount)
+                            .map { idx -> container.getChildAt(idx) }
+                            .filterIsInstance<CanvasOverlayView>()
+                            .firstOrNull { ov -> ov.isFullscreen && ov.overlaySession === session }
+                        // Red indicator when overlay is in fullscreen
+                    // (now by checking if a CanvasTab has isFullscreen)
+
+                    // Exit any canvas fullscreen when a terminal tab is fully selected
+                    if (!tabSwitcher.isSwitcherShown && !isQuickPreview) {
+                        for (i in 0 until tabSwitcher.count) {
+                            val tab = tabSwitcher.getTab(i)
+                            if (tab is CanvasTab) {
+                                val ov = tab.overlayView
+                                if (ov.isFullscreen) {
+                                    ov.exitFullscreenTab()
+                                    ov.onToggleFullscreen?.invoke(false)
+                                }
+                            }
+                        }
+                    }
+                    }
                 } else {
                     Log.d("NeoTabDecor", "titleContainer NOT found — childContainer=$childContainer rootLayout=$rootLayout")
                 }
@@ -183,6 +221,22 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
             VIEW_TYPE_X -> {
                 toolbar.visibility = View.GONE
                 bindXSessionView(tab as XSessionTab)
+            }
+
+            VIEW_TYPE_CANVAS -> {
+                val canvasTab = tab as CanvasTab
+                val ov = canvasTab.overlayView
+                if (!tabSwitcher.isSwitcherShown && !isQuickPreview) {
+                    // Move overlay into the tab's content view (parent == view)
+                    if (ov.parent != view) {
+                        (ov.parent as? ViewGroup)?.removeView(ov)
+                        (view as? ViewGroup)?.addView(ov, ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        ))
+                    }
+                    ov.enterFullscreenTab()
+                }
             }
         }
     }
@@ -276,6 +330,43 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                         v.initialOffsetX = 20f
                         v.initialOffsetY = 20f
                         v.tag = tag
+                        v.onToggleFullscreen = { enter ->
+                            val ts = ctx.findViewById<TabSwitcher>(R.id.tab_switcher)
+                            val container = ctx.findViewById<FrameLayout>(R.id.terminal_container)
+                            if (enter) {
+                                val ct = CanvasTab("Canvas", v)
+                                ct.setBackgroundColor(0x88FF0000.toInt())
+                                ts.addTab(ct, 0, SwipeAnimation.Builder().create())
+                                ts.selectTab(ct)
+                            } else {
+                                // Move overlay back to terminal_container (floating mode)
+                                if (v.parent != container) {
+                                    (v.parent as? ViewGroup)?.removeView(v)
+                                    container?.addView(v, FrameLayout.LayoutParams(
+                                        FrameLayout.LayoutParams.MATCH_PARENT,
+                                        FrameLayout.LayoutParams.MATCH_PARENT
+                                    ))
+                                }
+                                // Remove the CanvasTab from TabSwitcher
+                                for (i in 0 until ts.count) {
+                                    val tab = ts.getTab(i)
+                                    if (tab is CanvasTab && tab.overlayView === v) {
+                                        ts.removeTab(tab)
+                                        break
+                                    }
+                                }
+                                // Select the first terminal tab so it's shown
+                                for (i in 0 until ts.count) {
+                                    val tab = ts.getTab(i)
+                                    if (tab is TermTab) {
+                                        ts.selectTab(tab)
+                                        break
+                                    }
+                                }
+                                // Force redraw to avoid black terminal
+                                container?.postInvalidate()
+                            }
+                        }
                     }
                     v.overlaySession = session
                     latch.countDown()
@@ -339,6 +430,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         return when (tab) {
             is TermTab -> VIEW_TYPE_TERM
             is XSessionTab -> VIEW_TYPE_X
+            is CanvasTab -> VIEW_TYPE_CANVAS
             else -> VIEW_TYPE_TERM
         }
     }

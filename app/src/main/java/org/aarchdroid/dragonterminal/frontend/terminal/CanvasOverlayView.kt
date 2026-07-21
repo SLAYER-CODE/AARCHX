@@ -7,12 +7,18 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RectF
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.util.AttributeSet
-import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
+import android.view.ViewConfiguration
+import android.view.ViewGroup
 import android.widget.FrameLayout
+import kotlin.math.hypot
+import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.backend.HiddenOverlayRegistry
 import org.aarchdroid.dragonterminal.backend.OverlayButtonState
 import org.aarchdroid.dragonterminal.backend.TerminalSession
@@ -49,13 +55,25 @@ class CanvasOverlayView @JvmOverloads constructor(
     var overlaySession: TerminalSession? = null
     val createdAt: Long = System.currentTimeMillis()
 
+    var isFullscreen = false
+
+    private val longPressHandler = Handler(Looper.getMainLooper())
+    private var longPressRunnable: Runnable? = null
+    private var longPressFired = false
+    private var downX = 0f
+    private var downY = 0f
+    private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
+
     private val btnSize = 34f
     private val btnFrameRect = RectF()
     private val btnScreenRect = RectF()
     private val btnPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var btnVisible = false
     private var scaleDetector = createScaleDetector()
-    private var gestureDetector = createGestureDetector()
+
+    private var lastTapTime = 0L
+    private var lastTapX = 0f
+    private var lastTapY = 0f
 
     private fun createScaleDetector(): ScaleGestureDetector {
         return ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -68,15 +86,6 @@ class CanvasOverlayView @JvmOverloads constructor(
                 offsetY = cy - frameHeight * scaleFactor / 2f
                 updateTransform()
                 postInvalidateOnAnimation()
-                return true
-            }
-        })
-    }
-
-    private fun createGestureDetector(): GestureDetector {
-        return GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: MotionEvent): Boolean {
-                minimize()
                 return true
             }
         })
@@ -103,6 +112,7 @@ class CanvasOverlayView @JvmOverloads constructor(
     }
 
     fun show(width: Int, height: Int, scale: Float = initialScale) {
+        exitFullscreen()
         frameWidth = width
         frameHeight = height
         layoutParams = FrameLayout.LayoutParams(
@@ -122,6 +132,7 @@ class CanvasOverlayView @JvmOverloads constructor(
     }
 
     fun hide() {
+        exitFullscreen()
         isActive = false
         frameBitmap = null
         visibility = GONE
@@ -131,6 +142,7 @@ class CanvasOverlayView @JvmOverloads constructor(
     }
 
     fun minimize() {
+        if (isFullscreen) exitFullscreen()
         isActive = false
         visibility = GONE
         touchOwned = false
@@ -144,12 +156,79 @@ class CanvasOverlayView @JvmOverloads constructor(
         visibility = VISIBLE
         bringToFront()
         scaleDetector = createScaleDetector()
-        gestureDetector = createGestureDetector()
         touchOwned = false
         HiddenOverlayRegistry.unregister(this)
         EventBus.getDefault().post(OverlayHiddenEvent())
         updateTransform()
         postInvalidateOnAnimation()
+    }
+
+    var onToggleFullscreen: ((enterFullscreen: Boolean) -> Unit)? = null
+
+    fun enterFullscreenTab() {
+        if (isFullscreen) return
+        isFullscreen = true
+        setBackgroundColor(Color.BLACK)
+        visibility = VISIBLE
+        isActive = true
+        bringToFront()
+        if (frameWidth > 0 && frameHeight > 0) {
+            val p = parent as? View ?: return
+            val pw = p.width
+            val ph = p.height
+            if (pw > 0 && ph > 0) {
+                val fitScale = minOf(
+                    pw.toFloat() / (frameWidth.coerceAtLeast(1) + 40),
+                    ph.toFloat() / (frameHeight.coerceAtLeast(1) + 40)
+                )
+                scaleFactor = fitScale
+                offsetX = (pw - frameWidth * fitScale) / 2f
+                offsetY = (ph - frameHeight * fitScale) / 2f
+            }
+        }
+        updateTransform()
+        postInvalidateOnAnimation()
+    }
+
+    fun exitFullscreenTab() {
+        if (!isFullscreen) return
+        isFullscreen = false
+        setBackgroundColor(Color.TRANSPARENT)
+        scaleFactor = initialScale
+        offsetX = initialOffsetX
+        offsetY = initialOffsetY
+        updateTransform()
+        postInvalidateOnAnimation()
+    }
+
+    private fun exitFullscreen() {
+        exitFullscreenTab()
+        onToggleFullscreen?.invoke(false)
+    }
+
+    fun toggleFullscreen() {
+        if (isFullscreen) {
+            exitFullscreenTab()
+            onToggleFullscreen?.invoke(false)
+        } else {
+            onToggleFullscreen?.invoke(true)
+            // enterFullscreenTab() is called by onShowTab(VIEW_TYPE_CANVAS)
+            // after the overlay has been moved to the tab's FrameLayout
+        }
+    }
+
+    private fun cancelPendingLongPress() {
+        longPressRunnable?.let { longPressHandler.removeCallbacks(it) }
+        longPressRunnable = null
+    }
+
+    private fun startLongPress() {
+        cancelPendingLongPress()
+        longPressRunnable = Runnable {
+            longPressFired = true
+            toggleFullscreen()
+        }
+        longPressHandler.postDelayed(longPressRunnable!!, 700L)
     }
 
     fun getFrameBitmap(): Bitmap? = frameBitmap
@@ -214,6 +293,11 @@ class CanvasOverlayView @JvmOverloads constructor(
 
         when (event.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
+                if (isFullscreen) {
+                    touchOwned = true
+                    startLongPress()
+                    return true
+                }
                 if (!canvasScreenRect.contains(event.x, event.y) &&
                     !(btnVisible && btnScreenRect.contains(event.x, event.y))) {
                     touchOwned = false
@@ -221,19 +305,25 @@ class CanvasOverlayView @JvmOverloads constructor(
                 }
                 touchOwned = true
                 bringToFront()
+                downX = event.x
+                downY = event.y
                 lastTouchX = event.x
                 lastTouchY = event.y
                 scaleDetector.onTouchEvent(event)
-                gestureDetector.onTouchEvent(event)
+                startLongPress()
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
                 if (!touchOwned) return false
+                if (isFullscreen || longPressFired) return true
                 scaleDetector.onTouchEvent(event)
                 val dx = event.x - lastTouchX
                 val dy = event.y - lastTouchY
                 lastTouchX = event.x
                 lastTouchY = event.y
+                if (hypot(event.x - downX, event.y - downY) > touchSlop) {
+                    cancelPendingLongPress()
+                }
                 if (!scaleDetector.isInProgress) {
                     offsetX += dx
                     offsetY += dy
@@ -243,19 +333,42 @@ class CanvasOverlayView @JvmOverloads constructor(
                 return true
             }
             MotionEvent.ACTION_UP -> {
+                cancelPendingLongPress()
+                longPressFired = false
                 if (!touchOwned) return false
+                if (isFullscreen) {
+                    touchOwned = false
+                    return true
+                }
                 scaleDetector.onTouchEvent(event)
-                gestureDetector.onTouchEvent(event)
                 touchOwned = false
+
+                val now = SystemClock.uptimeMillis()
+                val dt = now - lastTapTime
+                val dTouch = hypot(event.x - lastTapX, event.y - lastTapY)
+                lastTapTime = now
+                lastTapX = event.x
+                lastTapY = event.y
+
+                if (dt < ViewConfiguration.getDoubleTapTimeout() && dTouch < touchSlop * 3) {
+                    minimize()
+                    return true
+                }
+
                 if (btnVisible && btnScreenRect.contains(event.x, event.y)) {
                     minimize()
                 }
                 return true
             }
+            MotionEvent.ACTION_CANCEL -> {
+                cancelPendingLongPress()
+                longPressFired = false
+                touchOwned = false
+                return true
+            }
             else -> {
                 if (!touchOwned) return false
                 scaleDetector.onTouchEvent(event)
-                gestureDetector.onTouchEvent(event)
                 return true
             }
         }

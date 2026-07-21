@@ -29,7 +29,8 @@ class CameraFrameSender(
     private val cameraId: String = "0",
     private val socketName: String = "cam-0",
     private val width: Int = 640,
-    private val height: Int = 480
+    private val height: Int = 480,
+    private val rotationOverride: Int = 0 // 0 = auto (sensor), -1 = none (original)
 ) {
     companion object {
         private const val TAG = "CameraFrame"
@@ -61,6 +62,7 @@ class CameraFrameSender(
     private var reuseVBuf: ByteArray? = null
     private var reuseOutBuf: ByteBuffer? = null
     private var reuseHeader: ByteArray? = null
+    private var reuseRotateBuf: ByteBuffer? = null
 
     private var sensorOrientation: Int = 0
 
@@ -183,10 +185,7 @@ class CameraFrameSender(
                 if (!running) return@setOnImageAvailableListener
                 val img = r.acquireLatestImage() ?: return@setOnImageAvailableListener
                 try {
-                    var frame = yuv420ToBgra(img)
-                    if (sensorOrientation != 0) {
-                        frame = rotateBuffer(frame, sensorOrientation)
-                    }
+                    val frame = yuv420ToBgra(img)
                     if (!writeFrame(frame)) {
                         streamLatch?.countDown()
                     }
@@ -277,52 +276,55 @@ class CameraFrameSender(
     private fun rotateBuffer(frame: FrameData, degrees: Int): FrameData {
         if (degrees == 0) return frame
 
+        val src = frame.buffer
         val srcW = frame.width
         val srcH = frame.height
-        val src = frame.buffer
 
         when (degrees) {
             180 -> {
-                val dst = ByteBuffer.allocate(srcW * srcH * 4)
-                dst.order(ByteOrder.LITTLE_ENDIAN)
-                for (row in 0 until srcH) {
-                    val dstRow = srcH - 1 - row
-                    for (col in 0 until srcW) {
-                        val srcOff = (row * srcW + col) * 4
-                        val dstOff = (dstRow * srcW + (srcW - 1 - col)) * 4
-                        dst.putInt(dstOff, src.getInt(srcOff))
-                    }
+                // 180°: swap píxeles opuestos en el mismo buffer (in-place)
+                val totalPixels = srcW * srcH
+                val intBuf = src.duplicate().order(ByteOrder.LITTLE_ENDIAN).asIntBuffer()
+                for (i in 0 until totalPixels / 2) {
+                    val j = totalPixels - 1 - i
+                    val tmp = intBuf.get(i)
+                    intBuf.put(i, intBuf.get(j))
+                    intBuf.put(j, tmp)
                 }
-                return FrameData(dst, srcW, srcH)
+                return frame
             }
-            90 -> {
+            90, 270 -> {
                 val dstW = srcH
                 val dstH = srcW
-                val dst = ByteBuffer.allocate(dstW * dstH * 4)
-                dst.order(ByteOrder.LITTLE_ENDIAN)
-                for (row in 0 until srcH) {
-                    for (col in 0 until srcW) {
-                        val srcOff = (row * srcW + col) * 4
-                        val dstCol = srcH - 1 - row
-                        val dstRow = col
-                        val dstOff = (dstRow * dstW + dstCol) * 4
-                        dst.putInt(dstOff, src.getInt(srcOff))
+                val dstBytes = dstW * dstH * 4
+                var dst: ByteBuffer = reuseRotateBuf ?: ByteBuffer.allocate(dstBytes).also {
+                    it.order(ByteOrder.LITTLE_ENDIAN)
+                    reuseRotateBuf = it
+                }
+                if (dst.capacity() < dstBytes) {
+                    dst = ByteBuffer.allocate(dstBytes).also {
+                        it.order(ByteOrder.LITTLE_ENDIAN)
+                        reuseRotateBuf = it
                     }
                 }
-                return FrameData(dst, dstW, dstH)
-            }
-            270 -> {
-                val dstW = srcH
-                val dstH = srcW
-                val dst = ByteBuffer.allocate(dstW * dstH * 4)
+                dst.clear()
                 dst.order(ByteOrder.LITTLE_ENDIAN)
+
+                val srcIntBuf = src.duplicate().order(ByteOrder.LITTLE_ENDIAN).asIntBuffer()
+
                 for (row in 0 until srcH) {
                     for (col in 0 until srcW) {
-                        val srcOff = (row * srcW + col) * 4
-                        val dstCol = row
-                        val dstRow = srcW - 1 - col
-                        val dstOff = (dstRow * dstW + dstCol) * 4
-                        dst.putInt(dstOff, src.getInt(srcOff))
+                        val srcOff = row * srcW + col
+                        val dstRow: Int
+                        val dstCol: Int
+                        if (degrees == 90) {
+                            dstRow = col
+                            dstCol = srcH - 1 - row
+                        } else {
+                            dstRow = srcW - 1 - col
+                            dstCol = row
+                        }
+                        dst.asIntBuffer().put(dstRow * dstW + dstCol, srcIntBuf.get(srcOff))
                     }
                 }
                 return FrameData(dst, dstW, dstH)
@@ -443,6 +445,7 @@ class CameraFrameSender(
         reuseUBuf = null
         reuseVBuf = null
         reuseOutBuf = null
+        reuseRotateBuf = null
         reuseHeader = null
     }
 

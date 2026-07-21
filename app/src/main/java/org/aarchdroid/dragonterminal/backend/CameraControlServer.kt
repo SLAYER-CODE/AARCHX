@@ -14,6 +14,7 @@ import java.io.InputStreamReader
  * Server socket que escucha en "cam-ctrl" (abstracto) comandos desde el chroot:
  *   "camera 0|1" — cambiar cámara (back/front)
  *   "size WxH"   — cambiar resolución
+ *   "rotate none" — desactivar rotación (mostrar original)
  *   "stop"       — apagar cámara
  *
  * Posee un único CameraFrameSender que se reconfigure según los comandos.
@@ -35,6 +36,8 @@ class CameraControlServer(private val context: Context) {
     private var pendingWidth: Int = 640
     @Volatile
     private var pendingHeight: Int = 480
+    @Volatile
+    private var pendingRotation: Int = 0 // 0 = auto (sensor), -1 = none (original)
 
     fun start() {
         if (running) return
@@ -78,6 +81,7 @@ class CameraControlServer(private val context: Context) {
     }
 
     private fun handleClient(client: android.net.LocalSocket) {
+        pendingRotation = 0
         var changed = false
         try {
             val reader = BufferedReader(InputStreamReader(client.inputStream))
@@ -125,6 +129,10 @@ class CameraControlServer(private val context: Context) {
                             Log.w(TAG, "Invalid size format: $cmd")
                         }
                     }
+                    cmd == "rotate none" -> {
+                        pendingRotation = -1
+                        changed = true
+                    }
                     cmd == "stop" -> {
                         sender?.stop()
                         sender = null
@@ -132,6 +140,20 @@ class CameraControlServer(private val context: Context) {
                     }
                 }
                 line = reader.readLine()
+            }
+            // Responder con sensor_orientation para que iris rote en C++
+            try {
+                val camManager = context.getSystemService(Context.CAMERA_SERVICE)
+                    as android.hardware.camera2.CameraManager
+                val chars = camManager.getCameraCharacteristics(pendingCameraId)
+                val orientation = chars.get(
+                    android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+                val response = "sensor_orientation=$orientation\n"
+                client.outputStream.write(response.toByteArray())
+                client.outputStream.flush()
+                Log.d(TAG, "Responded sensor_orientation=$orientation")
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to read sensor orientation: ${e.message}")
             }
         } catch (e: Exception) {
             Log.d(TAG, "Client handler error: ${e.message}")
@@ -153,7 +175,7 @@ class CameraControlServer(private val context: Context) {
         sender = null
         try { Thread.sleep(200) } catch (_: InterruptedException) {}
         val socketName = "cam-$pendingCameraId"
-        CameraFrameSender(pendingCameraId, socketName, pendingWidth, pendingHeight).also {
+        CameraFrameSender(pendingCameraId, socketName, pendingWidth, pendingHeight, pendingRotation).also {
             sender = it
             it.start(context)
         }
