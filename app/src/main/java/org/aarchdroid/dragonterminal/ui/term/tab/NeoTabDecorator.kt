@@ -120,6 +120,8 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
 
         when (viewType) {
             VIEW_TYPE_TERM -> {
+                // Restore toolbar when leaving canvas
+                toolbar.visibility = View.VISIBLE
                 if (tab !is TermTab) return
                 val termTab = tab
                 termTab.toolbar = toolbar
@@ -199,15 +201,28 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                         // Red indicator when overlay is in fullscreen
                     // (now by checking if a CanvasTab has isFullscreen)
 
-                    // Exit any canvas fullscreen when a terminal tab is fully selected
+                    // Exit any canvas fullscreen when a terminal tab is fully selected,
+                    // or restore a lost CanvasTab on activity resume
                     if (!tabSwitcher.isSwitcherShown && !isQuickPreview) {
+                        var foundCanvas = false
                         for (i in 0 until tabSwitcher.count) {
                             val tab = tabSwitcher.getTab(i)
                             if (tab is CanvasTab) {
+                                foundCanvas = true
                                 val ov = tab.overlayView
                                 if (ov.isFullscreen) {
                                     ov.exitFullscreenTab()
                                     ov.onToggleFullscreen?.invoke(false)
+                                }
+                            }
+                        }
+                        // Restore CanvasTab if overlay thinks it's fullscreen but tab is gone
+                        if (!foundCanvas && CanvasOverlayView.wasFullscreen) {
+                            for (i in 0 until container.childCount) {
+                                val ov = container.getChildAt(i)
+                                if (ov is CanvasOverlayView && ov.isFullscreen) {
+                                    ov.onToggleFullscreen?.invoke(true)
+                                    break
                                 }
                             }
                         }
@@ -235,7 +250,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                             ViewGroup.LayoutParams.MATCH_PARENT
                         ))
                     }
-                    ov.enterFullscreenTab()
+                    view.post { ov.enterFullscreenTab() }
                 }
             }
         }
@@ -334,11 +349,20 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                             val ts = ctx.findViewById<TabSwitcher>(R.id.tab_switcher)
                             val container = ctx.findViewById<FrameLayout>(R.id.terminal_container)
                             if (enter) {
+                                // Hide keyboard before showing fullscreen tab
+                                val imm = ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                                imm.hideSoftInputFromWindow(ctx.window?.decorView?.windowToken, 0)
+                                ctx.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
+
                                 val ct = CanvasTab("Canvas", v)
-                                ct.setBackgroundColor(0x88FF0000.toInt())
                                 ts.addTab(ct, 0, SwipeAnimation.Builder().create())
                                 ts.selectTab(ct)
                             } else {
+                                // Restore original resolution on native process
+                                if (v.frameWidth > 0 && v.frameHeight > 0) {
+                                    CanvasSocketServer.getInstance().sendToAll("resize ${v.frameWidth}x${v.frameHeight}")
+                                }
+
                                 // Move overlay back to terminal_container (floating mode)
                                 if (v.parent != container) {
                                     (v.parent as? ViewGroup)?.removeView(v)

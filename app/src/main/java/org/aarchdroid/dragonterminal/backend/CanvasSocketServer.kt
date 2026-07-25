@@ -4,8 +4,10 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import java.io.InputStream
+import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -28,7 +30,7 @@ class CanvasSocketServer private constructor() {
     companion object {
         private const val TAG = "CanvasSocket"
         private const val SOCKET_NAME = "canvas-display"
-        private const val MAX_FRAME_SIZE = 4 * 1024 * 1024  // 4MB
+        private const val MAX_FRAME_SIZE = 20 * 1024 * 1024  // 20MB sanity cap
         private const val HEADER_SIZE = 20
         private const val MAGIC = 0x4D4E444C  // "MNDL"
 
@@ -57,11 +59,36 @@ class CanvasSocketServer private constructor() {
     private var serverSocket: LocalServerSocketExt? = null
     private var acceptThread: Thread? = null
 
+    /** Active client connections keyed by connId (for sending commands back) */
+    private val clientOutputs = ConcurrentHashMap<Int, OutputStream>()
+
     fun setListener(l: CanvasFrameListener?) {
         onNewConnection = if (l != null) {
             { _ -> l }
         } else {
             null
+        }
+    }
+
+    /**
+     * Send a text command to ALL connected native clients.
+     * Command is written as UTF-8 with trailing \n.
+     * Used for sending resize requests back to the native process.
+     */
+    fun sendToAll(command: String) {
+        val payload = (command + "\n").toByteArray(Charsets.UTF_8)
+        val deadIds = mutableListOf<Int>()
+        for ((id, out) in clientOutputs) {
+            try {
+                out.write(payload)
+                out.flush()
+            } catch (e: Exception) {
+                Log.w(TAG, "[#$id] Failed to send command: ${e.message}")
+                deadIds.add(id)
+            }
+        }
+        for (id in deadIds) {
+            clientOutputs.remove(id)
         }
     }
 
@@ -108,12 +135,34 @@ class CanvasSocketServer private constructor() {
             return
         }
 
+        // Register output stream for reverse commands
+        try {
+            clientOutputs[connId] = client.outputStream
+        } catch (e: Exception) {
+            Log.w(TAG, "[#$connId] Cannot get outputStream: ${e.message}")
+        }
+
         try {
             val input: InputStream = client.inputStream
             val headerBuf = ByteArray(HEADER_SIZE)
-            val frameBuf = ByteArray(MAX_FRAME_SIZE)
-            val pixelPool = Array(3) { IntArray(MAX_FRAME_SIZE / 4) }
+            // Dynamic buffers: grow as needed based on actual frame dimensions
+            var frameBuf = ByteArray(HEADER_SIZE) // start small
+            var pixelPool = Array(3) { IntArray(0) }
             var poolIdx = 0
+
+            fun ensureBuffers(pixelBytes: Int) {
+                if (pixelBytes <= 0 || pixelBytes > MAX_FRAME_SIZE) {
+                    throw java.io.IOException("Frame pixel bytes out of range: $pixelBytes")
+                }
+                if (frameBuf.size < pixelBytes) {
+                    frameBuf = ByteArray(pixelBytes)
+                }
+                val intsNeeded = pixelBytes / 4
+                if (pixelPool[0].size < intsNeeded) {
+                    pixelPool = Array(3) { IntArray(intsNeeded) }
+                    poolIdx = 0
+                }
+            }
 
             fun nextBuffer(): IntArray {
                 val buf = pixelPool[poolIdx]
@@ -137,6 +186,7 @@ class CanvasSocketServer private constructor() {
             val firstScaleDenom = bb0.getInt()
             val firstScale = if (firstScaleDenom > 0) firstScaleDenom / 100f else 1f
             Log.w(TAG, "[#$connId] First frame: id=$firstId ${firstW}x$firstH scale=$firstScale")
+            ensureBuffers(firstW * firstH * 4)
             val firstBuf = nextBuffer()
             if (!readFrame(input, frameBuf, firstW, firstH, firstBuf)) {
                 Log.e(TAG, "[#$connId] Invalid first frame dimensions: $firstW x $firstH")
@@ -167,6 +217,8 @@ class CanvasSocketServer private constructor() {
                 val frameId = bb.getInt()
                 val w = bb.getInt()
                 val h = bb.getInt()
+                val scaleDenom = bb.getInt()
+                ensureBuffers(w * h * 4)
                 val frameBuf2 = nextBuffer()
                 if (!readFrame(input, frameBuf, w, h, frameBuf2)) {
                     consecutiveErrors++
@@ -186,6 +238,7 @@ class CanvasSocketServer private constructor() {
         } catch (e: Exception) {
             if (isRunning.get()) Log.e(TAG, "[#$connId] Client handler error", e)
         } finally {
+            clientOutputs.remove(connId)
             try { client.close() } catch (_: Exception) {}
             mainHandler.post { listener.onEnd() }
         }
@@ -193,7 +246,7 @@ class CanvasSocketServer private constructor() {
 
     private fun readFrame(input: InputStream, buf: ByteArray, w: Int, h: Int, outPixels: IntArray): Boolean {
         val pixelBytes = w * h * 4
-        if (pixelBytes <= 0 || pixelBytes > MAX_FRAME_SIZE || w * h > outPixels.size) {
+        if (pixelBytes <= 0 || w * h > outPixels.size) {
             Log.w(TAG, "Invalid frame size: $w x $h = $pixelBytes")
             return false
         }
@@ -214,6 +267,7 @@ class CanvasSocketServer private constructor() {
 
     fun stop() {
         isRunning.set(false)
+        clientOutputs.clear()
         cleanup()
         acceptThread?.interrupt()
         acceptThread = null

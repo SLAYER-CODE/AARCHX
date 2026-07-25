@@ -1,6 +1,9 @@
 package org.aarchdroid.dragonterminal.frontend.terminal
 
+import android.app.Activity
 import android.content.Context
+import android.view.inputmethod.InputMethodManager
+import android.view.WindowManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -31,9 +34,16 @@ class CanvasOverlayView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
+    companion object {
+        @Volatile
+        var wasFullscreen = false
+    }
+
     private var frameBitmap: Bitmap? = null
-    private var frameWidth = 0
-    private var frameHeight = 0
+    var frameWidth = 0
+        private set
+    var frameHeight = 0
+        private set
 
     private val transformMatrix = Matrix()
     private val canvasScreenRect = RectF()
@@ -168,23 +178,52 @@ class CanvasOverlayView @JvmOverloads constructor(
     fun enterFullscreenTab() {
         if (isFullscreen) return
         isFullscreen = true
+        wasFullscreen = true
         setBackgroundColor(Color.BLACK)
         visibility = VISIBLE
         isActive = true
         bringToFront()
-        if (frameWidth > 0 && frameHeight > 0) {
-            val p = parent as? View ?: return
-            val pw = p.width
-            val ph = p.height
-            if (pw > 0 && ph > 0) {
-                val fitScale = minOf(
-                    pw.toFloat() / (frameWidth.coerceAtLeast(1) + 40),
-                    ph.toFloat() / (frameHeight.coerceAtLeast(1) + 40)
-                )
-                scaleFactor = fitScale
-                offsetX = (pw - frameWidth * fitScale) / 2f
-                offsetY = (ph - frameHeight * fitScale) / 2f
+
+        val act = context as? Activity
+        act?.let { a ->
+            val imm = a.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(a.window?.decorView?.windowToken, 0)
+            a.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
+        }
+
+        // Scale to fill parent view (the tab content area), respecting tab title bar
+        val parent = parent as? ViewGroup
+        if (parent != null && frameWidth > 0 && frameHeight > 0) {
+            parent.post {
+                val pw = parent.width
+                val ph = parent.height
+                if (pw > 0 && ph > 0) {
+                    // Find tab_title_container height to avoid covering it
+                    // hierarchy: overlay → FrameLayout (view) → child_container → phone_tab (LinearLayout)
+                    val phoneTab = parent.parent?.parent as? ViewGroup
+                    val titleContainer = phoneTab?.findViewById<View>(
+                        de.mrapp.android.tabswitcher.R.id.tab_title_container
+                    )
+                    val titleHeight = titleContainer?.height ?: 0
+                    val availH = ph - titleHeight
+
+                    val scaleX = pw.toFloat() / frameWidth.coerceAtLeast(1)
+                    val scaleY = availH.toFloat() / frameHeight.coerceAtLeast(1)
+                    scaleFactor = minOf(scaleX, scaleY)
+                    offsetX = (pw - frameWidth * scaleFactor) / 2f
+                    offsetY = titleHeight.toFloat() + (availH - frameHeight * scaleFactor) / 2f
+                    updateTransform()
+                    postInvalidateOnAnimation()
+                    val cmd = "resize ${pw}x${availH}"
+                    org.aarchdroid.dragonterminal.backend.CanvasSocketServer.getInstance().sendToAll(cmd)
+                }
             }
+        } else if (frameWidth > 0 && frameHeight > 0) {
+            val scaleX = width.toFloat() / frameWidth.coerceAtLeast(1)
+            val scaleY = height.toFloat() / frameHeight.coerceAtLeast(1)
+            scaleFactor = minOf(scaleX, scaleY)
+            offsetX = (width - frameWidth * scaleFactor) / 2f
+            offsetY = (height - frameHeight * scaleFactor) / 2f
         }
         updateTransform()
         postInvalidateOnAnimation()
@@ -193,11 +232,16 @@ class CanvasOverlayView @JvmOverloads constructor(
     fun exitFullscreenTab() {
         if (!isFullscreen) return
         isFullscreen = false
+        wasFullscreen = false
         setBackgroundColor(Color.TRANSPARENT)
         scaleFactor = initialScale
         offsetX = initialOffsetX
         offsetY = initialOffsetY
         updateTransform()
+        val act = context as? Activity
+        act?.let { a ->
+            a.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        }
         postInvalidateOnAnimation()
     }
 
@@ -239,6 +283,25 @@ class CanvasOverlayView @JvmOverloads constructor(
         frameHeight = h
         frameBitmap?.recycle()
         frameBitmap = Bitmap.createBitmap(argbPixels, w, h, Bitmap.Config.ARGB_8888)
+        if (isFullscreen) {
+            val parent = parent as? ViewGroup
+            val pw = parent?.width ?: width
+            val ph = parent?.height ?: height
+            if (pw > 0 && ph > 0) {
+                val phoneTab = parent?.parent?.parent as? ViewGroup
+                val titleContainer = phoneTab?.findViewById<View>(
+                    de.mrapp.android.tabswitcher.R.id.tab_title_container
+                )
+                val titleHeight = titleContainer?.height ?: 0
+                val availH = ph - titleHeight
+
+                val scaleX = pw.toFloat() / frameWidth.coerceAtLeast(1)
+                val scaleY = availH.toFloat() / frameHeight.coerceAtLeast(1)
+                scaleFactor = minOf(scaleX, scaleY)
+                offsetX = (pw - frameWidth * scaleFactor) / 2f
+                offsetY = titleHeight.toFloat() + (availH - frameHeight * scaleFactor) / 2f
+            }
+        }
         updateTransform()
         postInvalidateOnAnimation()
     }
@@ -293,14 +356,9 @@ class CanvasOverlayView @JvmOverloads constructor(
 
         when (event.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
-                if (isFullscreen) {
-                    touchOwned = true
-                    startLongPress()
-                    return true
-                }
-                if (!canvasScreenRect.contains(event.x, event.y) &&
-                    !(btnVisible && btnScreenRect.contains(event.x, event.y))) {
-                    touchOwned = false
+                val inFrame = canvasScreenRect.contains(event.x, event.y)
+                val inBtn = btnVisible && btnScreenRect.contains(event.x, event.y)
+                if (!inFrame && !inBtn) {
                     return false
                 }
                 touchOwned = true
@@ -309,14 +367,15 @@ class CanvasOverlayView @JvmOverloads constructor(
                 downY = event.y
                 lastTouchX = event.x
                 lastTouchY = event.y
-                scaleDetector.onTouchEvent(event)
                 startLongPress()
+                if (!isFullscreen) {
+                    scaleDetector.onTouchEvent(event)
+                }
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
                 if (!touchOwned) return false
-                if (isFullscreen || longPressFired) return true
-                scaleDetector.onTouchEvent(event)
+                if (!isFullscreen) scaleDetector.onTouchEvent(event)
                 val dx = event.x - lastTouchX
                 val dy = event.y - lastTouchY
                 lastTouchX = event.x
@@ -336,27 +395,25 @@ class CanvasOverlayView @JvmOverloads constructor(
                 cancelPendingLongPress()
                 longPressFired = false
                 if (!touchOwned) return false
-                if (isFullscreen) {
-                    touchOwned = false
-                    return true
-                }
-                scaleDetector.onTouchEvent(event)
+                if (!isFullscreen) scaleDetector.onTouchEvent(event)
                 touchOwned = false
 
-                val now = SystemClock.uptimeMillis()
-                val dt = now - lastTapTime
-                val dTouch = hypot(event.x - lastTapX, event.y - lastTapY)
-                lastTapTime = now
-                lastTapX = event.x
-                lastTapY = event.y
+                if (!isFullscreen) {
+                    val now = SystemClock.uptimeMillis()
+                    val dt = now - lastTapTime
+                    val dTouch = hypot(event.x - lastTapX, event.y - lastTapY)
+                    lastTapTime = now
+                    lastTapX = event.x
+                    lastTapY = event.y
 
-                if (dt < ViewConfiguration.getDoubleTapTimeout() && dTouch < touchSlop * 3) {
-                    minimize()
-                    return true
-                }
+                    if (dt < ViewConfiguration.getDoubleTapTimeout() && dTouch < touchSlop * 3) {
+                        minimize()
+                        return true
+                    }
 
-                if (btnVisible && btnScreenRect.contains(event.x, event.y)) {
-                    minimize()
+                    if (btnVisible && btnScreenRect.contains(event.x, event.y)) {
+                        minimize()
+                    }
                 }
                 return true
             }
