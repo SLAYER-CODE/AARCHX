@@ -17,5 +17,7 @@ local.properties
 *.swp
 *.swo
 
-# Herramientas (tools external to this app)
-Herramientas/
+# Herramientas (tools external to this app) — keep Cornea tracked
+Herramientas/Iris/
+Herramientas/Mandela/
+Herramientas/WifiOneshot/

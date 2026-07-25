@@ -1,0 +1,8 @@
+build/
+deps/ncnn-src/
+deps/tesseract_build/src/
+deps/tesseract_build/install/
+deps/yolov8n.pt
+deps/yolov8n_ncnn_model/
+__pycache__/
+*.pyc
