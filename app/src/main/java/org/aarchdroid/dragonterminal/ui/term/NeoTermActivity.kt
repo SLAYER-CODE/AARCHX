@@ -1424,7 +1424,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     private fun createRevealAnimation(): Animation {
         if (NeoPreference.isAnimationsDisabled()) {
-            return SwipeAnimation.Builder().create()
+            return RevealAnimation.Builder().setDuration(1).create()
         }
         var x = 0f
         var y = 0f
