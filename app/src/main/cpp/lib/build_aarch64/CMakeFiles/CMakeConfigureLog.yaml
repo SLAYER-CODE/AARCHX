@@ -3460,8 +3460,8 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-A4qtyV"
-      binary: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-A4qtyV"
+      source: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-bAMigd"
+      binary: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-bAMigd"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: ""
@@ -3472,13 +3472,13 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-A4qtyV'
+        Change Dir: '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-bAMigd'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_50bc6/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_50bc6.dir/build.make CMakeFiles/cmTC_50bc6.dir/build
-        make[1]: Entering directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-A4qtyV'
-        Building C object CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o
-        /usr/bin/aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu   -v -o CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_98ab3/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_98ab3.dir/build.make CMakeFiles/cmTC_98ab3.dir/build
+        make[1]: Entering directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-bAMigd'
+        Building C object CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o
+        /usr/bin/aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu   -v -o CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
         Using built-in specs.
         COLLECT_GCC=/usr/bin/aarch64-linux-gnu-gcc
         Target: aarch64-linux-gnu
@@ -3486,8 +3486,8 @@ events:
         Thread model: posix
         Supported LTO compression algorithms: zlib zstd
         gcc version 15.1.0 (GCC) 
-        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_50bc6.dir/'
-         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/cc1 -quiet -v -isysroot /usr/aarch64-linux-gnu /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_50bc6.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mlittle-endian -mabi=lp64 -version -o /tmp/ccqdK0bX.s
+        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_98ab3.dir/'
+         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/cc1 -quiet -v -isysroot /usr/aarch64-linux-gnu /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_98ab3.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mlittle-endian -mabi=lp64 -version -o /tmp/ccGgvHSF.s
         GNU C23 (GCC) version 15.1.0 (aarch64-linux-gnu)
         	compiled by GNU C version 15.1.1 20250425, GMP version 6.3.0, MPFR version 4.2.2, MPC version 1.3.1, isl version isl-0.27-GMP
         
@@ -3501,14 +3501,14 @@ events:
          /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/include
         End of search list.
         Compiler executable checksum: 8a7a8c17da9462a858bb4e6f55ba8cb0
-        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_50bc6.dir/'
-         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/as -v -EL -mabi=lp64 -o CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o /tmp/ccqdK0bX.s
+        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_98ab3.dir/'
+         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/as -v -EL -mabi=lp64 -o CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o /tmp/ccGgvHSF.s
         GNU assembler version 2.44 (aarch64-linux-gnu) using BFD version (GNU Binutils) 2.44
         COMPILER_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/
         LIBRARY_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/:/usr/aarch64-linux-gnu/lib/../lib64/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/:/usr/aarch64-linux-gnu/lib/
-        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.'
-        Linking C executable cmTC_50bc6
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_50bc6.dir/link.txt --verbose=1
+        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.'
+        Linking C executable cmTC_98ab3
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_98ab3.dir/link.txt --verbose=1
         Using built-in specs.
         COLLECT_GCC=/usr/bin/aarch64-linux-gnu-gcc
         COLLECT_LTO_WRAPPER=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper
@@ -3519,14 +3519,14 @@ events:
         gcc version 15.1.0 (GCC) 
         COMPILER_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/
         LIBRARY_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/:/usr/aarch64-linux-gnu/lib/../lib64/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/:/usr/aarch64-linux-gnu/lib/
-        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_50bc6' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_50bc6.'
-         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/collect2 -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccjaVzHW.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_50bc6 /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o
+        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_98ab3' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_98ab3.'
+         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/collect2 -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccuEChqP.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_98ab3 /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o
         collect2 version 15.1.0
-        /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/ld -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccjaVzHW.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_50bc6 /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o
+        /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/ld -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccuEChqP.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_98ab3 /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o
         GNU ld (GNU Binutils) 2.44
-        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_50bc6' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_50bc6.'
-        /usr/bin/aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu  -v -Wl,-v CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o -o cmTC_50bc6
-        make[1]: Leaving directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-A4qtyV'
+        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_98ab3' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_98ab3.'
+        /usr/bin/aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu  -v -Wl,-v CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o -o cmTC_98ab3
+        make[1]: Leaving directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-bAMigd'
         
       exitCode: 0
   -
@@ -3559,13 +3559,13 @@ events:
       Parsed C implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-A4qtyV']
+        ignore line: [Change Dir: '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-bAMigd']
         ignore line: []
-        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_50bc6/fast]
-        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_50bc6.dir/build.make CMakeFiles/cmTC_50bc6.dir/build]
-        ignore line: [make[1]: Entering directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-A4qtyV']
-        ignore line: [Building C object CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o]
-        ignore line: [/usr/bin/aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu   -v -o CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c]
+        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_98ab3/fast]
+        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_98ab3.dir/build.make CMakeFiles/cmTC_98ab3.dir/build]
+        ignore line: [make[1]: Entering directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-bAMigd']
+        ignore line: [Building C object CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o]
+        ignore line: [/usr/bin/aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu   -v -o CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/aarch64-linux-gnu-gcc]
         ignore line: [Target: aarch64-linux-gnu]
@@ -3573,8 +3573,8 @@ events:
         ignore line: [Thread model: posix]
         ignore line: [Supported LTO compression algorithms: zlib zstd]
         ignore line: [gcc version 15.1.0 (GCC) ]
-        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_50bc6.dir/']
-        ignore line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/cc1 -quiet -v -isysroot /usr/aarch64-linux-gnu /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_50bc6.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mlittle-endian -mabi=lp64 -version -o /tmp/ccqdK0bX.s]
+        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_98ab3.dir/']
+        ignore line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/cc1 -quiet -v -isysroot /usr/aarch64-linux-gnu /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_98ab3.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mlittle-endian -mabi=lp64 -version -o /tmp/ccGgvHSF.s]
         ignore line: [GNU C23 (GCC) version 15.1.0 (aarch64-linux-gnu)]
         ignore line: [	compiled by GNU C version 15.1.1 20250425  GMP version 6.3.0  MPFR version 4.2.2  MPC version 1.3.1  isl version isl-0.27-GMP]
         ignore line: []
@@ -3588,14 +3588,14 @@ events:
         ignore line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/include]
         ignore line: [End of search list.]
         ignore line: [Compiler executable checksum: 8a7a8c17da9462a858bb4e6f55ba8cb0]
-        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_50bc6.dir/']
-        ignore line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/as -v -EL -mabi=lp64 -o CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o /tmp/ccqdK0bX.s]
+        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_98ab3.dir/']
+        ignore line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/as -v -EL -mabi=lp64 -o CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o /tmp/ccGgvHSF.s]
         ignore line: [GNU assembler version 2.44 (aarch64-linux-gnu) using BFD version (GNU Binutils) 2.44]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/:/usr/aarch64-linux-gnu/lib/../lib64/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/:/usr/aarch64-linux-gnu/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.']
-        ignore line: [Linking C executable cmTC_50bc6]
-        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_50bc6.dir/link.txt --verbose=1]
+        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o' '-c' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.']
+        ignore line: [Linking C executable cmTC_98ab3]
+        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_98ab3.dir/link.txt --verbose=1]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/aarch64-linux-gnu-gcc]
         ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper]
@@ -3606,13 +3606,13 @@ events:
         ignore line: [gcc version 15.1.0 (GCC) ]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/:/usr/aarch64-linux-gnu/lib/../lib64/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/:/usr/aarch64-linux-gnu/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_50bc6' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_50bc6.']
-        link line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/collect2 -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccjaVzHW.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_50bc6 /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o]
+        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_98ab3' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_98ab3.']
+        link line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/collect2 -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccuEChqP.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_98ab3 /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o]
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/collect2] ==> ignore
           arg [-plugin] ==> ignore
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so] ==> ignore
           arg [-plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper] ==> ignore
-          arg [-plugin-opt=-fresolution=/tmp/ccjaVzHW.res] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/ccuEChqP.res] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
           arg [-plugin-opt=-pass-through=-lc] ==> ignore
@@ -3629,7 +3629,7 @@ events:
           arg [-maarch64linux] ==> ignore
           arg [-pie] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_50bc6] ==> ignore
+          arg [cmTC_98ab3] ==> ignore
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o] ==> obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o]
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o] ==> obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o]
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o] ==> obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o]
@@ -3639,7 +3639,7 @@ events:
           arg [-L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib] ==> dir [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib]
           arg [-L/usr/aarch64-linux-gnu/lib] ==> dir [/usr/aarch64-linux-gnu/lib]
           arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o] ==> ignore
+          arg [CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o] ==> ignore
           arg [-lgcc] ==> lib [gcc]
           arg [--push-state] ==> ignore
           arg [--as-needed] ==> ignore
@@ -3654,7 +3654,7 @@ events:
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o] ==> obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o]
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o] ==> obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o]
         ignore line: [collect2 version 15.1.0]
-        ignore line: [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/ld -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccjaVzHW.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_50bc6 /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_50bc6.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o]
+        ignore line: [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/ld -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccuEChqP.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_98ab3 /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_98ab3.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o]
         linker tool for 'C': /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/ld
         collapse obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o] ==> [/usr/aarch64-linux-gnu/lib64/Scrt1.o]
         collapse obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o] ==> [/usr/aarch64-linux-gnu/lib64/crti.o]
@@ -3689,8 +3689,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-uDGKKl"
-      binary: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-uDGKKl"
+      source: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-Yh44g5"
+      binary: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-Yh44g5"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -3702,13 +3702,13 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-uDGKKl'
+        Change Dir: '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-Yh44g5'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_355bb/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_355bb.dir/build.make CMakeFiles/cmTC_355bb.dir/build
-        make[1]: Entering directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-uDGKKl'
-        Building CXX object CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o
-        /usr/bin/aarch64-linux-gnu-g++ --sysroot=/usr/aarch64-linux-gnu   -v -o CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_0488b/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_0488b.dir/build.make CMakeFiles/cmTC_0488b.dir/build
+        make[1]: Entering directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-Yh44g5'
+        Building CXX object CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o
+        /usr/bin/aarch64-linux-gnu-g++ --sysroot=/usr/aarch64-linux-gnu   -v -o CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp
         Using built-in specs.
         COLLECT_GCC=/usr/bin/aarch64-linux-gnu-g++
         Target: aarch64-linux-gnu
@@ -3716,8 +3716,8 @@ events:
         Thread model: posix
         Supported LTO compression algorithms: zlib zstd
         gcc version 15.1.0 (GCC) 
-        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_355bb.dir/'
-         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/cc1plus -quiet -v -isysroot /usr/aarch64-linux-gnu -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_355bb.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mlittle-endian -mabi=lp64 -version -o /tmp/ccr847vT.s
+        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_0488b.dir/'
+         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/cc1plus -quiet -v -isysroot /usr/aarch64-linux-gnu -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_0488b.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mlittle-endian -mabi=lp64 -version -o /tmp/ccHVsC9L.s
         GNU C++17 (GCC) version 15.1.0 (aarch64-linux-gnu)
         	compiled by GNU C version 15.1.1 20250425, GMP version 6.3.0, MPFR version 4.2.2, MPC version 1.3.1, isl version isl-0.27-GMP
         
@@ -3734,14 +3734,14 @@ events:
          /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/include
         End of search list.
         Compiler executable checksum: c6f38a5dc240377e92e7a7c19b0c7cdb
-        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_355bb.dir/'
-         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/as -v -EL -mabi=lp64 -o CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccr847vT.s
+        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_0488b.dir/'
+         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/as -v -EL -mabi=lp64 -o CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccHVsC9L.s
         GNU assembler version 2.44 (aarch64-linux-gnu) using BFD version (GNU Binutils) 2.44
         COMPILER_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/
         LIBRARY_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/:/usr/aarch64-linux-gnu/lib/../lib64/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/:/usr/aarch64-linux-gnu/lib/
-        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.'
-        Linking CXX executable cmTC_355bb
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_355bb.dir/link.txt --verbose=1
+        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.'
+        Linking CXX executable cmTC_0488b
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0488b.dir/link.txt --verbose=1
         Using built-in specs.
         COLLECT_GCC=/usr/bin/aarch64-linux-gnu-g++
         COLLECT_LTO_WRAPPER=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper
@@ -3752,14 +3752,14 @@ events:
         gcc version 15.1.0 (GCC) 
         COMPILER_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/
         LIBRARY_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/:/usr/aarch64-linux-gnu/lib/../lib64/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/:/usr/aarch64-linux-gnu/lib/
-        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_355bb' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_355bb.'
-         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/collect2 -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccEztKD4.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_355bb /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o
+        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_0488b' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_0488b.'
+         /usr/lib/gcc/aarch64-linux-gnu/15.1.0/collect2 -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccLwaGMP.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_0488b /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o
         collect2 version 15.1.0
-        /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/ld -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccEztKD4.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_355bb /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o
+        /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/ld -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccLwaGMP.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_0488b /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o
         GNU ld (GNU Binutils) 2.44
-        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_355bb' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_355bb.'
-        /usr/bin/aarch64-linux-gnu-g++ --sysroot=/usr/aarch64-linux-gnu  -v -Wl,-v CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_355bb
-        make[1]: Leaving directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-uDGKKl'
+        COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_0488b' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_0488b.'
+        /usr/bin/aarch64-linux-gnu-g++ --sysroot=/usr/aarch64-linux-gnu  -v -Wl,-v CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_0488b
+        make[1]: Leaving directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-Yh44g5'
         
       exitCode: 0
   -
@@ -3798,13 +3798,13 @@ events:
       Parsed CXX implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-uDGKKl']
+        ignore line: [Change Dir: '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-Yh44g5']
         ignore line: []
-        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_355bb/fast]
-        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_355bb.dir/build.make CMakeFiles/cmTC_355bb.dir/build]
-        ignore line: [make[1]: Entering directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-uDGKKl']
-        ignore line: [Building CXX object CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o]
-        ignore line: [/usr/bin/aarch64-linux-gnu-g++ --sysroot=/usr/aarch64-linux-gnu   -v -o CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_0488b/fast]
+        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_0488b.dir/build.make CMakeFiles/cmTC_0488b.dir/build]
+        ignore line: [make[1]: Entering directory '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-Yh44g5']
+        ignore line: [Building CXX object CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/usr/bin/aarch64-linux-gnu-g++ --sysroot=/usr/aarch64-linux-gnu   -v -o CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/aarch64-linux-gnu-g++]
         ignore line: [Target: aarch64-linux-gnu]
@@ -3812,8 +3812,8 @@ events:
         ignore line: [Thread model: posix]
         ignore line: [Supported LTO compression algorithms: zlib zstd]
         ignore line: [gcc version 15.1.0 (GCC) ]
-        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_355bb.dir/']
-        ignore line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/cc1plus -quiet -v -isysroot /usr/aarch64-linux-gnu -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_355bb.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mlittle-endian -mabi=lp64 -version -o /tmp/ccr847vT.s]
+        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_0488b.dir/']
+        ignore line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/cc1plus -quiet -v -isysroot /usr/aarch64-linux-gnu -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_0488b.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mlittle-endian -mabi=lp64 -version -o /tmp/ccHVsC9L.s]
         ignore line: [GNU C++17 (GCC) version 15.1.0 (aarch64-linux-gnu)]
         ignore line: [	compiled by GNU C version 15.1.1 20250425  GMP version 6.3.0  MPFR version 4.2.2  MPC version 1.3.1  isl version isl-0.27-GMP]
         ignore line: []
@@ -3830,14 +3830,14 @@ events:
         ignore line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/include]
         ignore line: [End of search list.]
         ignore line: [Compiler executable checksum: c6f38a5dc240377e92e7a7c19b0c7cdb]
-        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_355bb.dir/']
-        ignore line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/as -v -EL -mabi=lp64 -o CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccr847vT.s]
+        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_0488b.dir/']
+        ignore line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/as -v -EL -mabi=lp64 -o CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccHVsC9L.s]
         ignore line: [GNU assembler version 2.44 (aarch64-linux-gnu) using BFD version (GNU Binutils) 2.44]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/:/usr/aarch64-linux-gnu/lib/../lib64/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/:/usr/aarch64-linux-gnu/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.']
-        ignore line: [Linking CXX executable cmTC_355bb]
-        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_355bb.dir/link.txt --verbose=1]
+        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.']
+        ignore line: [Linking CXX executable cmTC_0488b]
+        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0488b.dir/link.txt --verbose=1]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/aarch64-linux-gnu-g++]
         ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper]
@@ -3848,13 +3848,13 @@ events:
         ignore line: [gcc version 15.1.0 (GCC) ]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/:/usr/aarch64-linux-gnu/lib/../lib64/:/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/:/usr/aarch64-linux-gnu/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_355bb' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_355bb.']
-        link line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/collect2 -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccEztKD4.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_355bb /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o]
+        ignore line: [COLLECT_GCC_OPTIONS='--sysroot=/usr/aarch64-linux-gnu' '-v' '-o' 'cmTC_0488b' '-shared-libgcc' '-mlittle-endian' '-mabi=lp64' '-dumpdir' 'cmTC_0488b.']
+        link line: [ /usr/lib/gcc/aarch64-linux-gnu/15.1.0/collect2 -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccLwaGMP.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_0488b /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o]
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/collect2] ==> ignore
           arg [-plugin] ==> ignore
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so] ==> ignore
           arg [-plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper] ==> ignore
-          arg [-plugin-opt=-fresolution=/tmp/ccEztKD4.res] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/ccLwaGMP.res] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
           arg [-plugin-opt=-pass-through=-lc] ==> ignore
@@ -3871,7 +3871,7 @@ events:
           arg [-maarch64linux] ==> ignore
           arg [-pie] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_355bb] ==> ignore
+          arg [cmTC_0488b] ==> ignore
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o] ==> obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o]
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o] ==> obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o]
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o] ==> obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o]
@@ -3881,7 +3881,7 @@ events:
           arg [-L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib] ==> dir [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib]
           arg [-L/usr/aarch64-linux-gnu/lib] ==> dir [/usr/aarch64-linux-gnu/lib]
           arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
           arg [-lstdc++] ==> lib [stdc++]
           arg [-lm] ==> lib [m]
           arg [-lgcc_s] ==> lib [gcc_s]
@@ -3892,7 +3892,7 @@ events:
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o] ==> obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o]
           arg [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o] ==> obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o]
         ignore line: [collect2 version 15.1.0]
-        ignore line: [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/ld -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccEztKD4.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_355bb /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_355bb.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o]
+        ignore line: [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/ld -plugin /usr/lib/gcc/aarch64-linux-gnu/15.1.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/aarch64-linux-gnu/15.1.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccLwaGMP.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/usr/aarch64-linux-gnu --build-id --eh-frame-hdr --hash-style=gnu -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux -pie -o cmTC_0488b /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtbeginS.o -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64 -L/usr/aarch64-linux-gnu/lib/../lib64 -L/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib -L/usr/aarch64-linux-gnu/lib -v CMakeFiles/cmTC_0488b.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/aarch64-linux-gnu/15.1.0/crtendS.o /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crtn.o]
         linker tool for 'CXX': /usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/bin/ld
         collapse obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/Scrt1.o] ==> [/usr/aarch64-linux-gnu/lib64/Scrt1.o]
         collapse obj [/usr/lib/gcc/aarch64-linux-gnu/15.1.0/../../../../aarch64-linux-gnu/lib/../lib64/crti.o] ==> [/usr/aarch64-linux-gnu/lib64/crti.o]
@@ -3927,8 +3927,8 @@ events:
       - "/usr/share/cmake/Modules/FindThreads.cmake:226 (_threads_check_libc)"
       - "CMakeLists.txt:10 (find_package)"
     directories:
-      source: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-fxpoqr"
-      binary: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-fxpoqr"
+      source: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-xWDwa9"
+      binary: "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-xWDwa9"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: ""
@@ -3939,17 +3939,17 @@ events:
       variable: "CMAKE_HAVE_LIBC_PTHREAD"
       cached: true
       stdout: |
-        Change Dir: '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-fxpoqr'
+        Change Dir: '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-xWDwa9'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_70661/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_70661.dir/build.make CMakeFiles/cmTC_70661.dir/build
-        make[1]: se entra en el directorio '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-fxpoqr'
-        Building C object CMakeFiles/cmTC_70661.dir/src.c.o
-        /usr/bin/aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_70661.dir/src.c.o -c /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-fxpoqr/src.c
-        Linking C executable cmTC_70661
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_70661.dir/link.txt --verbose=1
-        /usr/bin/aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu CMakeFiles/cmTC_70661.dir/src.c.o -o cmTC_70661
-        make[1]: se sale del directorio '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-fxpoqr'
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_d9156/fast
+        /usr/bin/make  -f CMakeFiles/cmTC_d9156.dir/build.make CMakeFiles/cmTC_d9156.dir/build
+        make[1]: se entra en el directorio '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-xWDwa9'
+        Building C object CMakeFiles/cmTC_d9156.dir/src.c.o
+        /usr/bin/aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_d9156.dir/src.c.o -c /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-xWDwa9/src.c
+        Linking C executable cmTC_d9156
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d9156.dir/link.txt --verbose=1
+        /usr/bin/aarch64-linux-gnu-gcc --sysroot=/usr/aarch64-linux-gnu CMakeFiles/cmTC_d9156.dir/src.c.o -o cmTC_d9156
+        make[1]: se sale del directorio '/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/CMakeScratch/TryCompile-xWDwa9'
         
       exitCode: 0
 ...

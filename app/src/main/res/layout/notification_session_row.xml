@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="28dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp"
+    android:paddingTop="2dp"
+    android:paddingBottom="2dp">
+
+    <TextView
+        android:id="@+id/session_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="#FFFFFFFF"
+        android:textSize="14sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <Button
+        android:id="@+id/btn_kill"
+        android:layout_width="wrap_content"
+        android:layout_height="24dp"
+        android:text="Kill"
+        android:textColor="#FFFFFF"
+        android:textSize="10sp"
+        android:textAllCaps="false"
+        android:background="#FFD32F2F"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:gravity="center" />
+
+</LinearLayout>
