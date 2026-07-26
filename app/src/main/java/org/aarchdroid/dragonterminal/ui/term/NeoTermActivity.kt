@@ -72,6 +72,7 @@ import org.aarchdroid.dragonterminal.ui.term.tab.NeoTabDecorator
 import org.aarchdroid.dragonterminal.ui.term.tab.CanvasTab
 import org.aarchdroid.dragonterminal.ui.term.tab.TermTab
 import org.aarchdroid.dragonterminal.ui.term.tab.XSessionTab
+import org.aarchdroid.dragonterminal.backend.CanvasSocketServer
 import org.aarchdroid.dragonterminal.backend.HiddenOverlayRegistry
 
 import org.aarchdroid.dragonterminal.utils.FullScreenHelper
@@ -630,8 +631,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                                     FrameLayout.LayoutParams.MATCH_PARENT
                                 ))
                             }
-                            // Minimize to carousel (safe during tab removal — no onToggleFullscreen cascade)
-                            ov.minimizeToCarousel()
+                            // Restore to floating overlay (not carousel) — native tool keeps running
+                            ov.restore()
                         }
                         updatePlaceholderVisibility()
                     }
@@ -708,6 +709,12 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         tabSessionMap.clear()
 
         NeoTabDecorator.stopCameraServer()
+
+        CanvasSocketServer.getInstance().apply {
+            stop()
+            onNewConnection = null
+        }
+        HiddenOverlayRegistry.clear()
 
         if (termService != null) {
             termService = null

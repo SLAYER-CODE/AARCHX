@@ -92,6 +92,21 @@ class CanvasSocketServer private constructor() {
         }
     }
 
+    /**
+     * Send a text command to a SPECIFIC connected native client by connId.
+     * Command is written as UTF-8 with trailing \n.
+     */
+    fun sendToClient(connId: Int, command: String) {
+        val out = clientOutputs[connId] ?: return
+        try {
+            out.write((command + "\n").toByteArray(Charsets.UTF_8))
+            out.flush()
+        } catch (e: Exception) {
+            Log.w(TAG, "[#$connId] Failed to send command: ${e.message}")
+            clientOutputs.remove(connId)
+        }
+    }
+
     fun start() {
         if (!isRunning.compareAndSet(false, true)) {
             Log.w(TAG, "start() called but already running (isRunning=$isRunning)")

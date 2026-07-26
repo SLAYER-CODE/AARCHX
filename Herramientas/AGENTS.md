@@ -234,6 +234,26 @@ Sin magic. Socket dedicado por cámara (cam-0, cam-1, etc).
 - `scale_denom` = `overlay_scale * 100` (default 100 = 1.0)
 - `CanvasSocketServer.kt` es multi-cliente
 
+### canvas-display (Android → Iris/Mandela, reverse channel)
+
+Text commands newline-delimited, written to the same socket by Android:
+
+| Comando | Descripción |
+|---|---|
+| `resize <W>x<H>` | Redimensionar canvas del tool nativo |
+| `touch down <x> <y>` | Dedo presionado (coords del frame) |
+| `touch move <x> <y>` | Dedo se mueve |
+| `touch up <x> <y>` | Dedo levantado |
+| `pinch <factor> <cx> <cy>` | Zoom (factor > 1 = zoom in, < 1 = zoom out) |
+
+Touch/pinch solo se envían cuando el overlay CanvasOverlayView está en
+**fullscreen** (CanvasTab). Coordenadas en píxeles del frame (0..W, 0..H),
+mapeadas desde screen coords por el overlay.
+
+Los tools nativos parsean estos comandos en `poll_commands()` y los exponen
+vía accessores (`touch_down()`, `touch_x/y()`, `consume_pinch()`). El
+Controller los consume para pan/zoom del renderer.
+
 ### cam-ctrl (Iris → Android, texto)
 
 ```

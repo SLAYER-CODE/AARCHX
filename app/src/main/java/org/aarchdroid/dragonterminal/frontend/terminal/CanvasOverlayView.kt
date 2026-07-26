@@ -20,6 +20,7 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.view.doOnLayout
 import kotlin.math.hypot
 import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.backend.HiddenOverlayRegistry
@@ -66,7 +67,44 @@ class CanvasOverlayView @JvmOverloads constructor(
     var overlaySession: TerminalSession? = null
     val createdAt: Long = System.currentTimeMillis()
 
+    /** Connection ID from CanvasSocketServer — used for targeted sendToClient() */
+    var connId: Int = -1
+
     var isFullscreen = false
+
+    /** Original frame dimensions from native tool — used to restore after fullscreen */
+    var originalFrameWidth: Int = 0
+        private set
+    var originalFrameHeight: Int = 0
+        private set
+
+    /** True while waiting for native tool to respond to resize with matching dimensions */
+    internal var pendingFullscreenResize = false
+
+    /** Tracks parent size to detect keyboard open/close during fullscreen */
+    private var fullscreenParentWidth = 0
+    private var fullscreenParentHeight = 0
+    private val fullscreenLayoutListener = OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+        if (!isFullscreen) return@OnLayoutChangeListener
+        val parent = parent as? ViewGroup ?: return@OnLayoutChangeListener
+        val pw = parent.width
+        val ph = parent.height
+        if (pw > 0 && ph > 0 && (pw != fullscreenParentWidth || ph != fullscreenParentHeight)) {
+            fullscreenParentWidth = pw
+            fullscreenParentHeight = ph
+            pendingFullscreenResize = true
+            val scaleX = pw.toFloat() / frameWidth.coerceAtLeast(1)
+            val scaleY = ph.toFloat() / frameHeight.coerceAtLeast(1)
+            scaleFactor = minOf(scaleX, scaleY)
+            offsetX = (pw - frameWidth * scaleFactor) / 2f
+            offsetY = (ph - frameHeight * scaleFactor) / 2f
+            updateTransform()
+            postInvalidateOnAnimation()
+            if (connId >= 0) {
+                CanvasSocketServer.getInstance().sendToClient(connId, "resize ${pw}x${ph}")
+            }
+        }
+    }
 
     private val longPressHandler = Handler(Looper.getMainLooper())
     private var longPressRunnable: Runnable? = null
@@ -86,17 +124,32 @@ class CanvasOverlayView @JvmOverloads constructor(
     private var lastTapX = 0f
     private var lastTapY = 0f
 
+    /** Throttle touch move forwarding to ~60fps */
+    private var lastMoveSendTime = 0L
+    private val MOVE_THROTTLE_MS = 16L
+
     private fun createScaleDetector(): ScaleGestureDetector {
         return ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScale(detector: ScaleGestureDetector): Boolean {
-                val cx = offsetX + frameWidth * scaleFactor / 2f
-                val cy = offsetY + frameHeight * scaleFactor / 2f
-                scaleFactor *= detector.scaleFactor
-                scaleFactor = scaleFactor.coerceIn(0.1f, 10f)
-                offsetX = cx - frameWidth * scaleFactor / 2f
-                offsetY = cy - frameHeight * scaleFactor / 2f
-                updateTransform()
-                postInvalidateOnAnimation()
+                if (isFullscreen) {
+                    // Forward pinch to native tool via socket
+                    val fx = mapScreenToFrameX(detector.focusX)
+                    val fy = mapScreenToFrameY(detector.focusY)
+                    if (connId >= 0) {
+                        CanvasSocketServer.getInstance().sendToClient(
+                            connId, "pinch ${detector.scaleFactor} ${fx.toInt()} ${fy.toInt()}"
+                        )
+                    }
+                } else {
+                    val cx = offsetX + frameWidth * scaleFactor / 2f
+                    val cy = offsetY + frameHeight * scaleFactor / 2f
+                    scaleFactor *= detector.scaleFactor
+                    scaleFactor = scaleFactor.coerceIn(0.1f, 10f)
+                    offsetX = cx - frameWidth * scaleFactor / 2f
+                    offsetY = cy - frameHeight * scaleFactor / 2f
+                    updateTransform()
+                    postInvalidateOnAnimation()
+                }
                 return true
             }
         })
@@ -126,6 +179,10 @@ class CanvasOverlayView @JvmOverloads constructor(
         exitFullscreen()
         frameWidth = width
         frameHeight = height
+        if (originalFrameWidth <= 0 || originalFrameHeight <= 0) {
+            originalFrameWidth = width
+            originalFrameHeight = height
+        }
         layoutParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT
@@ -192,6 +249,7 @@ class CanvasOverlayView @JvmOverloads constructor(
         if (isFullscreen) return
         isFullscreen = true
         wasFullscreen = true
+        pendingFullscreenResize = true
         setBackgroundColor(Color.BLACK)
         visibility = VISIBLE
         isActive = true
@@ -204,36 +262,46 @@ class CanvasOverlayView @JvmOverloads constructor(
             a.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
         }
 
-        // Scale to fill parent view (the tab content area), respecting tab title bar
+        // Scale to fill the entire parent (tab content area). No title height subtraction —
+        // the parent FrameLayout is already below the tab's own title bar.
         val parent = parent as? ViewGroup
         if (parent != null && frameWidth > 0 && frameHeight > 0) {
-            parent.post {
-                val pw = parent.width
-                val ph = parent.height
-                if (pw > 0 && ph > 0) {
-                    // Find tab_title_container height to avoid covering it
-                    // hierarchy: overlay → FrameLayout (view) → child_container → phone_tab (LinearLayout)
-                    val phoneTab = parent.parent?.parent as? ViewGroup
-                    val titleContainer = phoneTab?.findViewById<View>(
-                        de.mrapp.android.tabswitcher.R.id.tab_title_container
-                    )
-                    val titleHeight = titleContainer?.height ?: 0
-                    val availH = ph - titleHeight
-
-                    val scaleX = pw.toFloat() / frameWidth.coerceAtLeast(1)
-                    val scaleY = availH.toFloat() / frameHeight.coerceAtLeast(1)
-                    scaleFactor = minOf(scaleX, scaleY)
-                    offsetX = (pw - frameWidth * scaleFactor) / 2f
-                    offsetY = titleHeight.toFloat() + (availH - frameHeight * scaleFactor) / 2f
-                    updateTransform()
-                    postInvalidateOnAnimation()
-                    // NOTE: Do NOT send resize command here. Changing the canvas resolution
-                    // causes setFrame() to recalculate scale with different frame dimensions,
-                    // resulting in a second visual growth (the "double fullscreen" bug).
-                    // The Android side scales the bitmap to fill the tab; text/bboxes stay at
-                    // camera resolution.
+            val pw = parent.width
+            val ph = parent.height
+            if (pw > 0 && ph > 0) {
+                fullscreenParentWidth = pw
+                fullscreenParentHeight = ph
+                val scaleX = pw.toFloat() / frameWidth.coerceAtLeast(1)
+                val scaleY = ph.toFloat() / frameHeight.coerceAtLeast(1)
+                scaleFactor = minOf(scaleX, scaleY)
+                offsetX = (pw - frameWidth * scaleFactor) / 2f
+                offsetY = (ph - frameHeight * scaleFactor) / 2f
+                updateTransform()
+                postInvalidateOnAnimation()
+                if (connId >= 0) {
+                    CanvasSocketServer.getInstance().sendToClient(connId, "resize ${pw}x${ph}")
+                }
+            } else {
+                parent.doOnLayout {
+                    val w2 = parent.width
+                    val h2 = parent.height
+                    if (w2 > 0 && h2 > 0) {
+                        fullscreenParentWidth = w2
+                        fullscreenParentHeight = h2
+                        val scaleX = w2.toFloat() / frameWidth.coerceAtLeast(1)
+                        val scaleY = h2.toFloat() / frameHeight.coerceAtLeast(1)
+                        scaleFactor = minOf(scaleX, scaleY)
+                        offsetX = (w2 - frameWidth * scaleFactor) / 2f
+                        offsetY = (h2 - frameHeight * scaleFactor) / 2f
+                        updateTransform()
+                        postInvalidateOnAnimation()
+                        if (connId >= 0) {
+                            CanvasSocketServer.getInstance().sendToClient(connId, "resize ${w2}x${h2}")
+                        }
+                    }
                 }
             }
+            parent.addOnLayoutChangeListener(fullscreenLayoutListener)
         } else if (frameWidth > 0 && frameHeight > 0) {
             val scaleX = width.toFloat() / frameWidth.coerceAtLeast(1)
             val scaleY = height.toFloat() / frameHeight.coerceAtLeast(1)
@@ -249,9 +317,12 @@ class CanvasOverlayView @JvmOverloads constructor(
         if (!isFullscreen) return
         isFullscreen = false
         wasFullscreen = false
+        pendingFullscreenResize = false
+        (parent as? ViewGroup)?.removeOnLayoutChangeListener(fullscreenLayoutListener)
         setBackgroundColor(Color.TRANSPARENT)
-        // Restore default canvas size on Cornea (safety net)
-        CanvasSocketServer.getInstance().sendToAll("resize 640x480")
+        if (connId >= 0 && originalFrameWidth > 0 && originalFrameHeight > 0) {
+            CanvasSocketServer.getInstance().sendToClient(connId, "resize ${originalFrameWidth}x${originalFrameHeight}")
+        }
         scaleFactor = initialScale
         offsetX = initialOffsetX
         offsetY = initialOffsetY
@@ -306,18 +377,18 @@ class CanvasOverlayView @JvmOverloads constructor(
             val pw = parent?.width ?: width
             val ph = parent?.height ?: height
             if (pw > 0 && ph > 0) {
-                val phoneTab = parent?.parent?.parent as? ViewGroup
-                val titleContainer = phoneTab?.findViewById<View>(
-                    de.mrapp.android.tabswitcher.R.id.tab_title_container
-                )
-                val titleHeight = titleContainer?.height ?: 0
-                val availH = ph - titleHeight
-
                 val scaleX = pw.toFloat() / frameWidth.coerceAtLeast(1)
-                val scaleY = availH.toFloat() / frameHeight.coerceAtLeast(1)
+                val scaleY = ph.toFloat() / frameHeight.coerceAtLeast(1)
                 scaleFactor = minOf(scaleX, scaleY)
                 offsetX = (pw - frameWidth * scaleFactor) / 2f
-                offsetY = titleHeight.toFloat() + (availH - frameHeight * scaleFactor) / 2f
+                offsetY = (ph - frameHeight * scaleFactor) / 2f
+                // Retry resize: if frame is still at original resolution, resend resize
+                if (pendingFullscreenResize && connId >= 0 &&
+                    (frameWidth != pw || frameHeight != ph)) {
+                    CanvasSocketServer.getInstance().sendToClient(connId, "resize ${pw}x${ph}")
+                } else {
+                    pendingFullscreenResize = false
+                }
             }
         }
         updateTransform()
@@ -350,7 +421,10 @@ class CanvasOverlayView @JvmOverloads constructor(
         val bmp = frameBitmap ?: return
         if (!isActive) return
 
-        canvas.drawBitmap(bmp, transformMatrix, paint)
+        // Don't draw the old frame while waiting for resize — shows black background instead
+        if (!pendingFullscreenResize) {
+            canvas.drawBitmap(bmp, transformMatrix, paint)
+        }
 
         if (btnVisible) {
             btnPaint.color = 0xCC000000.toInt()
@@ -369,6 +443,18 @@ class CanvasOverlayView @JvmOverloads constructor(
         }
     }
 
+    /** Map screen X to frame pixel coordinate (0..frameWidth) */
+    private fun mapScreenToFrameX(screenX: Float): Float {
+        if (scaleFactor == 0f) return 0f
+        return ((screenX - offsetX) / scaleFactor).coerceIn(0f, frameWidth.toFloat())
+    }
+
+    /** Map screen Y to frame pixel coordinate (0..frameHeight) */
+    private fun mapScreenToFrameY(screenY: Float): Float {
+        if (scaleFactor == 0f) return 0f
+        return ((screenY - offsetY) / scaleFactor).coerceIn(0f, frameHeight.toFloat())
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (!isActive) return false
 
@@ -385,27 +471,49 @@ class CanvasOverlayView @JvmOverloads constructor(
                 downY = event.y
                 lastTouchX = event.x
                 lastTouchY = event.y
+                lastMoveSendTime = 0L
                 startLongPress()
-                if (!isFullscreen) {
-                    scaleDetector.onTouchEvent(event)
+                // Always feed scaleDetector (for pinch detection even in fullscreen)
+                scaleDetector.onTouchEvent(event)
+                if (isFullscreen) {
+                    // Forward touch down to native tool
+                    val fx = mapScreenToFrameX(event.x)
+                    val fy = mapScreenToFrameY(event.y)
+                    if (connId >= 0) {
+                        CanvasSocketServer.getInstance().sendToClient(connId, "touch down ${fx.toInt()} ${fy.toInt()}")
+                    }
                 }
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
                 if (!touchOwned) return false
-                if (!isFullscreen) scaleDetector.onTouchEvent(event)
-                val dx = event.x - lastTouchX
-                val dy = event.y - lastTouchY
-                lastTouchX = event.x
-                lastTouchY = event.y
+                // Always feed scaleDetector for pinch detection
+                scaleDetector.onTouchEvent(event)
                 if (hypot(event.x - downX, event.y - downY) > touchSlop) {
                     cancelPendingLongPress()
                 }
-                if (!scaleDetector.isInProgress) {
-                    offsetX += dx
-                    offsetY += dy
-                    updateTransform()
-                    postInvalidateOnAnimation()
+                if (isFullscreen) {
+                    // Forward touch move to native tool (throttled)
+                    val now = SystemClock.uptimeMillis()
+                    if (now - lastMoveSendTime >= MOVE_THROTTLE_MS) {
+                        lastMoveSendTime = now
+                        val fx = mapScreenToFrameX(event.x)
+                        val fy = mapScreenToFrameY(event.y)
+                        if (connId >= 0) {
+                            CanvasSocketServer.getInstance().sendToClient(connId, "touch move ${fx.toInt()} ${fy.toInt()}")
+                        }
+                    }
+                } else {
+                    val dx = event.x - lastTouchX
+                    val dy = event.y - lastTouchY
+                    lastTouchX = event.x
+                    lastTouchY = event.y
+                    if (!scaleDetector.isInProgress) {
+                        offsetX += dx
+                        offsetY += dy
+                        updateTransform()
+                        postInvalidateOnAnimation()
+                    }
                 }
                 return true
             }
@@ -413,10 +521,16 @@ class CanvasOverlayView @JvmOverloads constructor(
                 cancelPendingLongPress()
                 longPressFired = false
                 if (!touchOwned) return false
-                if (!isFullscreen) scaleDetector.onTouchEvent(event)
-                touchOwned = false
-
-                if (!isFullscreen) {
+                // Always feed scaleDetector
+                scaleDetector.onTouchEvent(event)
+                if (isFullscreen) {
+                    // Forward touch up to native tool
+                    val fx = mapScreenToFrameX(event.x)
+                    val fy = mapScreenToFrameY(event.y)
+                    if (connId >= 0) {
+                        CanvasSocketServer.getInstance().sendToClient(connId, "touch up ${fx.toInt()} ${fy.toInt()}")
+                    }
+                } else {
                     val now = SystemClock.uptimeMillis()
                     val dt = now - lastTapTime
                     val dTouch = hypot(event.x - lastTapX, event.y - lastTapY)
@@ -433,6 +547,7 @@ class CanvasOverlayView @JvmOverloads constructor(
                         minimize()
                     }
                 }
+                touchOwned = false
                 return true
             }
             MotionEvent.ACTION_CANCEL -> {

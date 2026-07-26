@@ -161,22 +161,56 @@ bool Canvas::resize(int width, int height) {
 bool Canvas::poll_commands() {
     if (socket_fd_ < 0) return false;
     bool resized = false;
+    static char rbuf[1024];
+    static size_t rbuf_len = 0;
     struct pollfd pfd = { socket_fd_, POLLIN, 0 };
     while (poll(&pfd, 1, 0) > 0) {
-        char buf[256];
-        ssize_t n = read(socket_fd_, buf, sizeof(buf) - 1);
+        ssize_t n = read(socket_fd_, rbuf + rbuf_len, sizeof(rbuf) - rbuf_len - 1);
         if (n <= 0) break;
-        buf[n] = '\0';
-        // Parse each newline-delimited command in the buffer
-        char* line = buf;
+        rbuf_len += n;
+        rbuf[rbuf_len] = '\0';
+        char* line = rbuf;
         char* nl;
         while ((nl = strchr(line, '\n')) != nullptr) {
             *nl = '\0';
             int rw = 0, rh = 0;
             if (sscanf(line, "resize %dx%d", &rw, &rh) == 2) {
                 if (resize(rw, rh)) resized = true;
+            } else if (strncmp(line, "touch ", 6) == 0) {
+                char action[8] = {};
+                int tx = 0, ty = 0;
+                if (sscanf(line, "touch %7s %d %d", action, &tx, &ty) >= 2) {
+                    if (strcmp(action, "down") == 0) {
+                        touch_down_ = true;
+                        touch_x_ = tx;
+                        touch_y_ = ty;
+                    } else if (strcmp(action, "move") == 0) {
+                        touch_x_ = tx;
+                        touch_y_ = ty;
+                    } else if (strcmp(action, "up") == 0) {
+                        touch_down_ = false;
+                        touch_x_ = tx;
+                        touch_y_ = ty;
+                    }
+                }
+            } else if (strncmp(line, "pinch ", 6) == 0) {
+                float pf = 1.0f;
+                int pcx = 0, pcy = 0;
+                if (sscanf(line, "pinch %f %d %d", &pf, &pcx, &pcy) == 3) {
+                    pinch_pending_ = true;
+                    pinch_factor_ = pf;
+                    pinch_cx_ = pcx;
+                    pinch_cy_ = pcy;
+                }
             }
             line = nl + 1;
+        }
+        size_t consumed = line - rbuf;
+        if (consumed > 0 && consumed < rbuf_len) {
+            memmove(rbuf, line, rbuf_len - consumed);
+            rbuf_len -= consumed;
+        } else if (consumed >= rbuf_len) {
+            rbuf_len = 0;
         }
     }
     return resized;

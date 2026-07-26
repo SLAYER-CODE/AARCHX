@@ -53,6 +53,21 @@ public:
     void set_overlay_scale(float s) { overlay_scale_ = s; }
     float overlay_scale() const { return overlay_scale_; }
 
+    // Touch state (populated by poll_commands from Android overlay)
+    bool touch_down() const { return touch_down_; }
+    int touch_x() const { return touch_x_; }
+    int touch_y() const { return touch_y_; }
+
+    // Consume pinch zoom (returns true if pending, clears flag)
+    bool consume_pinch(double& factor, int& cx, int& cy) {
+        if (!pinch_pending_) return false;
+        factor = pinch_factor_;
+        cx = pinch_cx_;
+        cy = pinch_cy_;
+        pinch_pending_ = false;
+        return true;
+    }
+
 protected:
     int width_ = 0;
     int height_ = 0;
@@ -61,6 +76,15 @@ protected:
     std::string socket_name_;
     std::vector<uint32_t> pixels_;
     int frame_id_ = 0;
+
+    // Touch state from Android overlay
+    bool touch_down_ = false;
+    int touch_x_ = 0;
+    int touch_y_ = 0;
+    bool pinch_pending_ = false;
+    double pinch_factor_ = 1.0;
+    int pinch_cx_ = 0;
+    int pinch_cy_ = 0;
 
 #ifdef MANDELA_USE_SKIA
     sk_sp<SkSurface> sk_surface_;

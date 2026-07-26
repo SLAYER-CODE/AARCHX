@@ -331,9 +331,8 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
             val socketServer = CanvasSocketServer.getInstance()
 
             // onNewConnection: cada conexión obtiene su propio overlay view.
-            // Only assign if null — existing callback already serves active readers.
+            // Always reassign — new activity needs fresh context references.
             val ctx = context
-            if (socketServer.onNewConnection == null) {
             socketServer.onNewConnection = lambda@{ connId ->
                 val latch = java.util.concurrent.CountDownLatch(1)
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
@@ -354,7 +353,8 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                             val ts = ctx.findViewById<TabSwitcher>(R.id.tab_switcher)
                             val container = ctx.findViewById<FrameLayout>(R.id.terminal_container)
                             if (enter) {
-                                // Hide keyboard before showing fullscreen tab
+                                v.pendingFullscreenResize = true
+
                                 val imm = ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
                                 imm.hideSoftInputFromWindow(ctx.window?.decorView?.windowToken, 0)
                                 ctx.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
@@ -363,12 +363,6 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                                 ts.addTab(ct, 0, SwipeAnimation.Builder().create())
                                 ts.selectTab(ct)
                             } else {
-                                // exitFullscreenTab() already sends "resize 640x480".
-                                // Do NOT re-send here — v.frameWidth/Height are overwritten
-                                // by setFrame() to the fullscreen resolution, which would
-                                // send a conflicting resize and cause frozen triplicated images.
-
-                                // Move overlay back to terminal_container (floating mode)
                                 if (v.parent != container) {
                                     (v.parent as? ViewGroup)?.removeView(v)
                                     container?.addView(v, FrameLayout.LayoutParams(
@@ -376,7 +370,6 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                                         FrameLayout.LayoutParams.MATCH_PARENT
                                     ))
                                 }
-                                // Remove the CanvasTab from TabSwitcher
                                 for (i in 0 until ts.count) {
                                     val tab = ts.getTab(i)
                                     if (tab is CanvasTab && tab.overlayView === v) {
@@ -384,7 +377,6 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                                         break
                                     }
                                 }
-                                // Select the first terminal tab so it's shown
                                 for (i in 0 until ts.count) {
                                     val tab = ts.getTab(i)
                                     if (tab is TermTab) {
@@ -392,12 +384,12 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                                         break
                                     }
                                 }
-                                // Force redraw to avoid black terminal
                                 container?.postInvalidate()
                             }
                         }
                     }
                     v.overlaySession = session
+                    v.connId = connId
                     latch.countDown()
                 }
                 latch.await()
@@ -417,7 +409,6 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                     }
                 }
             }
-            } // end if (onNewConnection == null)
 
             // Start server AFTER setting callback para evitar race condition
             socketServer.start()
