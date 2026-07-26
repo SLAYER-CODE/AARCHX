@@ -39,6 +39,8 @@ public:
     // Socket overlay (canvas-display)
     bool connect_overlay(const std::string& socket_name = "canvas-display");
     bool present();
+    bool poll_commands();
+    bool resize(int width, int height);
 
     // Accesores
     int width() const { return width_; }

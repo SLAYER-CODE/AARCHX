@@ -201,9 +201,12 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                         // Red indicator when overlay is in fullscreen
                     // (now by checking if a CanvasTab has isFullscreen)
 
-                    // Exit any canvas fullscreen when a terminal tab is fully selected,
-                    // or restore a lost CanvasTab on activity resume
-                    if (!tabSwitcher.isSwitcherShown && !isQuickPreview) {
+                    // Exit any canvas fullscreen ONLY when a terminal tab is selected.
+                    // If tab is a CanvasTab, do NOT exit — the block above already
+                    // entered fullscreen for it.  Exiting here would immediately
+                    // undo that, which is the root cause of the black-screen bug.
+                    // Also restore a lost CanvasTab on activity resume.
+                    if (!tabSwitcher.isSwitcherShown && !isQuickPreview && tab !is CanvasTab) {
                         var foundCanvas = false
                         for (i in 0 until tabSwitcher.count) {
                             val tab = tabSwitcher.getTab(i)
@@ -327,8 +330,10 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         if (session != null) {
             val socketServer = CanvasSocketServer.getInstance()
 
-            // onNewConnection: cada conexión obtiene su propio overlay view
+            // onNewConnection: cada conexión obtiene su propio overlay view.
+            // Only assign if null — existing callback already serves active readers.
             val ctx = context
+            if (socketServer.onNewConnection == null) {
             socketServer.onNewConnection = lambda@{ connId ->
                 val latch = java.util.concurrent.CountDownLatch(1)
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
@@ -358,10 +363,10 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                                 ts.addTab(ct, 0, SwipeAnimation.Builder().create())
                                 ts.selectTab(ct)
                             } else {
-                                // Restore original resolution on native process
-                                if (v.frameWidth > 0 && v.frameHeight > 0) {
-                                    CanvasSocketServer.getInstance().sendToAll("resize ${v.frameWidth}x${v.frameHeight}")
-                                }
+                                // exitFullscreenTab() already sends "resize 640x480".
+                                // Do NOT re-send here — v.frameWidth/Height are overwritten
+                                // by setFrame() to the fullscreen resolution, which would
+                                // send a conflicting resize and cause frozen triplicated images.
 
                                 // Move overlay back to terminal_container (floating mode)
                                 if (v.parent != container) {
@@ -412,6 +417,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                     }
                 }
             }
+            } // end if (onNewConnection == null)
 
             // Start server AFTER setting callback para evitar race condition
             socketServer.start()

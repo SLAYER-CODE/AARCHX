@@ -30,7 +30,6 @@ Canvas::~Canvas() {
 
 bool Canvas::init(int width, int height) {
     if (width <= 0 || height <= 0) return false;
-    if (width > 1920 || height > 1080) return false;
 
     width_ = width;
     height_ = height;
@@ -143,6 +142,47 @@ bool Canvas::present() {
         remaining -= n;
     }
     return true;
+}
+
+bool Canvas::resize(int width, int height) {
+    if (width <= 0 || height <= 0) return false;
+    if (width == width_ && height == height_) return false;
+
+    width_ = width;
+    height_ = height;
+    pixels_.resize(width_ * height_, 0xFF000000);
+
+#ifdef MANDELA_USE_SKIA
+    rebuild_skia_surface();
+#endif
+    return true;
+}
+
+bool Canvas::poll_commands() {
+    if (socket_fd_ < 0) return false;
+    bool resized = false;
+    struct pollfd pfd = { socket_fd_, POLLIN, 0 };
+    while (poll(&pfd, 1, 0) > 0) {
+        char buf[256];
+        ssize_t n = read(socket_fd_, buf, sizeof(buf) - 1);
+        if (n <= 0) break;
+        buf[n] = '\0';
+        // Parse each newline-delimited command in the buffer
+        char* line = buf;
+        char* nl;
+        while ((nl = strchr(line, '\n')) != nullptr) {
+            *nl = '\0';
+            int rw = 0, rh = 0;
+            std::cout << "[Canvas] poll_commands: '" << line << "'" << std::endl;
+            if (sscanf(line, "resize %dx%d", &rw, &rh) == 2) {
+                std::cout << "[Canvas] resize " << width_ << "x" << height_
+                          << " -> " << rw << "x" << rh << std::endl;
+                if (resize(rw, rh)) resized = true;
+            }
+            line = nl + 1;
+        }
+    }
+    return resized;
 }
 
 // ── Drawing (delegan a las standalone draw::*) ──────────────────
@@ -317,7 +357,9 @@ void draw_circle(uint32_t* pixels, int w, int h,
 void draw_text(uint32_t* pixels, int w, int h,
                int x, int y, const std::string& text,
                uint32_t color, int size) {
-    (void)size;
+    // size = glyph height in pixels. 13 = native bitmap size (1:1).
+    // For size > 13, scale each bitmap pixel as NxN blocks.
+    int font_scale = std::max(1, size / 13);
     // 8x13 bitmap font for ASCII 32-126
     static const uint8_t FONT[95][13] = {
         {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
@@ -417,22 +459,30 @@ void draw_text(uint32_t* pixels, int w, int h,
         {0x00,0x22,0x54,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
     };
 
-    int cy = y - 9;  // y is baseline, adjust for top-left
+    int cy = y - 9 * font_scale;  // y is baseline, adjust for top-left
     int cx = x;
     for (unsigned char c : text) {
-        if (c < 32 || c > 126) { cx += 8; continue; }
+        if (c < 32 || c > 126) { cx += 8 * font_scale; continue; }
         const uint8_t* glyph = FONT[c - 32];
         for (int row = 0; row < 13; row++) {
-            if (cy + row < 0 || cy + row >= h) continue;
+            int py0 = cy + row * font_scale;
+            if (py0 + font_scale <= 0 || py0 >= h) continue;
             for (int col = 0; col < 8; col++) {
                 if (glyph[row] & (0x80 >> col)) {
-                    int px = cx + col;
-                    if (px >= 0 && px < w)
-                        pixels[(cy + row) * w + px] = color;
+                    int px0 = cx + col * font_scale;
+                    for (int sy = 0; sy < font_scale; sy++) {
+                        int py = py0 + sy;
+                        if (py < 0 || py >= h) continue;
+                        for (int sx = 0; sx < font_scale; sx++) {
+                            int px = px0 + sx;
+                            if (px >= 0 && px < w)
+                                pixels[py * w + px] = color;
+                        }
+                    }
                 }
             }
         }
-        cx += 8;
+        cx += 8 * font_scale;
     }
 }
 

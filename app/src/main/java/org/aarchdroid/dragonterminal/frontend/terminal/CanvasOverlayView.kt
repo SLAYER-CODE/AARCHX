@@ -23,6 +23,7 @@ import android.widget.FrameLayout
 import kotlin.math.hypot
 import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.backend.HiddenOverlayRegistry
+import org.aarchdroid.dragonterminal.backend.CanvasSocketServer
 import org.aarchdroid.dragonterminal.backend.OverlayButtonState
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.event.OverlayHiddenEvent
@@ -214,8 +215,9 @@ class CanvasOverlayView @JvmOverloads constructor(
                     offsetY = titleHeight.toFloat() + (availH - frameHeight * scaleFactor) / 2f
                     updateTransform()
                     postInvalidateOnAnimation()
-                    val cmd = "resize ${pw}x${availH}"
-                    org.aarchdroid.dragonterminal.backend.CanvasSocketServer.getInstance().sendToAll(cmd)
+                    
+                    // Tell Cornea to render at tab resolution (text stays crisp)
+                    CanvasSocketServer.getInstance().sendToAll("resize ${pw}x${availH}")
                 }
             }
         } else if (frameWidth > 0 && frameHeight > 0) {
@@ -234,6 +236,8 @@ class CanvasOverlayView @JvmOverloads constructor(
         isFullscreen = false
         wasFullscreen = false
         setBackgroundColor(Color.TRANSPARENT)
+        // Restore camera resolution on Cornea
+        CanvasSocketServer.getInstance().sendToAll("resize 640x480")
         scaleFactor = initialScale
         offsetX = initialOffsetX
         offsetY = initialOffsetY

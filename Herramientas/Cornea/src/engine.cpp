@@ -1,10 +1,12 @@
 #include "cornea/engine.h"
+#include "cornea/overlay_renderer.h"
 #include "cornea/modules/ocr.h"
 #include "cornea/modules/logo_detector.h"
 #include "cornea/modules/vulndb.h"
 #include "cornea/modules/diagnostics.h"
 #include "cornea/modules/device_classifier.h"
 #include "cornea/modules/visual_detector.h"
+#include "iris/canvas.h"
 
 #include <iostream>
 #include <thread>
@@ -207,7 +209,57 @@ void Engine::process_loop() {
                 }
             }
             
-            // ── Step 2: DiagnosticsModule inline (fast, draws green+blue boxes) ──
+            // ── Step 2: Auto-resize canvas to match camera if at default size ──
+            // When the camera sends a different aspect ratio (e.g. 480x640 portrait
+            // vs 640x480 landscape default), resize the canvas to match so the image
+            // is not distorted. Only when canvas is at the configured default size —
+            // if it was resized by a "resize" command (fullscreen), keep that size.
+            if (overlay_canvas_ &&
+                overlay_canvas_->width() == config_.overlay_width &&
+                overlay_canvas_->height() == config_.overlay_height &&
+                (overlay_canvas_->width() != fw || overlay_canvas_->height() != fh)) {
+                std::cout << "[Engine] Auto-resize canvas "
+                          << overlay_canvas_->width() << "x" << overlay_canvas_->height()
+                          << " -> " << fw << "x" << fh << " (match camera)" << std::endl;
+                overlay_canvas_->resize(fw, fh);
+            }
+
+            // ── Step 2b: Determine render target ──
+            uint32_t* diag_pixels;
+            int diag_w, diag_h;
+            bool render_mode = overlay_canvas_ &&
+                (overlay_canvas_->width() != fw || overlay_canvas_->height() != fh);
+
+            // DEBUG: print camera vs canvas resolution every frame
+            if (overlay_canvas_) {
+                std::cout << "[Engine] DEBUG cam=" << fw << "x" << fh
+                          << " canvas=" << overlay_canvas_->width() << "x" << overlay_canvas_->height()
+                          << " render=" << (render_mode ? "yes" : "no") << std::endl;
+            }
+            
+            if (render_mode) {
+                // Render mode: scale camera → canvas, draw diagnostics on canvas
+                diag_pixels = overlay_canvas_->pixels();
+                diag_w = overlay_canvas_->width();
+                diag_h = overlay_canvas_->height();
+                for (int dy = 0; dy < diag_h; dy++) {
+                    int sy = dy * fh / diag_h;
+                    for (int dx = 0; dx < diag_w; dx++) {
+                        diag_pixels[dy * diag_w + dx] = pixels[sy * fw + dx * fw / diag_w];
+                    }
+                }
+            } else {
+                // Non-render: canvas must match camera dimensions
+                if (overlay_canvas_ &&
+                    (overlay_canvas_->width() != fw || overlay_canvas_->height() != fh)) {
+                    overlay_canvas_->resize(fw, fh);
+                }
+                diag_pixels = pixels;
+                diag_w = fw;
+                diag_h = fh;
+            }
+            
+            // ── Step 3: DiagnosticsModule inline (fast, draws green+blue boxes) ──
             {
                 std::lock_guard<std::mutex> lock(result_mutex_);
                 FrameResult diag_result;
@@ -219,7 +271,7 @@ void Engine::process_loop() {
                 
                 auto* diag = get_module("diagnostics");
                 if (diag && diag->enabled()) {
-                    diag->process_frame(pixels, fw, fh, diag_result);
+                    diag->process_frame(diag_pixels, diag_w, diag_h, diag_result);
                 }
                 
                 // Debug: log state every 60 frames (~2s at 30fps)
@@ -230,13 +282,35 @@ void Engine::process_loop() {
                               << " visual_det=" << last_result_.visual_detections.size()
                               << " valid=" << last_result_.valid
                               << " overlay=" << (raw_frame_callback_ ? "yes" : "no")
+                              << (render_mode ? " render=upscaled" : "")
                               << std::endl;
                 }
             }
             
-            // ── Step 3: Send overlay with boxes drawn ──
-            if (raw_frame_callback_) {
+            // ── Step 4: Present frame (engine handles all paths) ──
+            if (overlay_canvas_) {
+                if (render_mode) {
+                    // Canvas already has the annotated scaled pixels
+                    overlay_canvas_->present();
+                } else {
+                    // Non-render: load camera pixels into canvas and present
+                    overlay_canvas_->load_frame(
+                        reinterpret_cast<const uint8_t*>(pixels),
+                        static_cast<size_t>(fw) * fh * 4
+                    );
+                    overlay_canvas_->present();
+                }
+            } else if (raw_frame_callback_) {
                 raw_frame_callback_(pixels, fw, fh);
+            }
+            
+            // ── Step 5: Poll commands from Android (resize, etc.) ──
+            if (overlay_canvas_ && overlay_canvas_->poll_commands()) {
+                // Canvas was resized — update renderer's render size
+                auto* renderer = static_cast<OverlayRenderer*>(overlay_renderer_);
+                if (renderer) {
+                    renderer->set_render_size(overlay_canvas_->width(), overlay_canvas_->height());
+                }
             }
             
             // ── Step 4: Launch async if previous done ──

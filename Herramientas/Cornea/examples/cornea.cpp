@@ -94,16 +94,16 @@ int main(int argc, char** argv) {
         }
     });
     
-    // Set up raw frame callback (overlay + command polling)
+    // Set up raw frame callback — NO present here, engine handles it.
+    // Only used for terminal stdout output (via frame_callback_).
+    // poll_commands is also handled by the engine.
     engine.on_frame_raw([&renderer](const uint32_t* pixels, int w, int h) {
-        if (renderer.is_connected()) {
-            renderer.present(pixels, w, h);
-        }
-        // Poll commands from Android but don't act on resize —
-        // camera resolution is fixed; the Android overlay scales visually.
-        auto* canvas = renderer.canvas();
-        if (canvas) canvas->poll_commands();
+        // Intentionally empty — engine handles present + poll_commands
     });
+    
+    // Connect canvas + renderer to engine so the pipeline handles present + poll_commands
+    engine.set_overlay_canvas(renderer.canvas());
+    engine.set_overlay_renderer(&renderer);
     
     // Start engine
     engine.start();

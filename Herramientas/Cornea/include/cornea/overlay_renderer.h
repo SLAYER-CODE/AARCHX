@@ -28,6 +28,13 @@ public:
     bool present(const uint32_t* pixels, int w, int h);
     iris::Canvas* canvas() { return canvas_.get(); }
     
+    // ── Render size (for fullscreen overlay at higher resolution) ─
+    void set_render_size(int w, int h);    // Canvas resizes to w×h, camera scales to fill
+    void clear_render_size();              // Restore to camera resolution
+    bool has_render_size() const;          // Is canvas at a different resolution than camera?
+    int render_width() const;
+    int render_height() const;
+    
     // ── Terminal output ──────────────────────────────────────────
     void print_device_info(const DeviceInfo& device);
     void print_vulnerability(const DeviceInfo::Vulnerability& vuln);
@@ -75,6 +82,8 @@ private:
     bool connected_ = false;
     bool verbose_ = false;
     int frames_rendered_ = 0;
+    int render_w_ = 0;  // 0 = use camera resolution
+    int render_h_ = 0;
     
     // Font data (minimal 8x12 bitmap font)
     static void draw_char(uint32_t* pixels, int w, int h,

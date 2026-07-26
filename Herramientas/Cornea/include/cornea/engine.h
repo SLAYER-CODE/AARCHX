@@ -13,6 +13,8 @@
 #include <future>
 #include <functional>
 
+namespace iris { class Canvas; }
+
 namespace cornea {
 
 // ── Engine configuration ─────────────────────────────────────────
@@ -72,6 +74,10 @@ public:
     // Runtime resolution change (re-sends cam-ctrl with new size)
     void request_resolution(int width, int height);
     
+    // Overlay canvas (for render-size aware pipeline)
+    void set_overlay_canvas(iris::Canvas* c) { overlay_canvas_ = c; }
+    void set_overlay_renderer(void* r) { overlay_renderer_ = r; }
+    
     // Results
     FrameResult last_result() const;
     
@@ -120,6 +126,10 @@ private:
     
     // Camera (listen mode, like Iris)
     iris::CameraCanvas camera_canvas_;
+    
+    // Overlay canvas pointer (owned by OverlayRenderer, not Engine)
+    iris::Canvas* overlay_canvas_ = nullptr;
+    void* overlay_renderer_ = nullptr;  // OverlayRenderer*, avoid include
 };
 
 } // namespace cornea

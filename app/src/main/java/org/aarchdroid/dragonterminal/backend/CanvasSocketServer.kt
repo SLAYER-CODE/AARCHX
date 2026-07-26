@@ -194,8 +194,9 @@ class CanvasSocketServer private constructor() {
             }
             val fw = firstW; val fh = firstH; val fid = firstId; val fs = firstScale
             mainHandler.post {
+                val copy = firstBuf.copyOf(fw * fh)
                 listener.onStart(fw, fh, fs)
-                listener.onFrame(fid, firstBuf, fw, fh)
+                listener.onFrame(fid, copy, fw, fh)
             }
 
             // Subsequent frames: verify magic too
@@ -230,7 +231,9 @@ class CanvasSocketServer private constructor() {
                 }
                 val nfw = w; val nfh = h; val nfid = frameId
                 mainHandler.post {
-                    listener.onFrame(nfid, frameBuf2, nfw, nfh)
+                    // Copy buffer to prevent torn frames if pool cycles before main thread reads
+                    val copy = frameBuf2.copyOf(nfw * nfh)
+                    listener.onFrame(nfid, copy, nfw, nfh)
                 }
             }
         } catch (e: java.io.EOFException) {

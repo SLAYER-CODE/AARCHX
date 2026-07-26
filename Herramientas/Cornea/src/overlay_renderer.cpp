@@ -52,28 +52,53 @@ bool OverlayRenderer::is_connected() const {
     return connected_;
 }
 
+void OverlayRenderer::set_render_size(int w, int h) {
+    if (w <= 0 || h <= 0) return;
+    render_w_ = w;
+    render_h_ = h;
+    if (canvas_) {
+        canvas_->resize(w, h);
+    }
+    if (verbose_) {
+        std::cout << "[Overlay] Render size: " << w << "x" << h << std::endl;
+    }
+}
+
+void OverlayRenderer::clear_render_size() {
+    render_w_ = 0;
+    render_h_ = 0;
+}
+
+bool OverlayRenderer::has_render_size() const {
+    return render_w_ > 0 && render_h_ > 0;
+}
+
+int OverlayRenderer::render_width() const { return render_w_; }
+int OverlayRenderer::render_height() const { return render_h_; }
+
 bool OverlayRenderer::present(const uint32_t* pixels, int w, int h) {
     if (!canvas_ || !connected_) return false;
     if (!pixels || w <= 0 || h <= 0) return false;
     
-    // Reinit canvas if frame dimensions changed (like Iris does)
-    if (w != width_ || h != height_) {
-        if (verbose_) {
-            std::cout << "[Overlay] Reinit: " << width_ << "x" << height_ 
-                      << " → " << w << "x" << h << std::endl;
-        }
-        width_ = w;
-        height_ = h;
-        if (!canvas_->init(w, h)) {
-            std::cerr << "[Overlay] Canvas reinit failed" << std::endl;
-            return false;
+    int cw = canvas_->width();
+    int ch = canvas_->height();
+    
+    if (cw == w && ch == h) {
+        // Same resolution — direct copy (fast path)
+        canvas_->load_frame(
+            reinterpret_cast<const uint8_t*>(pixels),
+            static_cast<size_t>(w) * h * 4
+        );
+    } else {
+        // Camera resolution differs from canvas — scale nearest-neighbor
+        uint32_t* dst = canvas_->pixels();
+        for (int dy = 0; dy < ch; dy++) {
+            int sy = dy * h / ch;
+            for (int dx = 0; dx < cw; dx++) {
+                dst[dy * cw + dx] = pixels[sy * w + dx * w / cw];
+            }
         }
     }
-    
-    canvas_->load_frame(
-        reinterpret_cast<const uint8_t*>(pixels),
-        static_cast<size_t>(w) * h * 4
-    );
     
     if (!canvas_->present()) {
         std::cerr << "[Overlay] present() failed" << std::endl;
