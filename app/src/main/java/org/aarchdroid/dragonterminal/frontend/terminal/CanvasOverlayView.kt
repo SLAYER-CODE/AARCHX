@@ -162,6 +162,18 @@ class CanvasOverlayView @JvmOverloads constructor(
         postInvalidateOnAnimation()
     }
 
+    /** Minimize to carousel without triggering onToggleFullscreen cascade.
+     *  Safe to call from onTabRemoved (tab is already being removed). */
+    fun minimizeToCarousel() {
+        exitFullscreenTab()
+        isActive = false
+        visibility = GONE
+        touchOwned = false
+        HiddenOverlayRegistry.register(this)
+        EventBus.getDefault().post(OverlayHiddenEvent())
+        postInvalidateOnAnimation()
+    }
+
     fun restore() {
         isActive = true
         visibility = VISIBLE

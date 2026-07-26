@@ -69,8 +69,10 @@ import org.aarchdroid.dragonterminal.ui.settings.SettingActivity
 import org.aarchdroid.dragonterminal.ui.term.tab.NeoTab
 import org.aarchdroid.dragonterminal.ui.pm.PackageManagerActivity
 import org.aarchdroid.dragonterminal.ui.term.tab.NeoTabDecorator
+import org.aarchdroid.dragonterminal.ui.term.tab.CanvasTab
 import org.aarchdroid.dragonterminal.ui.term.tab.TermTab
 import org.aarchdroid.dragonterminal.ui.term.tab.XSessionTab
+import org.aarchdroid.dragonterminal.backend.HiddenOverlayRegistry
 
 import org.aarchdroid.dragonterminal.utils.FullScreenHelper
 import org.aarchdroid.dragonterminal.utils.RangedInt
@@ -617,6 +619,19 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                             }
                         } else if (tab is XSessionTab) {
                             SessionRemover.removeXSession(termService, tab)
+                        } else if (tab is CanvasTab) {
+                            val ov = tab.overlayView
+                            // Move overlay back to terminal_container if it was in the tab's content view
+                            val container = findViewById<FrameLayout>(R.id.terminal_container)
+                            if (container != null && ov.parent != container) {
+                                (ov.parent as? ViewGroup)?.removeView(ov)
+                                container.addView(ov, FrameLayout.LayoutParams(
+                                    FrameLayout.LayoutParams.MATCH_PARENT,
+                                    FrameLayout.LayoutParams.MATCH_PARENT
+                                ))
+                            }
+                            // Minimize to carousel (safe during tab removal — no onToggleFullscreen cascade)
+                            ov.minimizeToCarousel()
                         }
                         updatePlaceholderVisibility()
                     }
