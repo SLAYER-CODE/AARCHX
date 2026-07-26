@@ -230,13 +230,6 @@ void Engine::process_loop() {
             bool render_mode = overlay_canvas_ &&
                 (overlay_canvas_->width() != fw || overlay_canvas_->height() != fh);
 
-            // DEBUG: print camera vs canvas resolution every frame
-            if (overlay_canvas_) {
-                std::cout << "[Engine] DEBUG cam=" << fw << "x" << fh
-                          << " canvas=" << overlay_canvas_->width() << "x" << overlay_canvas_->height()
-                          << " render=" << (render_mode ? "yes" : "no") << std::endl;
-            }
-            
             if (render_mode) {
                 // Render mode: scale camera → canvas, draw diagnostics on canvas
                 diag_pixels = overlay_canvas_->pixels();

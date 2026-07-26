@@ -215,9 +215,11 @@ class CanvasOverlayView @JvmOverloads constructor(
                     offsetY = titleHeight.toFloat() + (availH - frameHeight * scaleFactor) / 2f
                     updateTransform()
                     postInvalidateOnAnimation()
-                    
-                    // Tell Cornea to render at tab resolution (text stays crisp)
-                    CanvasSocketServer.getInstance().sendToAll("resize ${pw}x${availH}")
+                    // NOTE: Do NOT send resize command here. Changing the canvas resolution
+                    // causes setFrame() to recalculate scale with different frame dimensions,
+                    // resulting in a second visual growth (the "double fullscreen" bug).
+                    // The Android side scales the bitmap to fill the tab; text/bboxes stay at
+                    // camera resolution.
                 }
             }
         } else if (frameWidth > 0 && frameHeight > 0) {
@@ -236,7 +238,7 @@ class CanvasOverlayView @JvmOverloads constructor(
         isFullscreen = false
         wasFullscreen = false
         setBackgroundColor(Color.TRANSPARENT)
-        // Restore camera resolution on Cornea
+        // Restore default canvas size on Cornea (safety net)
         CanvasSocketServer.getInstance().sendToAll("resize 640x480")
         scaleFactor = initialScale
         offsetX = initialOffsetX

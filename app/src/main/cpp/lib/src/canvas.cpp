@@ -173,10 +173,7 @@ bool Canvas::poll_commands() {
         while ((nl = strchr(line, '\n')) != nullptr) {
             *nl = '\0';
             int rw = 0, rh = 0;
-            std::cout << "[Canvas] poll_commands: '" << line << "'" << std::endl;
             if (sscanf(line, "resize %dx%d", &rw, &rh) == 2) {
-                std::cout << "[Canvas] resize " << width_ << "x" << height_
-                          << " -> " << rw << "x" << rh << std::endl;
                 if (resize(rw, rh)) resized = true;
             }
             line = nl + 1;
