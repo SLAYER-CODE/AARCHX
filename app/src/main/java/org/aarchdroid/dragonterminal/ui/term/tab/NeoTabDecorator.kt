@@ -412,16 +412,6 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
 
             // Start server AFTER setting callback para evitar race condition
             socketServer.start()
-
-            // Keep PTY listener for legacy stdout mode fallback
-            session.setMandelaFrameListener(object : TerminalSession.MandelaFrameListener {
-                override fun onMandelaStart(width: Int, height: Int) {
-                }
-                override fun onMandelaFrame(frameId: Int, argbPixels: IntArray, width: Int, height: Int) {
-                }
-                override fun onMandelaEnd() {
-                }
-            })
         }
 
         // Start camera control server (iris se conecta a cam-ctrl → restartCamera)

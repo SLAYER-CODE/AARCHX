@@ -221,11 +221,34 @@ class CanvasSocketServer private constructor() {
                 val bb = ByteBuffer.wrap(headerBuf).order(ByteOrder.LITTLE_ENDIAN)
                 val magic = bb.getInt()
                 if (magic != MAGIC) {
-                    consecutiveErrors++
-                    if (consecutiveErrors > 3) {
-                        val hex = headerBuf.joinToString("") { "%02x".format(it) }
-                        Log.e(TAG, "[#$connId] Too many bad frames, last raw=[$hex]")
-                        break
+                    // Stream misaligned — scan byte-by-byte for next magic (MNDL LE)
+                    var shift0 = headerBuf[0]; var shift1 = headerBuf[1]
+                    var shift2 = headerBuf[2]; var shift3 = headerBuf[3]
+                    var recovered = false
+                    for (i in 0 until 4096) {
+                        shift0 = shift1; shift1 = shift2; shift2 = shift3
+                        val b = input.read()
+                        if (b == -1) break
+                        shift3 = b.toByte()
+                        if (shift0 == 0x4C.toByte() && shift1 == 0x44.toByte() &&
+                            shift2 == 0x4E.toByte() && shift3 == 0x4D.toByte()) {
+                            // Found magic — read remaining 16 bytes of header
+                            headerBuf[0] = shift0; headerBuf[1] = shift1
+                            headerBuf[2] = shift2; headerBuf[3] = shift3
+                            val tail = ByteArray(16)
+                            readFully(input, tail, 16)
+                            System.arraycopy(tail, 0, headerBuf, 4, 16)
+                            recovered = true
+                            break
+                        }
+                    }
+                    if (!recovered) {
+                        consecutiveErrors++
+                        if (consecutiveErrors > 3) {
+                            val hex = headerBuf.joinToString("") { "%02x".format(it) }
+                            Log.e(TAG, "[#$connId] Too many bad frames, last raw=[$hex]")
+                            break
+                        }
                     }
                     continue
                 }

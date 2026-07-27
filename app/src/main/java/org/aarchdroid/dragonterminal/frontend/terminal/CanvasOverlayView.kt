@@ -39,6 +39,7 @@ class CanvasOverlayView @JvmOverloads constructor(
     companion object {
         @Volatile
         var wasFullscreen = false
+        private const val MAX_FULLSCREEN_RESIZE_RETRIES = 5
     }
 
     private var frameBitmap: Bitmap? = null
@@ -80,6 +81,7 @@ class CanvasOverlayView @JvmOverloads constructor(
 
     /** True while waiting for native tool to respond to resize with matching dimensions */
     internal var pendingFullscreenResize = false
+    private var pendingFullscreenResizeRetries = 0
 
     /** Tracks parent size to detect keyboard open/close during fullscreen */
     private var fullscreenParentWidth = 0
@@ -382,12 +384,19 @@ class CanvasOverlayView @JvmOverloads constructor(
                 scaleFactor = minOf(scaleX, scaleY)
                 offsetX = (pw - frameWidth * scaleFactor) / 2f
                 offsetY = (ph - frameHeight * scaleFactor) / 2f
-                // Retry resize: if frame is still at original resolution, resend resize
+                // Retry resize: if frame is still at original resolution, resend resize (max retries)
                 if (pendingFullscreenResize && connId >= 0 &&
                     (frameWidth != pw || frameHeight != ph)) {
-                    CanvasSocketServer.getInstance().sendToClient(connId, "resize ${pw}x${ph}")
+                    if (pendingFullscreenResizeRetries < MAX_FULLSCREEN_RESIZE_RETRIES) {
+                        CanvasSocketServer.getInstance().sendToClient(connId, "resize ${pw}x${ph}")
+                        pendingFullscreenResizeRetries++
+                    } else {
+                        pendingFullscreenResize = false
+                        pendingFullscreenResizeRetries = 0
+                    }
                 } else {
                     pendingFullscreenResize = false
+                    pendingFullscreenResizeRetries = 0
                 }
             }
         }
@@ -553,6 +562,11 @@ class CanvasOverlayView @JvmOverloads constructor(
             MotionEvent.ACTION_CANCEL -> {
                 cancelPendingLongPress()
                 longPressFired = false
+                if (isFullscreen && connId >= 0) {
+                    val fx = mapScreenToFrameX(event.x)
+                    val fy = mapScreenToFrameY(event.y)
+                    CanvasSocketServer.getInstance().sendToClient(connId, "touch up ${fx.toInt()} ${fy.toInt()}")
+                }
                 touchOwned = false
                 return true
             }
