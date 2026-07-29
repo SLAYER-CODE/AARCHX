@@ -75,6 +75,7 @@ protected:
     int socket_fd_ = -1;
     std::string socket_name_;
     std::vector<uint32_t> pixels_;
+    std::vector<uint8_t> frame_buf_;   // reusable send buffer (avoids alloc per frame)
     int frame_id_ = 0;
 
     // Touch state from Android overlay

@@ -67,7 +67,7 @@ bool Canvas::connect_overlay(const std::string& socket_name) {
         return false;
     }
 
-    int sndbuf = 2 * 1024 * 1024;
+    int sndbuf = 256 * 1024;
     setsockopt(socket_fd_, SOL_SOCKET, SO_SNDBUF, &sndbuf, sizeof(sndbuf));
 
     struct sockaddr_un addr;
@@ -104,20 +104,20 @@ bool Canvas::present() {
     uint32_t w   = static_cast<uint32_t>(width_);
     uint32_t h   = static_cast<uint32_t>(height_);
     size_t pixel_bytes = static_cast<size_t>(w) * h * 4;
-
-    std::vector<uint8_t> frame_buf(OVERLAY_HEADER_SIZE + pixel_bytes);
+    size_t needed = OVERLAY_HEADER_SIZE + pixel_bytes;
+    if (frame_buf_.size() < needed) frame_buf_.resize(needed);
 
     uint32_t magic = OVERLAY_MAGIC;
-    memcpy(frame_buf.data(),      &magic,        4);
-    memcpy(frame_buf.data() + 4,  &fid,          4);
-    memcpy(frame_buf.data() + 8,  &w,            4);
-    memcpy(frame_buf.data() + 12, &h,            4);
+    memcpy(frame_buf_.data(),      &magic,        4);
+    memcpy(frame_buf_.data() + 4,  &fid,          4);
+    memcpy(frame_buf_.data() + 8,  &w,            4);
+    memcpy(frame_buf_.data() + 12, &h,            4);
     uint32_t scale_denom = static_cast<uint32_t>(overlay_scale_ * 100.0f + 0.5f);
-    memcpy(frame_buf.data() + 16, &scale_denom,  4);
-    memcpy(frame_buf.data() + OVERLAY_HEADER_SIZE, pixels_.data(), pixel_bytes);
+    memcpy(frame_buf_.data() + 16, &scale_denom,  4);
+    memcpy(frame_buf_.data() + OVERLAY_HEADER_SIZE, pixels_.data(), pixel_bytes);
 
-    const uint8_t* ptr = frame_buf.data();
-    size_t remaining = frame_buf.size();
+    const uint8_t* ptr = frame_buf_.data();
+    size_t remaining = needed;
     while (remaining > 0) {
         ssize_t n = write(socket_fd_, ptr, remaining);
         if (n < 0) {
@@ -531,8 +531,11 @@ bool present_overlay(int socket_fd, const uint32_t* pixels, int w, int h, float 
     uint32_t fw = static_cast<uint32_t>(w);
     uint32_t fh = static_cast<uint32_t>(h);
     size_t pixel_bytes = static_cast<size_t>(w) * h * 4;
+    size_t needed = OVERLAY_HEADER_SIZE + pixel_bytes;
 
-    std::vector<uint8_t> frame_buf(OVERLAY_HEADER_SIZE + pixel_bytes);
+    // Reutilizar buffer entre frames (evita 630KB alloc/dealloc cada frame)
+    static std::vector<uint8_t> frame_buf;
+    if (frame_buf.size() < needed) frame_buf.resize(needed);
 
     uint32_t magic = OVERLAY_MAGIC;
     memcpy(frame_buf.data(),      &magic,       4);
@@ -544,7 +547,7 @@ bool present_overlay(int socket_fd, const uint32_t* pixels, int w, int h, float 
     memcpy(frame_buf.data() + OVERLAY_HEADER_SIZE, pixels, pixel_bytes);
 
     const uint8_t* ptr = frame_buf.data();
-    size_t remaining = frame_buf.size();
+    size_t remaining = needed;
     while (remaining > 0) {
         ssize_t n = write(socket_fd, ptr, remaining);
         if (n < 0) {

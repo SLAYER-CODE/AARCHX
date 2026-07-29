@@ -97,7 +97,11 @@ class CanvasSocketServer private constructor() {
      * Command is written as UTF-8 with trailing \n.
      */
     fun sendToClient(connId: Int, command: String) {
-        val out = clientOutputs[connId] ?: return
+        val out = clientOutputs[connId]
+        if (out == null) {
+            Log.w(TAG, "[#$connId] sendToClient: no output stream for '$command'")
+            return
+        }
         try {
             out.write((command + "\n").toByteArray(Charsets.UTF_8))
             out.flush()
@@ -221,34 +225,55 @@ class CanvasSocketServer private constructor() {
                 val bb = ByteBuffer.wrap(headerBuf).order(ByteOrder.LITTLE_ENDIAN)
                 val magic = bb.getInt()
                 if (magic != MAGIC) {
-                    // Stream misaligned — scan byte-by-byte for next magic (MNDL LE)
-                    var shift0 = headerBuf[0]; var shift1 = headerBuf[1]
-                    var shift2 = headerBuf[2]; var shift3 = headerBuf[3]
+                    // Stream misaligned — scan chunks for next MNDL magic (0x4D4E444C LE)
+                    // Must scan up to ~16MB to span large fullscreen frames (1080x2400 ≈ 10MB)
                     var recovered = false
-                    for (i in 0 until 4096) {
-                        shift0 = shift1; shift1 = shift2; shift2 = shift3
-                        val b = input.read()
-                        if (b == -1) break
-                        shift3 = b.toByte()
-                        if (shift0 == 0x4C.toByte() && shift1 == 0x44.toByte() &&
-                            shift2 == 0x4E.toByte() && shift3 == 0x4D.toByte()) {
-                            // Found magic — read remaining 16 bytes of header
-                            headerBuf[0] = shift0; headerBuf[1] = shift1
-                            headerBuf[2] = shift2; headerBuf[3] = shift3
-                            val tail = ByteArray(16)
-                            readFully(input, tail, 16)
-                            System.arraycopy(tail, 0, headerBuf, 4, 16)
-                            recovered = true
-                            break
+                    val scanBuf = ByteArray(8192)
+                    // Start with the 4 bytes we already read as sliding window
+                    var s0 = headerBuf[0].toInt() and 0xFF
+                    var s1 = headerBuf[1].toInt() and 0xFF
+                    var s2 = headerBuf[2].toInt() and 0xFF
+                    var s3 = headerBuf[3].toInt() and 0xFF
+                    var totalScanned = 0
+                    val maxScan = 16_777_216 // 16MB — must span largest possible frame
+                    while (totalScanned < maxScan && isRunning.get()) {
+                        val toRead = minOf(scanBuf.size, maxScan - totalScanned)
+                        var off = 0
+                        while (off < toRead) {
+                            val n = input.read(scanBuf, off, toRead - off)
+                            if (n == -1) break
+                            off += n
                         }
+                        if (off == 0) break
+                        totalScanned += off
+                        // Scan within this chunk for magic
+                        for (j in 0 until off) {
+                            s0 = s1; s1 = s2; s2 = s3
+                            s3 = scanBuf[j].toInt() and 0xFF
+                            if (s0 == 0x4C && s1 == 0x44 && s2 == 0x4E && s3 == 0x4D) {
+                                // Found magic — read remaining 16 bytes of header
+                                headerBuf[0] = 0x4C; headerBuf[1] = 0x44
+                                headerBuf[2] = 0x4E; headerBuf[3] = 0x4D
+                                val tail = ByteArray(16)
+                                readFully(input, tail, 16)
+                                System.arraycopy(tail, 0, headerBuf, 4, 16)
+                                recovered = true
+                                break
+                            }
+                        }
+                        if (recovered) break
                     }
-                    if (!recovered) {
+                    if (recovered) {
+                        consecutiveErrors = 0
+                    } else {
                         consecutiveErrors++
-                        if (consecutiveErrors > 3) {
+                        if (consecutiveErrors > 20) {
                             val hex = headerBuf.joinToString("") { "%02x".format(it) }
                             Log.e(TAG, "[#$connId] Too many bad frames, last raw=[$hex]")
                             break
                         }
+                        // Back off briefly before retrying
+                        Thread.sleep(5)
                     }
                     continue
                 }
@@ -261,13 +286,16 @@ class CanvasSocketServer private constructor() {
                 val frameBuf2 = nextBuffer()
                 if (!readFrame(input, frameBuf, w, h, frameBuf2)) {
                     consecutiveErrors++
-                    if (consecutiveErrors > 3) {
+                    if (consecutiveErrors > 20) {
                         Log.e(TAG, "[#$connId] Too many invalid frame dimensions")
                         break
                     }
                     continue
                 }
                 val nfw = w; val nfh = h; val nfid = frameId
+                if (nfid % 5 == 0) {
+                    Log.w(TAG, "[#$connId] frame $nfid ${nfw}x${nfh}")
+                }
                 mainHandler.post {
                     // Copy buffer to prevent torn frames if pool cycles before main thread reads
                     val copy = frameBuf2.copyOf(nfw * nfh)

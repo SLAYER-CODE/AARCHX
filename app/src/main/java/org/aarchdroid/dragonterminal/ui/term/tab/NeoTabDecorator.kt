@@ -213,7 +213,10 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                             if (tab is CanvasTab) {
                                 foundCanvas = true
                                 val ov = tab.overlayView
-                                if (ov.isFullscreen) {
+                                // Only exit if overlay is in container (stale fullscreen state).
+                                // If overlay is inside the CanvasTab's view hierarchy, it's
+                                // properly in fullscreen — don't undo it.
+                                if (ov.isFullscreen && ov.parent == container) {
                                     ov.exitFullscreenTab()
                                     ov.onToggleFullscreen?.invoke(false)
                                 }
@@ -244,17 +247,15 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
             VIEW_TYPE_CANVAS -> {
                 val canvasTab = tab as CanvasTab
                 val ov = canvasTab.overlayView
-                if (!tabSwitcher.isSwitcherShown && !isQuickPreview) {
-                    // Move overlay into the tab's content view (parent == view)
-                    if (ov.parent != view) {
-                        (ov.parent as? ViewGroup)?.removeView(ov)
-                        (view as? ViewGroup)?.addView(ov, ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        ))
-                    }
-                    view.post { ov.enterFullscreenTab() }
+                // Always move overlay into the tab's content view
+                if (ov.parent != view) {
+                    (ov.parent as? ViewGroup)?.removeView(ov)
+                    (view as? ViewGroup)?.addView(ov, ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    ))
                 }
+                ov.enterFullscreenTab()
             }
         }
     }
@@ -353,8 +354,6 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                             val ts = ctx.findViewById<TabSwitcher>(R.id.tab_switcher)
                             val container = ctx.findViewById<FrameLayout>(R.id.terminal_container)
                             if (enter) {
-                                v.pendingFullscreenResize = true
-
                                 val imm = ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
                                 imm.hideSoftInputFromWindow(ctx.window?.decorView?.windowToken, 0)
                                 ctx.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
@@ -405,7 +404,10 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                         mainHandler.post { ov.setFrame(argbPixels, width, height) }
                     }
                     override fun onEnd() {
-                        mainHandler.post { ov.hide() }
+                        mainHandler.post {
+                            Log.w("CanvasSocket", "[#$connId] onEnd — hiding overlay")
+                            ov.hide()
+                        }
                     }
                 }
             }

@@ -622,17 +622,22 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                             SessionRemover.removeXSession(termService, tab)
                         } else if (tab is CanvasTab) {
                             val ov = tab.overlayView
-                            // Move overlay back to terminal_container if it was in the tab's content view
-                            val container = findViewById<FrameLayout>(R.id.terminal_container)
-                            if (container != null && ov.parent != container) {
-                                (ov.parent as? ViewGroup)?.removeView(ov)
-                                container.addView(ov, FrameLayout.LayoutParams(
-                                    FrameLayout.LayoutParams.MATCH_PARENT,
-                                    FrameLayout.LayoutParams.MATCH_PARENT
-                                ))
+                            if (!ov.isActive) {
+                                // Native tool is dead (onEnd called hide()) — don't restore
+                                Log.d("NeoTermAct", "onTabRemoved CanvasTab — overlay inactive, skipping restore")
+                            } else {
+                                // Move overlay back to terminal_container if it was in the tab's content view
+                                val container = findViewById<FrameLayout>(R.id.terminal_container)
+                                if (container != null && ov.parent != container) {
+                                    (ov.parent as? ViewGroup)?.removeView(ov)
+                                    container.addView(ov, FrameLayout.LayoutParams(
+                                        FrameLayout.LayoutParams.MATCH_PARENT,
+                                        FrameLayout.LayoutParams.MATCH_PARENT
+                                    ))
+                                }
+                                // Restore to floating overlay (not carousel) — native tool keeps running
+                                ov.restore()
                             }
-                            // Restore to floating overlay (not carousel) — native tool keeps running
-                            ov.restore()
                         }
                         updatePlaceholderVisibility()
                     }
