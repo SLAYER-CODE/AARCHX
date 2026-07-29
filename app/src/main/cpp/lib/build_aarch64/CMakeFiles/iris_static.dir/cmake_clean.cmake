@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o"
+  "CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o.d"
   "CMakeFiles/iris_static.dir/src/canvas.cpp.o"
   "CMakeFiles/iris_static.dir/src/canvas.cpp.o.d"
   "libiris_static.a"

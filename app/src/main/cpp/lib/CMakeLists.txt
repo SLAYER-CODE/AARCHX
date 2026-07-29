@@ -22,11 +22,13 @@ endif()
 
 set(IRIS_SOURCES
     src/canvas.cpp
+    src/camera_canvas.cpp
 )
 
 set(IRIS_HEADERS
     include/iris/types.h
     include/iris/canvas.h
+    include/iris/camera_canvas.h
 )
 
 add_library(iris_static STATIC

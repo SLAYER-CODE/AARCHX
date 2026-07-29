@@ -86,17 +86,33 @@ CMakeFiles/iris_static.dir/src/canvas.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/iris_static.dir/src/canvas.cpp.s"
 	/usr/bin/aarch64-linux-gnu-g++ --sysroot=/usr/aarch64-linux-gnu $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/src/canvas.cpp -o CMakeFiles/iris_static.dir/src/canvas.cpp.s
 
+CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o: CMakeFiles/iris_static.dir/flags.make
+CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o: /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/src/camera_canvas.cpp
+CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o: CMakeFiles/iris_static.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o"
+	/usr/bin/aarch64-linux-gnu-g++ --sysroot=/usr/aarch64-linux-gnu $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o -MF CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o.d -o CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o -c /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/src/camera_canvas.cpp
+
+CMakeFiles/iris_static.dir/src/camera_canvas.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/iris_static.dir/src/camera_canvas.cpp.i"
+	/usr/bin/aarch64-linux-gnu-g++ --sysroot=/usr/aarch64-linux-gnu $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/src/camera_canvas.cpp > CMakeFiles/iris_static.dir/src/camera_canvas.cpp.i
+
+CMakeFiles/iris_static.dir/src/camera_canvas.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/iris_static.dir/src/camera_canvas.cpp.s"
+	/usr/bin/aarch64-linux-gnu-g++ --sysroot=/usr/aarch64-linux-gnu $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/src/camera_canvas.cpp -o CMakeFiles/iris_static.dir/src/camera_canvas.cpp.s
+
 # Object files for target iris_static
 iris_static_OBJECTS = \
-"CMakeFiles/iris_static.dir/src/canvas.cpp.o"
+"CMakeFiles/iris_static.dir/src/canvas.cpp.o" \
+"CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o"
 
 # External object files for target iris_static
 iris_static_EXTERNAL_OBJECTS =
 
 libiris_static.a: CMakeFiles/iris_static.dir/src/canvas.cpp.o
+libiris_static.a: CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o
 libiris_static.a: CMakeFiles/iris_static.dir/build.make
 libiris_static.a: CMakeFiles/iris_static.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libiris_static.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX static library libiris_static.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/iris_static.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/iris_static.dir/link.txt --verbose=$(VERBOSE)
 

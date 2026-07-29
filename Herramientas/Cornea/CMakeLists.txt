@@ -35,7 +35,6 @@ set(CORNEA_SOURCES
     src/modules/diagnostics.cpp
     src/modules/device_classifier.cpp
     src/modules/visual_detector.cpp
-    ${CMAKE_SOURCE_DIR}/../../Herramientas/Iris/src/camera_canvas.cpp
 )
 
 set(CORNEA_HEADERS

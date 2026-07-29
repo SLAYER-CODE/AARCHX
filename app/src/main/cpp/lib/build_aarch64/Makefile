@@ -129,6 +129,30 @@ iris_static/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/iris_static.dir/build.make CMakeFiles/iris_static.dir/build
 .PHONY : iris_static/fast
 
+src/camera_canvas.o: src/camera_canvas.cpp.o
+.PHONY : src/camera_canvas.o
+
+# target to build an object file
+src/camera_canvas.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/iris_static.dir/build.make CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o
+.PHONY : src/camera_canvas.cpp.o
+
+src/camera_canvas.i: src/camera_canvas.cpp.i
+.PHONY : src/camera_canvas.i
+
+# target to preprocess a source file
+src/camera_canvas.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/iris_static.dir/build.make CMakeFiles/iris_static.dir/src/camera_canvas.cpp.i
+.PHONY : src/camera_canvas.cpp.i
+
+src/camera_canvas.s: src/camera_canvas.cpp.s
+.PHONY : src/camera_canvas.s
+
+# target to generate assembly for a file
+src/camera_canvas.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/iris_static.dir/build.make CMakeFiles/iris_static.dir/src/camera_canvas.cpp.s
+.PHONY : src/camera_canvas.cpp.s
+
 src/canvas.o: src/canvas.cpp.o
 .PHONY : src/canvas.o
 
@@ -162,6 +186,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... iris_static"
+	@echo "... src/camera_canvas.o"
+	@echo "... src/camera_canvas.i"
+	@echo "... src/camera_canvas.s"
 	@echo "... src/canvas.o"
 	@echo "... src/canvas.i"
 	@echo "... src/canvas.s"

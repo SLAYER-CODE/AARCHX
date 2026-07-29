@@ -27,51 +27,67 @@ bool CameraCanvas::listen(const std::string& socket_name) {
         listen_fd_ = -1;
     }
 
-    listen_fd_ = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
-    if (listen_fd_ < 0) {
-        std::cerr << "[CameraCanvas] socket() failed: " << strerror(errno) << "\n";
-        return false;
-    }
+    // Try requested socket first; if EADDRINUSE, try cam-0..cam-9
+    static const int MAX_ATTEMPTS = 10;
+    for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        std::string name = socket_name;
+        if (attempt > 0)
+            name = "cam-" + std::to_string(attempt);
 
-    {
+        listen_fd_ = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+        if (listen_fd_ < 0) {
+            std::cerr << "[cam] socket() failed: " << strerror(errno) << "\n";
+            return false;
+        }
+
         int opt = 1;
         setsockopt(listen_fd_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-    }
 
-    struct sockaddr_un addr;
-    std::memset(&addr, 0, sizeof(addr));
-    addr.sun_family = AF_UNIX;
+        struct sockaddr_un addr;
+        std::memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
 
-    size_t name_len = socket_name.size();
-    if (name_len > sizeof(addr.sun_path) - 1)
-        name_len = sizeof(addr.sun_path) - 1;
-    std::memcpy(addr.sun_path + 1, socket_name.data(), name_len);
+        size_t name_len = name.size();
+        if (name_len > sizeof(addr.sun_path) - 1)
+            name_len = sizeof(addr.sun_path) - 1;
+        std::memcpy(addr.sun_path + 1, name.data(), name_len);
 
-    socklen_t addr_len = offsetof(struct sockaddr_un, sun_path) + 1 + name_len;
+        socklen_t addr_len = offsetof(struct sockaddr_un, sun_path) + 1 + name_len;
 
-    if (::bind(listen_fd_, (struct sockaddr*)&addr, addr_len) < 0) {
-        std::cerr << "[CameraCanvas] bind('" << socket_name << "') failed: "
-                  << strerror(errno) << "\n";
+        if (::bind(listen_fd_, (struct sockaddr*)&addr, addr_len) == 0) {
+            if (::listen(listen_fd_, SOCKET_BACKLOG) < 0) {
+                std::cerr << "[cam] listen(" << name << ") failed: " << strerror(errno) << "\n";
+                close(listen_fd_);
+                listen_fd_ = -1;
+                return false;
+            }
+            socket_name_ = name;
+            if (name != socket_name)
+                std::cerr << "[cam] '" << socket_name << "' taken, using '" << name << "'\n";
+            std::cerr << "[cam] listening on '" << name << "'\n";
+            return true;
+        }
+
+        // bind failed
+        if (errno != EADDRINUSE) {
+            std::cerr << "[cam] bind('" << name << "') failed: " << strerror(errno) << "\n";
+            close(listen_fd_);
+            listen_fd_ = -1;
+            return false;
+        }
+
         close(listen_fd_);
         listen_fd_ = -1;
-        return false;
+        // EADDRINUSE — try next
     }
 
-    if (::listen(listen_fd_, SOCKET_BACKLOG) < 0) {
-        std::cerr << "[CameraCanvas] listen() failed: " << strerror(errno) << "\n";
-        close(listen_fd_);
-        listen_fd_ = -1;
-        return false;
-    }
-
-    socket_name_ = socket_name;
-    std::cerr << "[CameraCanvas] Listening on '" << socket_name_ << "'\n";
-    return true;
+    std::cerr << "[cam]: all sockets busy (tried cam-0..cam-" << (MAX_ATTEMPTS - 1) << ")\n";
+    return false;
 }
 
 bool CameraCanvas::accept_client() {
     if (listen_fd_ < 0) {
-        std::cerr << "[CameraCanvas] No listening socket\n";
+        std::cerr << "[cam] No listening socket\n";
         return false;
     }
 
@@ -79,7 +95,7 @@ bool CameraCanvas::accept_client() {
     socklen_t peer_len = sizeof(peer);
     int client_fd = ::accept(listen_fd_, (struct sockaddr*)&peer, &peer_len);
     if (client_fd < 0) {
-        std::cerr << "[CameraCanvas] accept() failed: " << strerror(errno) << "\n";
+        std::cerr << "[cam] accept() failed: " << strerror(errno) << "\n";
         return false;
     }
 
@@ -88,7 +104,7 @@ bool CameraCanvas::accept_client() {
     }
     socket_fd_ = client_fd;
 
-    std::cerr << "[CameraCanvas] Client accepted\n";
+    std::cerr << "[cam] Client accepted\n";
     return true;
 }
 
@@ -107,7 +123,7 @@ bool CameraCanvas::recv_frame() {
 
     FrameHeader header;
     if (!read_all(socket_fd_, &header, FRAME_HEADER_SIZE)) {
-        std::cerr << "[CameraCanvas] Client disconnected (header)\n";
+        std::cerr << "[cam] Client disconnected (header)\n";
         close(socket_fd_);
         socket_fd_ = -1;
         return false;
@@ -118,7 +134,7 @@ bool CameraCanvas::recv_frame() {
     size_t pixel_bytes = static_cast<size_t>(w) * h * 4;
 
     if (pixel_bytes == 0 || pixel_bytes > MAX_FRAME_BYTES) {
-        std::cerr << "[CameraCanvas] Invalid frame size: " << w << "x" << h
+        std::cerr << "[cam] Invalid frame size: " << w << "x" << h
                   << " = " << pixel_bytes << "\n";
         close(socket_fd_);
         socket_fd_ = -1;
@@ -132,7 +148,7 @@ bool CameraCanvas::recv_frame() {
     }
 
     if (!read_all(socket_fd_, pixels_.data(), pixel_bytes)) {
-        std::cerr << "[CameraCanvas] Client disconnected (pixels)\n";
+        std::cerr << "[cam] Client disconnected (pixels)\n";
         return false;
     }
 

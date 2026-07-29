@@ -10,11 +10,7 @@ build_native/
 cornea
 cornea_stripped
 
-# Iris legacy files (not part of Cornea)
-include/iris/
-src/camera_canvas.cpp
-src/camera.cpp
-src/yuv.cpp
+# Iris legacy examples (not part of Lexis)
 examples/iris.cpp
 examples/iris_viewer.cpp
 examples/camera_diag.cpp

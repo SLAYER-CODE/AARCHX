@@ -28,7 +28,6 @@ set(LEXIS_SOURCES
     src/modules/ocr.cpp
     src/modules/document_analyzer.cpp
     src/modules/diagnostics.cpp
-    ${CMAKE_SOURCE_DIR}/../../Herramientas/Iris/src/camera_canvas.cpp
 )
 
 set(LEXIS_HEADERS
