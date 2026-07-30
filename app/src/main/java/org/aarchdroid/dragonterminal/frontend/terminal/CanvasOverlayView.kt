@@ -22,6 +22,9 @@ import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.doOnLayout
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.hypot
 import org.aarchdroid.R
 import org.aarchdroid.dragonterminal.backend.HiddenOverlayRegistry
@@ -129,6 +132,10 @@ class CanvasOverlayView @JvmOverloads constructor(
     private var lastTapTime = 0L
     private var lastTapX = 0f
     private var lastTapY = 0f
+
+    /** Rotation gesture state (2-finger rotate like Google Maps) */
+    private var prevAngle = 0.0
+    private var rotationActive = false
 
     /** Throttle touch move forwarding to ~60fps */
     private var lastMoveSendTime = 0L
@@ -493,6 +500,7 @@ class CanvasOverlayView @JvmOverloads constructor(
                 lastTouchX = event.x
                 lastTouchY = event.y
                 lastMoveSendTime = 0L
+                rotationActive = false
                 startLongPress()
                 // Always feed scaleDetector (for pinch detection even in fullscreen)
                 scaleDetector.onTouchEvent(event)
@@ -504,6 +512,23 @@ class CanvasOverlayView @JvmOverloads constructor(
                         CanvasSocketServer.getInstance().sendToClient(connId, "touch down ${fx.toInt()} ${fy.toInt()}")
                     }
                 }
+                return true
+            }
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                if (!touchOwned) return false
+                scaleDetector.onTouchEvent(event)
+                if (event.pointerCount >= 2) {
+                    val dx = (event.getX(1) - event.getX(0)).toDouble()
+                    val dy = (event.getY(1) - event.getY(0)).toDouble()
+                    prevAngle = Math.toDegrees(atan2(dy, dx))
+                    rotationActive = true
+                }
+                bringToFront()
+                return true
+            }
+            MotionEvent.ACTION_POINTER_UP -> {
+                scaleDetector.onTouchEvent(event)
+                if (event.pointerCount <= 2) rotationActive = false
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
@@ -524,6 +549,25 @@ class CanvasOverlayView @JvmOverloads constructor(
                             CanvasSocketServer.getInstance().sendToClient(connId, "touch move ${fx.toInt()} ${fy.toInt()}")
                         }
                     }
+                    // Rotation detection (2 fingers) — like Google Maps
+                    if (rotationActive && event.pointerCount >= 2) {
+                        val dx = (event.getX(1) - event.getX(0)).toDouble()
+                        val dy = (event.getY(1) - event.getY(0)).toDouble()
+                        val angle = Math.toDegrees(atan2(dy, dx))
+                        var delta = angle - prevAngle
+                        if (delta > 180.0) delta -= 360.0
+                        if (delta < -180.0) delta += 360.0
+                        if (abs(delta) > 0.1) {
+                            val mx = mapScreenToFrameX((event.getX(0) + event.getX(1)) / 2f)
+                            val my = mapScreenToFrameY((event.getY(0) + event.getY(1)) / 2f)
+                            if (connId >= 0) {
+                                CanvasSocketServer.getInstance().sendToClient(connId, String.format(Locale.US, "rotate %.1f %d %d", delta, mx.toInt(), my.toInt()))
+                            }
+                        }
+                        prevAngle = angle
+                    } else if (event.pointerCount < 2) {
+                        rotationActive = false
+                    }
                 } else {
                     val dx = event.x - lastTouchX
                     val dy = event.y - lastTouchY
@@ -541,6 +585,7 @@ class CanvasOverlayView @JvmOverloads constructor(
             MotionEvent.ACTION_UP -> {
                 cancelPendingLongPress()
                 longPressFired = false
+                rotationActive = false
                 if (!touchOwned) return false
                 // Always feed scaleDetector
                 scaleDetector.onTouchEvent(event)
@@ -574,6 +619,7 @@ class CanvasOverlayView @JvmOverloads constructor(
             MotionEvent.ACTION_CANCEL -> {
                 cancelPendingLongPress()
                 longPressFired = false
+                rotationActive = false
                 if (isFullscreen && connId >= 0) {
                     val fx = mapScreenToFrameX(event.x)
                     val fy = mapScreenToFrameY(event.y)
