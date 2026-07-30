@@ -36,7 +36,7 @@ public:
     int render_height() const;
     
     // ── Terminal output ──────────────────────────────────────────
-    void print_device_info(const DeviceInfo& device);
+    void print_analysis(const FrameResult& result);
     void print_vulnerability(const DeviceInfo::Vulnerability& vuln);
     void print_credential(const DeviceInfo::Credential& cred);
     void print_ocr_results(const std::vector<TextBlock>& blocks);

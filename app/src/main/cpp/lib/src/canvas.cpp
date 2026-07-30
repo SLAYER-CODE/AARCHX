@@ -388,10 +388,8 @@ void draw_circle(uint32_t* pixels, int w, int h,
 void draw_text(uint32_t* pixels, int w, int h,
                int x, int y, const std::string& text,
                uint32_t color, int size) {
-    // size = glyph height in pixels. 13 = native bitmap size (1:1).
-    // For size > 13, scale each bitmap pixel as NxN blocks.
-    int font_scale = std::max(1, size / 13);
-    // 8x13 bitmap font for ASCII 32-126
+    if (size <= 0 || text.empty()) return;
+    // 8x13 bitmap font for ASCII 32-126 — used by fractional sampler below
     static const uint8_t FONT[95][13] = {
         {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
         {0x00,0x08,0x08,0x08,0x08,0x08,0x08,0x00,0x08,0x08,0x00,0x00,0x00},
@@ -489,31 +487,26 @@ void draw_text(uint32_t* pixels, int w, int h,
         {0x00,0x30,0x08,0x08,0x06,0x08,0x08,0x08,0x30,0x00,0x00,0x00,0x00},
         {0x00,0x22,0x54,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
     };
-
-    int cy = y - 9 * font_scale;  // y is baseline, adjust for top-left
-    int cx = x;
+    // Render each glyph by sampling the 8x13 bitmap at fractional coordinates.
+    // This gives smooth integer-pixel scaling for any size (no font_scale jumps).
     for (unsigned char c : text) {
-        if (c < 32 || c > 126) { cx += 8 * font_scale; continue; }
+        if (c < 32 || c > 126) { c = '?'; }
         const uint8_t* glyph = FONT[c - 32];
-        for (int row = 0; row < 13; row++) {
-            int py0 = cy + row * font_scale;
-            if (py0 + font_scale <= 0 || py0 >= h) continue;
-            for (int col = 0; col < 8; col++) {
-                if (glyph[row] & (0x80 >> col)) {
-                    int px0 = cx + col * font_scale;
-                    for (int sy = 0; sy < font_scale; sy++) {
-                        int py = py0 + sy;
-                        if (py < 0 || py >= h) continue;
-                        for (int sx = 0; sx < font_scale; sx++) {
-                            int px = px0 + sx;
-                            if (px >= 0 && px < w)
-                                pixels[py * w + px] = color;
-                        }
-                    }
-                }
+        int char_w = std::max(1, (8 * size + 6) / 13);
+        int char_h = size;
+        for (int row = 0; row < char_h; row++) {
+            int py = y - (9 * size + 6) / 13 + row;
+            if (py < 0 || py >= h) continue;
+            int src_y = row * 13 / char_h;
+            for (int col = 0; col < char_w; col++) {
+                int px = x + col;
+                if (px < 0 || px >= w) continue;
+                int src_x = col * 8 / char_w;
+                if (glyph[src_y] & (0x80 >> src_x))
+                    pixels[py * w + px] = color;
             }
         }
-        cx += 8 * font_scale;
+        x += char_w;
     }
 }
 

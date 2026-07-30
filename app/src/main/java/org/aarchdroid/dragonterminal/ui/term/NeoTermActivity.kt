@@ -339,8 +339,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                     item.title = "Interna"
                     Toast.makeText(this, "Interna desmontada", Toast.LENGTH_SHORT).show()
                 } else {
-                    suRun("/data/data/org.aarchdroid/files/bin/busybox mkdir -p $target")
-                    suRunGlobal("/data/data/org.aarchdroid/files/bin/busybox mount -o bind /sdcard $target")
+                    suRun("mkdir -p $target")
+                    suRunGlobal("mount -o bind /sdcard $target")
                     item.title = "Interna Unmount"
                     Toast.makeText(this, "Interna montada", Toast.LENGTH_SHORT).show()
                 }
@@ -358,8 +358,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                     if (extSd == null) {
                         Toast.makeText(this, "no se detecto tarjeta externa", Toast.LENGTH_SHORT).show()
                     } else {
-                        suRun("/data/data/org.aarchdroid/files/bin/busybox mkdir -p $target")
-                        suRunGlobal("/data/data/org.aarchdroid/files/bin/busybox mount -o bind $extSd $target")
+                        suRun("mkdir -p $target")
+                        suRunGlobal("mount -o bind $extSd $target")
                         item.title = "Externa Unmount"
                         Toast.makeText(this, "Externa montada", Toast.LENGTH_SHORT).show()
                     }

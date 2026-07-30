@@ -50,7 +50,7 @@
         android:title="@string/pref_general_enable_word_based_ime" />
 
     <CheckBoxPreference
-        android:defaultValue="true"
+        android:defaultValue="false"
         android:key="@string/key_general_disable_logs"
         android:summary="@string/pref_general_disable_logs_desc"
         android:title="@string/pref_general_disable_logs" />

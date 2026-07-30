@@ -19,6 +19,7 @@
 
 #include "cornea/config.h"
 #include "cornea/engine.h"
+#include "cornea/log.h"
 #include "cornea/overlay_renderer.h"
 #include "cornea/modules/ocr.h"
 #include "cornea/modules/logo_detector.h"
@@ -68,7 +69,7 @@ int main(int argc, char** argv) {
     // Initialize engine
     cornea::Engine engine;
     if (!engine.init(engine_config)) {
-        std::cerr << "[Cornea] Failed to initialize engine" << std::endl;
+        std::cerr << TAG_CORNEA << "Failed to initialize engine" << std::endl;
         return 1;
     }
     
@@ -90,7 +91,7 @@ int main(int argc, char** argv) {
     // Set up frame callback (terminal output)
     engine.on_frame_processed([&renderer](const cornea::FrameResult& result) {
         if (result.valid) {
-            renderer.print_device_info(result.device);
+            renderer.print_analysis(result);
         }
     });
     
@@ -108,12 +109,12 @@ int main(int argc, char** argv) {
     // Start engine
     engine.start();
     
-    std::cout << "[Cornea] Camera: " << engine_config.camera_socket << std::endl;
-    std::cout << "[Cornea] Size: " << engine_config.width << "x" << engine_config.height << std::endl;
-    std::cout << "[Cornea] Modules: " << engine_config.modules.size() << std::endl;
-    std::cout << "[Cornea] Overlay: " << (engine_config.overlay_enabled ? "ON" : "OFF") << std::endl;
-    std::cout << "[Cornea] Point camera at a device to identify it" << std::endl;
-    std::cout << "[Cornea] Press Ctrl+C to stop" << std::endl;
+    std::cout << TAG_CORNEA << "Camera: " << engine_config.camera_socket << std::endl;
+    std::cout << TAG_CORNEA << "Size: " << engine_config.width << "x" << engine_config.height << std::endl;
+    std::cout << TAG_CORNEA << "Modules: " << engine_config.modules.size() << std::endl;
+    std::cout << TAG_CORNEA << "Overlay: " << (engine_config.overlay_enabled ? "ON" : "OFF") << std::endl;
+    std::cout << TAG_CORNEA << "Point camera at a device to identify it" << std::endl;
+    std::cout << TAG_CORNEA << "Press Ctrl+C to stop" << std::endl;
     std::cout << std::endl;
     
     // Main loop
@@ -125,7 +126,7 @@ int main(int argc, char** argv) {
     engine.stop();
     renderer.shutdown();
     
-    std::cout << "\n[Cornea] Shutdown complete." << std::endl;
+    std::cout << TAG_CORNEA << "Shutdown complete." << std::endl;
     return 0;
 }
 

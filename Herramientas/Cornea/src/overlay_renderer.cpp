@@ -1,4 +1,5 @@
 #include "cornea/overlay_renderer.h"
+#include "cornea/log.h"
 #include "iris/canvas.h"
 
 #include <iostream>
@@ -29,12 +30,12 @@ bool OverlayRenderer::init(int width, int height, const std::string& display_soc
     }
     
     if (!canvas_->init(width, height)) {
-        std::cerr << "[Overlay] Canvas init failed" << std::endl;
+        std::cerr << TAG_OVERLAY << "Canvas init failed" << std::endl;
         return false;
     }
     
     connected_ = true;
-    std::cout << "[Overlay] Connected to '" << display_socket << "' " << width << "x" << height << std::endl;
+    std::cout << TAG_OVERLAY << "Connected to '" << display_socket << "' " << width << "x" << height << std::endl;
     return true;
 }
 
@@ -60,7 +61,7 @@ void OverlayRenderer::set_render_size(int w, int h) {
         canvas_->resize(w, h);
     }
     if (verbose_) {
-        std::cout << "[Overlay] Render size: " << w << "x" << h << std::endl;
+        std::cout << TAG_OVERLAY << "Render size: " << w << "x" << h << std::endl;
     }
 }
 
@@ -101,7 +102,7 @@ bool OverlayRenderer::present(const uint32_t* pixels, int w, int h) {
     }
     
     if (!canvas_->present()) {
-        std::cerr << "[Overlay] present() failed" << std::endl;
+        std::cerr << TAG_OVERLAY << "present() failed" << std::endl;
         connected_ = false;
         return false;
     }
@@ -110,66 +111,76 @@ bool OverlayRenderer::present(const uint32_t* pixels, int w, int h) {
     return true;
 }
 
-void OverlayRenderer::print_device_info(const DeviceInfo& device) {
-    print_separator();
-    print_header("DEVICE RECOGNIZED");
-    print_separator();
-    
-    // Device Type (most important)
-    if (!device.type_label.empty()) {
-        std::cout << "Type: " << device.type_label;
-        if (device.classification_confidence > 0) {
-            std::cout << " (" << (int)(device.classification_confidence * 100) << "% confidence)";
+void OverlayRenderer::print_analysis(const FrameResult& result) {
+    const auto& device = result.device;
+    bool has_info = !device.type_label.empty() || !device.vendor.empty() || !device.model.empty();
+    bool has_detect = !result.visual_detections.empty();
+    bool has_ocr = !device.text_blocks.empty();
+    bool has_vulns = !device.vulns.empty();
+    bool has_creds = !device.default_creds.empty();
+    if (!has_info && !has_detect && !has_ocr && !has_vulns && !has_creds) return;
+
+    // Device identification — bold white
+    if (has_info) {
+        if (g_ansi) std::cout << "\033[1;37m";
+        std::cout << "[Device]";
+        if (g_ansi) std::cout << "\033[0m";
+        std::cout << " Type: " << device.type_label;
+        if (device.classification_confidence > 0)
+            std::cout << " (" << (int)(device.classification_confidence * 100) << "%)";
+        if (!device.vendor.empty())
+            std::cout << " | Vendor: " << device.vendor;
+        if (!device.model.empty())
+            std::cout << " | Model: " << device.model;
+        if (!device.serial.empty())
+            std::cout << " | Serial: " << device.serial;
+        if (!device.firmware.empty())
+            std::cout << " | FW: " << device.firmware;
+        std::cout << std::endl;
+    }
+
+    if (has_detect) {
+        if (g_ansi) std::cout << "\033[1;36m";  // cyan
+        std::cout << "[Detect]";
+        if (g_ansi) std::cout << "\033[0m" << " ";
+        else std::cout << " ";
+        for (size_t i = 0; i < result.visual_detections.size(); i++) {
+            if (i > 0) std::cout << ", ";
+            std::cout << result.visual_detections[i].class_name
+                      << " (" << (int)(result.visual_detections[i].confidence * 100) << "%)";
         }
         std::cout << std::endl;
     }
-    
-    // Device State
-    if (!device.state_label.empty()) {
-        std::cout << "State: " << device.state_label << std::endl;
-    }
-    
-    if (!device.vendor.empty()) {
-        std::cout << "Vendor: " << device.vendor;
-        if (device.logo_confidence > 0) {
-            std::cout << " (" << (int)(device.logo_confidence * 100) << "% confidence)";
+
+    if (has_ocr) {
+        if (g_ansi) std::cout << "\033[1;32m";  // green
+        std::cout << "[OCR]";
+        if (g_ansi) std::cout << "\033[0m" << " ";
+        else std::cout << " ";
+        for (size_t i = 0; i < device.text_blocks.size(); i++) {
+            if (i > 0) std::cout << ", ";
+            std::cout << "\"" << device.text_blocks[i].text << "\""
+                      << " (" << (int)(device.text_blocks[i].confidence * 100) << "%)";
         }
         std::cout << std::endl;
     }
-    
-    if (!device.model.empty()) {
-        std::cout << "Model: " << device.model << std::endl;
-    }
-    
-    if (!device.serial.empty()) {
-        std::cout << "Serial: " << device.serial << std::endl;
-    }
-    
-    if (!device.firmware.empty()) {
-        std::cout << "Firmware: " << device.firmware << std::endl;
-    }
-    
-    if (!device.text_blocks.empty()) {
-        print_ocr_results(device.text_blocks);
-    }
-    
-    if (!device.vulns.empty()) {
-        std::cout << std::endl;
-        print_header("VULNERABILITIES");
+
+    if (has_vulns) {
+        std::cout << "[Vulns] " << device.vulns.size();
         for (const auto& vuln : device.vulns) {
-            print_vulnerability(vuln);
+            std::cout << " | [" << vuln.severity << "] " << vuln.title;
+            if (!vuln.id.empty()) std::cout << " (" << vuln.id << ")";
         }
-    }
-    
-    if (!device.default_creds.empty()) {
         std::cout << std::endl;
-        print_header("DEFAULT CREDENTIALS");
-        for (const auto& cred : device.default_creds) {
-            print_credential(cred);
-        }
     }
-    
-    print_separator();
+
+    if (has_creds) {
+        std::cout << "[Creds] " << device.default_creds.size();
+        for (const auto& cred : device.default_creds) {
+            std::cout << " | " << cred.service << ": " << cred.username << "/" << cred.password;
+        }
+        std::cout << std::endl;
+    }
 }
 
 void OverlayRenderer::print_vulnerability(const DeviceInfo::Vulnerability& vuln) {

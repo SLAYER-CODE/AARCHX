@@ -25,3 +25,4 @@ iris_aarch64
 
 # Deploy artifacts
 /tmp/cornea_deploy/
+AGENTS.md

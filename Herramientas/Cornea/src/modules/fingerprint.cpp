@@ -1,4 +1,5 @@
 #include "cornea/modules/fingerprint.h"
+#include "cornea/log.h"
 
 #include <iostream>
 
@@ -16,18 +17,18 @@ const std::vector<FingerprintModule::PortPattern> FingerprintModule::PORT_PATTER
 };
 
 bool FingerprintModule::init() {
-    std::cout << "[Fingerprint] Initialized" << std::endl;
+    if (verbose_) std::cout << TAG_FINGERPRINT << "Initialized" << std::endl;
     return true;
 }
 
 void FingerprintModule::shutdown() {
-    std::cout << "[Fingerprint] Shutdown" << std::endl;
+    if (verbose_) std::cout << TAG_FINGERPRINT << "Shutdown" << std::endl;
 }
 
 void FingerprintModule::scan(std::vector<Device>& devices) {
     if (!enabled_) return;
     
-    std::cout << "[Fingerprint] Fingerprinting " << devices.size() << " devices..." << std::endl;
+    if (verbose_) std::cout << TAG_FINGERPRINT << "Fingerprinting " << devices.size() << " devices..." << std::endl;
     
     for (auto& device : devices) {
         if (port_scan_) fingerprint_ports(device);

@@ -1,4 +1,5 @@
 #include "cornea/modules/visual_detector.h"
+#include "cornea/log.h"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -30,7 +31,7 @@ VisualDetectorModule::~VisualDetectorModule() {
 }
 
 bool VisualDetectorModule::init() {
-    std::cout << "[VisualDetector] Initializing ncnn YOLOv8n..." << std::endl;
+    std::cout << TAG_VISUAL << "Initializing ncnn YOLOv8n..." << std::endl;
 
     net_.opt.use_vulkan_compute = false;
     net_.opt.use_winograd_convolution = true;
@@ -47,7 +48,6 @@ bool VisualDetectorModule::init() {
         const char* search_paths[] = {
             "/root/cornea/yolov8n.param",
             "/data/local/aarchdroid/root/cornea/yolov8n.param",
-            "/tmp/yolov8n.param",
             "yolov8n.param"
         };
         for (const char* p : search_paths) {
@@ -64,9 +64,9 @@ bool VisualDetectorModule::init() {
     model_loaded_ = load_model(param_path, bin_path);
 
     if (model_loaded_) {
-        std::cout << "[VisualDetector] Model loaded: " << param_path << std::endl;
+        std::cout << TAG_VISUAL << "Model loaded: " << param_path << std::endl;
     } else {
-        std::cout << "[VisualDetector] Model NOT loaded - visual detection disabled" << std::endl;
+        std::cout << TAG_VISUAL << "Model NOT loaded - visual detection disabled" << std::endl;
     }
 
     return true;
@@ -76,20 +76,20 @@ void VisualDetectorModule::shutdown() {
     if (model_loaded_) {
         net_.clear();
         model_loaded_ = false;
-        std::cout << "[VisualDetector] Shutdown" << std::endl;
+        if (verbose_) std::cout << TAG_VISUAL << "Shutdown" << std::endl;
     }
 }
 
 bool VisualDetectorModule::load_model(const std::string& param_path, const std::string& bin_path) {
     int ret = net_.load_param(param_path.c_str());
     if (ret != 0) {
-        std::cerr << "[VisualDetector] Failed to load param: " << param_path << " (ret=" << ret << ")" << std::endl;
+        std::cerr << TAG_VISUAL << "Failed to load param: " << param_path << " (ret=" << ret << ")" << std::endl;
         return false;
     }
 
     ret = net_.load_model(bin_path.c_str());
     if (ret != 0) {
-        std::cerr << "[VisualDetector] Failed to load model: " << bin_path << " (ret=" << ret << ")" << std::endl;
+        std::cerr << TAG_VISUAL << "Failed to load model: " << bin_path << " (ret=" << ret << ")" << std::endl;
         return false;
     }
 
@@ -130,11 +130,12 @@ void VisualDetectorModule::process_frame(uint32_t* pixels, int w, int h, FrameRe
 
         result.device.classification_confidence = best.confidence;
 
-        std::cout << "[VisualDetector] " << best.class_name
-                  << " (" << (int)(best.confidence * 100) << "%)"
-                  << " bbox:[" << (int)best.x << "," << (int)best.y
-                  << " " << (int)best.w << "x" << (int)best.h << "]"
-                  << std::endl;
+        if (verbose_)
+            std::cout << TAG_VISUAL << best.class_name
+                      << " (" << (int)(best.confidence * 100) << "%)"
+                      << " bbox:[" << (int)best.x << "," << (int)best.y
+                      << " " << (int)best.w << "x" << (int)best.h << "]"
+                      << std::endl;
     }
 }
 
@@ -197,12 +198,12 @@ std::vector<VisualDetection> VisualDetectorModule::detect(const uint32_t* pixels
     ncnn::Mat output;
     int ret = ex.extract("out0", output);
     if (ret != 0) {
-        std::cerr << "[VisualDetector] extract() failed: ret=" << ret << std::endl;
+        std::cerr << TAG_VISUAL << "extract() failed: ret=" << ret << std::endl;
         return {};
     }
 
     if (output.dims < 2 || output.w == 0 || output.h == 0) {
-        std::cerr << "[VisualDetector] invalid output dims: " << output.dims
+        std::cerr << TAG_VISUAL << "invalid output dims: " << output.dims
                   << " w=" << output.w << " h=" << output.h << std::endl;
         return {};
     }
@@ -227,8 +228,9 @@ std::vector<VisualDetection> VisualDetectorModule::postprocess(const ncnn::Mat& 
 
     const float* data = (const float*)output.data;
 
-    std::cout << "[VisualDetector] output:" << num_features << "x" << num_anchors
-              << " dims=" << output.dims << " thresh:" << conf_threshold_ << std::endl;
+    if (verbose_)
+        std::cout << TAG_VISUAL << "output:" << num_features << "x" << num_anchors
+                  << " dims=" << output.dims << " thresh:" << conf_threshold_ << std::endl;
 
     int pre_nms = 0;
     for (int i = 0; i < num_anchors; i++) {
@@ -263,8 +265,8 @@ std::vector<VisualDetection> VisualDetectorModule::postprocess(const ncnn::Mat& 
         w  = std::max(0.0f, std::min(w, (float)img_w - x1));
         h  = std::max(0.0f, std::min(h, (float)img_h - y1));
 
-        if (pre_nms <= 5) {
-            std::cout << "[VisualDetector] det#" << pre_nms
+        if (verbose_ && pre_nms <= 5) {
+            std::cout << TAG_VISUAL << "det#" << pre_nms
                       << " cls=" << max_class << "(" << ((max_class < COCO_COUNT) ? COCO_NAMES[max_class] : "?") << ")"
                       << " conf=" << (int)(max_score * 100) << "%"
                       << " xywh:[" << (int)cx << "," << (int)cy << " " << (int)bw << "x" << (int)bh << "]"
@@ -286,11 +288,12 @@ std::vector<VisualDetection> VisualDetectorModule::postprocess(const ncnn::Mat& 
         detections.push_back(det);
     }
 
-    std::cout << "[VisualDetector] anchors:" << num_anchors
-              << " classes:" << num_classes
-              << " above_thresh:" << pre_nms
-              << " size_filtered:" << (int)detections.size()
-              << " thresh:" << conf_threshold_ << std::endl;
+    if (verbose_)
+        std::cout << TAG_VISUAL << "anchors:" << num_anchors
+                  << " classes:" << num_classes
+                  << " above_thresh:" << pre_nms
+                  << " size_filtered:" << (int)detections.size()
+                  << " thresh:" << conf_threshold_ << std::endl;
 
     std::sort(detections.begin(), detections.end(),
               [](const VisualDetection& a, const VisualDetection& b) {
@@ -299,7 +302,8 @@ std::vector<VisualDetection> VisualDetectorModule::postprocess(const ncnn::Mat& 
 
     nms(detections, nms_threshold_);
 
-    std::cout << "[VisualDetector] after_nms:" << (int)detections.size() << std::endl;
+    if (verbose_)
+        std::cout << TAG_VISUAL << "after_nms:" << (int)detections.size() << std::endl;
 
     return detections;
 }

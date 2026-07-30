@@ -1,9 +1,10 @@
 #!/bin/bash
 # build_tesseract_static.sh — Cross-compile Tesseract + deps statically for aarch64
-# Output: libtesseract.a + libleptonica.a + headers in /tmp/tesseract_build/install/
+# Output: libtesseract.a + libleptonica.a + headers in <repo>/deps/tesseract_build/install/
 set -e
 
-WORKDIR="/tmp/tesseract_build"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKDIR="${SCRIPT_DIR}/deps/tesseract_build"
 PREFIX="${WORKDIR}/install"
 SYSROOT="/usr/aarch64-linux-gnu"
 CC="aarch64-linux-gnu-gcc"

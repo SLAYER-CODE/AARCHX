@@ -52,7 +52,11 @@ public:
     int rotate = 0;                          // -r, --rotate
     bool overlay_enabled = true;
     bool verbose = false;
+    bool ansi = true;
     bool help = false;
+    std::string tracker_mode = "kalman";
+    int max_fps = 0;
+    int process_every = 1;
 };
 
 } // namespace cornea

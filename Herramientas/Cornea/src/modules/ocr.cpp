@@ -1,4 +1,5 @@
 #include "cornea/modules/ocr.h"
+#include "cornea/log.h"
 
 #include <iostream>
 #include <regex>
@@ -26,7 +27,7 @@ bool OCRModule::init() {
     // Init Tesseract: data path + language
     int ret = api_->Init(data_path_.c_str(), lang_.c_str());
     if (ret != 0) {
-        std::cerr << "[OCR] Tesseract init failed (lang=" << lang_ << ", path=" << data_path_ << ")" << std::endl;
+        std::cerr << TAG_OCR << "Tesseract init failed (lang=" << lang_ << ", path=" << data_path_ << ")" << std::endl;
         delete api_;
         api_ = nullptr;
         return false;
@@ -40,10 +41,10 @@ bool OCRModule::init() {
     api_->SetVariable("textord_min_linesize", "2.5");
     
     initialized_ = true;
-    std::cout << "[OCR] Tesseract initialized: " << lang_ << " @ " << data_path_ << std::endl;
+    std::cout << TAG_OCR << "Tesseract initialized: " << lang_ << " @ " << data_path_ << std::endl;
     return true;
 #else
-    std::cout << "[OCR] Initialized (Tesseract NOT available - compile with -DCORNEA_HAS_TESSERACT)" << std::endl;
+    std::cout << TAG_OCR << "Initialized (Tesseract NOT available - compile with -DCORNEA_HAS_TESSERACT)" << std::endl;
     return true;
 #endif
 }
@@ -57,7 +58,7 @@ void OCRModule::shutdown() {
     }
 #endif
     initialized_ = false;
-    std::cout << "[OCR] Shutdown" << std::endl;
+    if (verbose_) std::cout << TAG_OCR << "Shutdown" << std::endl;
 }
 
 void OCRModule::process_frame(uint32_t* pixels, int w, int h,

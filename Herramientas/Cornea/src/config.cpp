@@ -1,4 +1,5 @@
 #include "cornea/config.h"
+#include "cornea/log.h"
 
 #include <iostream>
 #include <cstring>
@@ -138,9 +139,35 @@ Config Config::parse(int argc, char** argv) {
             }
         }
         
+        // ANSI colors
+        else if (arg == "--no-ansi" || arg == "--noansi" || arg == "--no-color") {
+            config.ansi = false;
+        }
+
+        // Tracker mode
+        else if (arg.rfind("--tracker=", 0) == 0) {
+            config.tracker_mode = arg.substr(arg.find('=') + 1);
+        } else if (arg == "--tracker") {
+            if (i + 1 < argc) config.tracker_mode = argv[++i];
+        }
+
+        // Max FPS
+        else if (arg.rfind("--max-fps=", 0) == 0) {
+            config.max_fps = std::stoi(arg.substr(arg.find('=') + 1));
+        } else if (arg == "--max-fps") {
+            if (i + 1 < argc) config.max_fps = std::stoi(argv[++i]);
+        }
+
+        // Process every N frames
+        else if (arg.rfind("--process-every=", 0) == 0) {
+            config.process_every = std::stoi(arg.substr(arg.find('=') + 1));
+        } else if (arg == "--process-every") {
+            if (i + 1 < argc) config.process_every = std::stoi(argv[++i]);
+        }
+
         // Unknown option
         else if (arg[0] == '-') {
-            std::cerr << "[Config] Unknown option: " << arg << std::endl;
+            std::cerr << TAG_CONFIG << "Unknown option: " << arg << std::endl;
         }
     }
     
@@ -174,6 +201,11 @@ Options:
       --tesseract-data PATH  Tesseract data directory
       --template-dir PATH  Logo templates directory
       --db PATH            Vulnerability database path
+      --tracker MODE       Tracker algorithm: kalman (default) or iou
+      --max-fps N          Maximum frames per second (0 = no limit)
+      --process-every N    Process 1 of every N frames (default: 1)
+      --no-ansi            Disable ANSI color output
+      --no-color           Same as --no-ansi
   -v, --verbose            Verbose output
   -h, --help               Show this help
 
@@ -185,6 +217,7 @@ Examples:
   cornea --verbose
   cornea -c cam-1 -s 1280x720 -m ocr,logo_detector
   cornea --no-overlay --template-dir=/path/to/templates
+  cornea --tracker=iou --max-fps=15
 )" << std::endl;
 }
 
@@ -196,7 +229,11 @@ EngineConfig Config::to_engine_config() const {
     config.height = height;
     config.rotate = rotate;
     config.verbose = verbose;
+    config.ansi = ansi;
     config.overlay_enabled = overlay_enabled;
+    config.tracker_mode = tracker_mode;
+    config.max_fps = max_fps;
+    config.process_every = process_every;
     config.display_socket = display_socket;
     
     if (!tesseract_data.empty()) {

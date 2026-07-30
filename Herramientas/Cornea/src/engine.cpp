@@ -1,5 +1,6 @@
 #include "cornea/engine.h"
 #include "cornea/overlay_renderer.h"
+#include "cornea/log.h"
 #include "cornea/modules/ocr.h"
 #include "cornea/modules/logo_detector.h"
 #include "cornea/modules/vulndb.h"
@@ -30,8 +31,14 @@ Engine::~Engine() {
 
 bool Engine::init(const EngineConfig& config) {
     config_ = config;
+    set_ansi(config_.ansi);
+
+    // Configure tracker
+    tracker_.set_use_kalman(config_.tracker_mode != "iou");
+    if (config_.verbose)
+        std::cout << TAG_ENGINE << "Tracker: " << config_.tracker_mode << std::endl;
     
-    std::cout << "[Engine] Initialized" << std::endl;
+    std::cout << TAG_ENGINE << "Initialized" << std::endl;
     std::cout << "  Camera: " << config_.camera_socket << std::endl;
     std::cout << "  Size: " << config_.width << "x" << config_.height << std::endl;
     std::cout << "  Overlay: " << (config_.overlay_enabled ? "ON" : "OFF") << std::endl;
@@ -44,15 +51,17 @@ void Engine::start() {
 
     // Init all modules
     for (auto& mod : modules_) {
+        mod->set_verbose(config_.verbose);
         if (mod->name() == std::string("ocr")) {
             auto* ocr = dynamic_cast<OCRModule*>(mod.get());
             if (ocr) {
                 ocr->set_data_path(config_.tesseract_data);
-                std::cout << "[Engine] OCR data path: " << config_.tesseract_data << std::endl;
+                if (config_.verbose)
+                    std::cout << TAG_ENGINE << "OCR data path: " << config_.tesseract_data << std::endl;
             }
         }
         if (!mod->init()) {
-            std::cerr << "[Engine] Module '" << mod->name() << "' init failed" << std::endl;
+            std::cerr << TAG_ENGINE << "Module '" << mod->name() << "' init failed" << std::endl;
         }
     }
 
@@ -68,7 +77,7 @@ void Engine::start() {
     running_ = true;
     process_thread_ = std::thread(&Engine::process_loop, this);
 
-    std::cout << "[Engine] Started" << std::endl;
+    std::cout << TAG_ENGINE << "Started" << std::endl;
 }
 
 void Engine::stop() {
@@ -85,7 +94,7 @@ void Engine::stop() {
         process_thread_.join();
     }
     
-    std::cout << "[Engine] Stopped" << std::endl;
+    std::cout << TAG_ENGINE << "Stopped" << std::endl;
 }
 
 void Engine::trigger_process() {
@@ -99,7 +108,7 @@ FrameResult Engine::last_result() const {
 
 void Engine::register_module(std::unique_ptr<AnalysisModule> module) {
     if (module) {
-        std::cout << "[Engine] Registered module: " << module->name() << std::endl;
+        std::cout << TAG_ENGINE << "Registered module: " << module->name() << std::endl;
         modules_.push_back(std::move(module));
     }
 }
@@ -129,10 +138,10 @@ void Engine::process_loop() {
     int frame_count = 0;
 
     if (!camera_canvas_.listen(config_.camera_socket)) {
-        std::cerr << "[Engine] Failed to listen on " << config_.camera_socket << std::endl;
+        std::cerr << TAG_ENGINE << "Failed to listen on " << config_.camera_socket << std::endl;
         return;
     }
-    std::cout << "[Engine] Listening on " << config_.camera_socket 
+    std::cout << TAG_ENGINE << "Listening on " << config_.camera_socket 
               << " (" << config_.width << "x" << config_.height << ")" << std::endl;
 
     send_camera_ctrl();
@@ -140,12 +149,12 @@ void Engine::process_loop() {
     while (running_) {
         if (!camera_canvas_.connected()) {
             if (config_.verbose)
-                std::cout << "[Engine] Waiting for camera client..." << std::endl;
+                std::cout << TAG_ENGINE << "Waiting for camera client..." << std::endl;
             if (!camera_canvas_.accept_client()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 continue;
             }
-            std::cout << "[Engine] Camera client connected" << std::endl;
+            std::cout << TAG_ENGINE << "Camera client connected" << std::endl;
         }
 
         if (camera_canvas_.recv_frame()) {
@@ -193,8 +202,12 @@ void Engine::process_loop() {
                     // Visual detection results — always update (including clearing)
                     last_result_.visual_detections = ocr_result.visual_detections;
                     
-                    if (!ocr_result.visual_detections.empty()) {
-                        std::cout << "[Engine] Async visual_detections: " << ocr_result.visual_detections.size() << " items" << std::endl;
+                    // Update tracker with new YOLO detections
+                    tracker_.update(ocr_result.visual_detections);
+                    last_result_.tracked_objects = tracker_.tracks();
+                    
+                    if (!ocr_result.visual_detections.empty() && config_.verbose) {
+                        std::cout << TAG_ENGINE << "Async visual_detections: " << ocr_result.visual_detections.size() << " items" << std::endl;
                     }
                     
                     last_result_.valid = !last_result_.device.vendor.empty() ||
@@ -218,9 +231,10 @@ void Engine::process_loop() {
                 overlay_canvas_->width() == config_.overlay_width &&
                 overlay_canvas_->height() == config_.overlay_height &&
                 (overlay_canvas_->width() != fw || overlay_canvas_->height() != fh)) {
-                std::cout << "[Engine] Auto-resize canvas "
-                          << overlay_canvas_->width() << "x" << overlay_canvas_->height()
-                          << " -> " << fw << "x" << fh << " (match camera)" << std::endl;
+                if (config_.verbose)
+                    std::cout << TAG_ENGINE << "Auto-resize canvas "
+                              << overlay_canvas_->width() << "x" << overlay_canvas_->height()
+                              << " -> " << fw << "x" << fh << " (match camera)" << std::endl;
                 overlay_canvas_->resize(fw, fh);
             }
 
@@ -252,7 +266,8 @@ void Engine::process_loop() {
                 diag_h = fh;
             }
             
-            // ── Step 3: DiagnosticsModule inline (fast, draws green+blue boxes) ──
+            // ── Step 3: Tracker predict (cada frame, aunque async no haya terminado) ──
+            tracker_.predict();
             {
                 std::lock_guard<std::mutex> lock(result_mutex_);
                 FrameResult diag_result;
@@ -261,6 +276,7 @@ void Engine::process_loop() {
                 diag_result.device = last_result_.device;
                 diag_result.valid = last_result_.valid;
                 diag_result.visual_detections = last_result_.visual_detections;
+                diag_result.tracked_objects = tracker_.tracks();
                 
                 auto* diag = get_module("diagnostics");
                 if (diag && diag->enabled()) {
@@ -268,8 +284,8 @@ void Engine::process_loop() {
                 }
                 
                 // Debug: log state every 60 frames (~2s at 30fps)
-                if (frame_count % 60 == 0) {
-                    std::cout << "[Engine] frame=" << frame_count
+                if (config_.verbose && frame_count % 60 == 0) {
+                    std::cout << TAG_ENGINE << "frame=" << frame_count
                               << " async=" << (async_ready ? "ready" : "pending")
                               << " text_blocks=" << last_result_.device.text_blocks.size()
                               << " visual_det=" << last_result_.visual_detections.size()
@@ -415,14 +431,15 @@ void Engine::send_camera_ctrl() {
                 config_.rotate = config_.sensor_orientation;
             }
             if (config_.verbose)
-                std::cout << "[Engine] sensor_orientation=" << config_.sensor_orientation << std::endl;
+                std::cout << TAG_ENGINE << "sensor_orientation=" << config_.sensor_orientation << std::endl;
         }
     }
 }
 
 void Engine::request_resolution(int width, int height) {
     if (width <= 0 || height <= 0) return;
-    std::cout << "[Engine] Requesting resolution: " << width << "x" << height << std::endl;
+    if (config_.verbose)
+        std::cout << TAG_ENGINE << "Requesting resolution: " << width << "x" << height << std::endl;
     config_.width = width;
     config_.height = height;
     send_camera_ctrl();

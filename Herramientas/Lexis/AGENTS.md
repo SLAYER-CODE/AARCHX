@@ -114,10 +114,7 @@ Lexis/
 │   └── modules/
 │       ├── ocr.h                     # Tesseract OCR wrapper
 │       ├── document_analyzer.h       # Document classification + field extraction
-│       └── diagnostics.h             # Overlay panels
-├── include/iris/
-│   ├── camera_canvas.h               # Camera socket handling (from Iris)
-│   └── camera.h                      # Camera types
+│   └── diagnostics.h             # Overlay panels
 ├── src/
 │   ├── engine.cpp                    # Main pipeline + camera socket
 │   ├── config.cpp                    # CLI parser
@@ -138,7 +135,7 @@ Lexis/
 
 | Dependencia | Tipo | Descripción |
 |-------------|------|-------------|
-| `libiris_static.a` | Static | Canvas, drawing, socket overlay |
+| `libiris_static.a` | Static | Canvas, CameraCanvas, drawing, socket overlay |
 | Tesseract OCR 4.x | Static | Cross-compiled en `/tmp/tesseract_build/install/` |
 | Leptonica | Static | Image processing |
 | libstdc++ | Dynamic | Runtime C++ standard library |

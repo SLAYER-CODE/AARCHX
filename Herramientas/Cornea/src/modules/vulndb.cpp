@@ -1,4 +1,5 @@
 #include "cornea/modules/vulndb.h"
+#include "cornea/log.h"
 
 #include <iostream>
 
@@ -11,13 +12,13 @@ VulnDBModule::~VulnDBModule() {
 }
 
 bool VulnDBModule::init() {
-    std::cout << "[VulnDB] Initialized" << std::endl;
+    if (verbose_) std::cout << TAG_VULNDB << "Initialized" << std::endl;
     return true;
 }
 
 void VulnDBModule::shutdown() {
     close_db();
-    std::cout << "[VulnDB] Shutdown" << std::endl;
+    if (verbose_) std::cout << TAG_VULNDB << "Shutdown" << std::endl;
 }
 
 void VulnDBModule::process_frame(uint32_t* pixels, int w, int h, 

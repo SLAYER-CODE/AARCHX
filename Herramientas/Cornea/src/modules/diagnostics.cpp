@@ -1,4 +1,5 @@
 #include "cornea/modules/diagnostics.h"
+#include "cornea/log.h"
 #include "cornea/overlay_renderer.h"
 #include "iris/canvas.h"
 
@@ -9,12 +10,12 @@
 namespace cornea {
 
 bool DiagnosticsModule::init() {
-    std::cout << "[Diagnostics] Initialized" << std::endl;
+    if (verbose_) std::cout << TAG_DIAGNOSTICS << "Initialized" << std::endl;
     return true;
 }
 
 void DiagnosticsModule::shutdown() {
-    std::cout << "[Diagnostics] Shutdown" << std::endl;
+    if (verbose_) std::cout << TAG_DIAGNOSTICS << "Shutdown" << std::endl;
 }
 
 void DiagnosticsModule::process_frame(uint32_t* pixels, int w, int h, 
@@ -56,25 +57,48 @@ void DiagnosticsModule::render_ocr_results(uint32_t* pixels, int w, int h,
 
 void DiagnosticsModule::render_visual_detections(uint32_t* pixels, int w, int h,
                                                   const FrameResult& result) {
-    // Draw blue bounding boxes for YOLO detections
-    static constexpr uint32_t COLOR_YOLO = 0xFF0000FF;  // Blue (BGRA)
-    
-    static int dbg_count = 0;
-    if (dbg_count < 5 || !result.visual_detections.empty()) {
-        std::cout << "[Diagnostics] render_visual_detections: " << result.visual_detections.size() << " detections" << std::endl;
-        dbg_count++;
+    static constexpr uint32_t COLOR_YOLO   = 0xFF0000FF;  // Blue (BGRA) — raw
+    static constexpr uint32_t COLOR_TRACK  = 0xFFFF00FF;  // Cyan (BGRA) — tracked
+
+    if (verbose_) {
+        static int dbg_count = 0;
+        if (dbg_count < 5) {
+            std::cout << TAG_DIAGNOSTICS << "tracks=" << result.tracked_objects.size()
+                      << " raw=" << result.visual_detections.size() << std::endl;
+            dbg_count++;
+        }
     }
-    
-    for (const auto& det : result.visual_detections) {
-        int bx = (int)det.x;
-        int by = (int)det.y;
-        int bw = (int)det.w;
-        int bh = (int)det.h;
-        
-        draw_bounding_box(pixels, w, h, bx, by, bw, bh, COLOR_YOLO, 2);
-        
-        std::string label = det.class_name + " " + std::to_string((int)(det.confidence * 100)) + "%";
-        draw_text(pixels, w, h, bx, by - 14, label, COLOR_YOLO, 10);
+
+    // Draw tracked boxes in cyan (smooth, multi-frame)
+    for (const auto& trk : result.tracked_objects) {
+        int bx = (int)trk.x;
+        int by = (int)trk.y;
+        int bw = (int)trk.w;
+        int bh = (int)trk.h;
+        if (bw <= 0 || bh <= 0) continue;
+
+        draw_bounding_box(pixels, w, h, bx, by, bw, bh, COLOR_TRACK, 3);
+
+        std::string label = "#" + std::to_string(trk.track_id) + " "
+                          + trk.class_name + " "
+                          + std::to_string((int)(trk.confidence * 100)) + "%";
+        draw_text(pixels, w, h, bx, by - 14, label, COLOR_TRACK, 10);
+    }
+
+    // Fallback: if no tracks yet, draw raw YOLO boxes in blue
+    if (result.tracked_objects.empty()) {
+        for (const auto& det : result.visual_detections) {
+            int bx = (int)det.x;
+            int by = (int)det.y;
+            int bw = (int)det.w;
+            int bh = (int)det.h;
+            if (bw <= 0 || bh <= 0) continue;
+
+            draw_bounding_box(pixels, w, h, bx, by, bw, bh, COLOR_YOLO, 2);
+
+            std::string label = det.class_name + " " + std::to_string((int)(det.confidence * 100)) + "%";
+            draw_text(pixels, w, h, bx, by - 14, label, COLOR_YOLO, 10);
+        }
     }
 }
 

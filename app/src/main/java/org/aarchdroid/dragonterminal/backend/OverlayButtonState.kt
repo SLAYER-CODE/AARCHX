@@ -1,7 +1,7 @@
 package org.aarchdroid.dragonterminal.backend
 
 object OverlayButtonState {
-    private var visible = true
+    private var visible = false
     private var btnX = -1
     private var btnY = -1
     private val listeners = mutableListOf<(Boolean, Int, Int) -> Unit>()

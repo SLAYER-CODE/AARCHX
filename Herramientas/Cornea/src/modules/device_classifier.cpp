@@ -1,4 +1,5 @@
 #include "cornea/modules/device_classifier.h"
+#include "cornea/log.h"
 
 #include <iostream>
 #include <algorithm>
@@ -87,12 +88,12 @@ DeviceClassifierModule::~DeviceClassifierModule() {
 }
 
 bool DeviceClassifierModule::init() {
-    std::cout << "[DeviceClassifier] Initialized" << std::endl;
+    if (verbose_) std::cout << TAG_CLASSIFIER << "Initialized" << std::endl;
     return true;
 }
 
 void DeviceClassifierModule::shutdown() {
-    std::cout << "[DeviceClassifier] Shutdown" << std::endl;
+    if (verbose_) std::cout << TAG_CLASSIFIER << "Shutdown" << std::endl;
 }
 
 void DeviceClassifierModule::process_frame(uint32_t* pixels, int w, int h,
@@ -163,11 +164,12 @@ void DeviceClassifierModule::process_frame(uint32_t* pixels, int w, int h,
     }
     
     // Debug output
-    std::cout << "[DeviceClassifier] Type: " << result.device.type_label 
-              << " State: " << result.device.state_label
-              << " Confidence: " << (int)(confidence_ * 100) << "%"
-              << " Text blocks: " << result.device.text_blocks.size()
-              << std::endl;
+    if (verbose_)
+        std::cout << TAG_CLASSIFIER << "Type: " << result.device.type_label 
+                  << " State: " << result.device.state_label
+                  << " Confidence: " << (int)(confidence_ * 100) << "%"
+                  << " Text blocks: " << result.device.text_blocks.size()
+                  << std::endl;
     
     // Mark as valid if we detected something
     result.valid = (result.device.type != DeviceType::UNKNOWN) || 

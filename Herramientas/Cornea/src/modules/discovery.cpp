@@ -1,4 +1,5 @@
 #include "cornea/modules/discovery.h"
+#include "cornea/log.h"
 
 #include <iostream>
 #include <sstream>
@@ -7,25 +8,25 @@
 namespace cornea {
 
 bool DiscoveryModule::init() {
-    std::cout << "[Discovery] Initialized" << std::endl;
+    if (verbose_) std::cout << TAG_DISCOVERY << "Initialized" << std::endl;
     return true;
 }
 
 void DiscoveryModule::shutdown() {
-    std::cout << "[Discovery] Shutdown" << std::endl;
+    if (verbose_) std::cout << TAG_DISCOVERY << "Shutdown" << std::endl;
 }
 
 void DiscoveryModule::scan(std::vector<Device>& devices) {
     if (!enabled_) return;
     
-    std::cout << "[Discovery] Scanning network..." << std::endl;
+    if (verbose_) std::cout << TAG_DISCOVERY << "Scanning network..." << std::endl;
     
     if (arp_scan_) scan_arp(devices);
     if (mdns_scan_) scan_mdns(devices);
     if (ssdp_scan_) scan_ssdp(devices);
     if (ping_scan_) scan_ping(devices);
     
-    std::cout << "[Discovery] Found " << devices.size() << " devices" << std::endl;
+    if (verbose_) std::cout << TAG_DISCOVERY << "Found " << devices.size() << " devices" << std::endl;
 }
 
 void DiscoveryModule::scan_arp(std::vector<Device>& devices) {

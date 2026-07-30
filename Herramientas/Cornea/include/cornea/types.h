@@ -98,12 +98,25 @@ struct VisualDetection {
     float w = 0.0f, h = 0.0f;
 };
 
+// ── Tracked object (multi-frame fusion output) ────────────────────
+struct TrackedObject {
+    int track_id = 0;
+    int class_id = 0;
+    std::string class_name;
+    float confidence = 0.0f;
+    float x = 0.0f, y = 0.0f;
+    float w = 0.0f, h = 0.0f;
+    int age = 0;                // Frames since track creation
+    int stale_count = 0;        // Frames without YOLO match
+};
+
 // ── Frame processing result ──────────────────────────────────────
 struct FrameResult {
     DeviceInfo device;          // Dispositivo reconocido
     int64_t timestamp = 0;      // Timestamp del frame procesado
     bool valid = false;         // Si se detectó algo
-    std::vector<VisualDetection> visual_detections;  // YOLO detections
+    std::vector<VisualDetection> visual_detections;  // YOLO detections (raw)
+    std::vector<TrackedObject> tracked_objects;      // Multi-frame tracks (estables)
 };
 
 // ── Protocol constants (reuses Iris/Mandela MNDL protocol) ──────

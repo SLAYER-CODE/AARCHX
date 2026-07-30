@@ -1,4 +1,5 @@
 #include "cornea/modules/logo_detector.h"
+#include "cornea/log.h"
 
 #include <iostream>
 #include <filesystem>
@@ -19,7 +20,7 @@ bool LogoDetectorModule::init() {
     // Load templates from directory
     // TODO: Scan template_dir_ for image files and load them
     
-    std::cout << "[LogoDetector] Initialized (templates: " << template_dir_ << ")" << std::endl;
+    if (verbose_) std::cout << TAG_LOGO << "Initialized (templates: " << template_dir_ << ")" << std::endl;
     return true;
 }
 
@@ -27,7 +28,7 @@ void LogoDetectorModule::shutdown() {
     clear_templates();
     // TODO: Cleanup ORB detector
     initialized_ = false;
-    std::cout << "[LogoDetector] Shutdown" << std::endl;
+    if (verbose_) std::cout << TAG_LOGO << "Shutdown" << std::endl;
 }
 
 void LogoDetectorModule::process_frame(uint32_t* pixels, int w, int h, 
@@ -68,7 +69,7 @@ bool LogoDetectorModule::load_template(const std::string& vendor, const std::str
     vendor_index_[vendor] = templates_.size();
     templates_.push_back(std::move(tmpl));
     
-    std::cout << "[LogoDetector] Loaded template: " << vendor << " (" << image_path << ")" << std::endl;
+    if (verbose_) std::cout << TAG_LOGO << "Loaded template: " << vendor << " (" << image_path << ")" << std::endl;
     return true;
 }
 

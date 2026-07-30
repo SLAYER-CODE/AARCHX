@@ -36,6 +36,9 @@ public:
     virtual void set_enabled(bool en) { enabled_ = en; }
     virtual bool enabled() const { return enabled_; }
     
+    virtual void set_verbose(bool v) { verbose_ = v; }
+    virtual bool verbose() const { return verbose_; }
+    
     virtual void set_param(const std::string& key, const std::string& value) {
         params_[key] = value;
     }
@@ -46,6 +49,7 @@ public:
     
 protected:
     bool enabled_ = true;
+    bool verbose_ = false;
     std::map<std::string, std::string> params_;
 };
 

@@ -29,6 +29,8 @@ set(CORNEA_SOURCES
     src/engine.cpp
     src/overlay_renderer.cpp
     src/config.cpp
+    src/log.cpp
+    src/tracker.cpp
     src/modules/ocr.cpp
     src/modules/logo_detector.cpp
     src/modules/vulndb.cpp

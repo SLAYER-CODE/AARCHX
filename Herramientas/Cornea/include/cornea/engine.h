@@ -2,6 +2,7 @@
 
 #include "cornea/types.h"
 #include "cornea/module.h"
+#include "cornea/tracker.h"
 #include "iris/camera_canvas.h"
 
 #include <memory>
@@ -50,6 +51,16 @@ struct EngineConfig {
     
     // Verbose
     bool verbose = false;
+
+    // ANSI color output
+    bool ansi = true;
+
+    // Tracker mode: "kalman" or "iou"
+    std::string tracker_mode = "kalman";
+
+    // Frame throttling (0 = no limit)
+    int max_fps = 0;
+    int process_every = 1;
 };
 
 // ── Frame callbacks ──────────────────────────────────────────────
@@ -130,6 +141,9 @@ private:
     // Overlay canvas pointer (owned by OverlayRenderer, not Engine)
     iris::Canvas* overlay_canvas_ = nullptr;
     void* overlay_renderer_ = nullptr;  // OverlayRenderer*, avoid include
+
+    // Tracker (inline, frame-to-frame)
+    Tracker tracker_;
 };
 
 } // namespace cornea
