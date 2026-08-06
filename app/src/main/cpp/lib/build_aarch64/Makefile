@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named iris_static
+# Target rules for targets named ac_static
 
 # Build rule for target.
-iris_static: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 iris_static
-.PHONY : iris_static
+ac_static: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ac_static
+.PHONY : ac_static
 
 # fast build rule for target.
-iris_static/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/iris_static.dir/build.make CMakeFiles/iris_static.dir/build
-.PHONY : iris_static/fast
+ac_static/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ac_static.dir/build.make CMakeFiles/ac_static.dir/build
+.PHONY : ac_static/fast
 
 src/camera_canvas.o: src/camera_canvas.cpp.o
 .PHONY : src/camera_canvas.o
 
 # target to build an object file
 src/camera_canvas.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/iris_static.dir/build.make CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ac_static.dir/build.make CMakeFiles/ac_static.dir/src/camera_canvas.cpp.o
 .PHONY : src/camera_canvas.cpp.o
 
 src/camera_canvas.i: src/camera_canvas.cpp.i
@@ -142,7 +142,7 @@ src/camera_canvas.i: src/camera_canvas.cpp.i
 
 # target to preprocess a source file
 src/camera_canvas.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/iris_static.dir/build.make CMakeFiles/iris_static.dir/src/camera_canvas.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ac_static.dir/build.make CMakeFiles/ac_static.dir/src/camera_canvas.cpp.i
 .PHONY : src/camera_canvas.cpp.i
 
 src/camera_canvas.s: src/camera_canvas.cpp.s
@@ -150,7 +150,7 @@ src/camera_canvas.s: src/camera_canvas.cpp.s
 
 # target to generate assembly for a file
 src/camera_canvas.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/iris_static.dir/build.make CMakeFiles/iris_static.dir/src/camera_canvas.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ac_static.dir/build.make CMakeFiles/ac_static.dir/src/camera_canvas.cpp.s
 .PHONY : src/camera_canvas.cpp.s
 
 src/canvas.o: src/canvas.cpp.o
@@ -158,7 +158,7 @@ src/canvas.o: src/canvas.cpp.o
 
 # target to build an object file
 src/canvas.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/iris_static.dir/build.make CMakeFiles/iris_static.dir/src/canvas.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ac_static.dir/build.make CMakeFiles/ac_static.dir/src/canvas.cpp.o
 .PHONY : src/canvas.cpp.o
 
 src/canvas.i: src/canvas.cpp.i
@@ -166,7 +166,7 @@ src/canvas.i: src/canvas.cpp.i
 
 # target to preprocess a source file
 src/canvas.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/iris_static.dir/build.make CMakeFiles/iris_static.dir/src/canvas.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ac_static.dir/build.make CMakeFiles/ac_static.dir/src/canvas.cpp.i
 .PHONY : src/canvas.cpp.i
 
 src/canvas.s: src/canvas.cpp.s
@@ -174,7 +174,7 @@ src/canvas.s: src/canvas.cpp.s
 
 # target to generate assembly for a file
 src/canvas.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/iris_static.dir/build.make CMakeFiles/iris_static.dir/src/canvas.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ac_static.dir/build.make CMakeFiles/ac_static.dir/src/canvas.cpp.s
 .PHONY : src/canvas.cpp.s
 
 # Help Target
@@ -185,7 +185,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... iris_static"
+	@echo "... ac_static"
 	@echo "... src/camera_canvas.o"
 	@echo "... src/camera_canvas.i"
 	@echo "... src/camera_canvas.s"

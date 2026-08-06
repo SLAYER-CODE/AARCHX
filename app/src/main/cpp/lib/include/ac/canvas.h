@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
 #include <SkCanvas.h>
 #include <SkFont.h>
 #include <SkImageInfo.h>
@@ -10,14 +10,14 @@
 #include <SkTextUtils.h>
 #endif
 
-#include "iris/types.h"
+#include "ac/types.h"
 
 #include <cstdint>
 #include <cstdio>
 #include <string>
 #include <vector>
 
-namespace iris {
+namespace ac {
 
 // ── Canvas class (socket overlay + pixel buffer + drawing) ──────
 // Herramienta nativa → CanvasSocketServer.kt (Android overlay)
@@ -58,6 +58,14 @@ public:
     int touch_x() const { return touch_x_; }
     int touch_y() const { return touch_y_; }
 
+    // Consume tap event (returns true if a touch up->down cycle happened,
+    // clears flag). Safe even if "touch down"+"touch up" arrive in one batch.
+    bool consume_tap() {
+        if (!tap_pending_) return false;
+        tap_pending_ = false;
+        return true;
+    }
+
     // Consume pinch zoom (returns true if pending, clears flag)
     bool consume_pinch(double& factor, int& cx, int& cy) {
         if (!pinch_pending_) return false;
@@ -65,6 +73,30 @@ public:
         cx = pinch_cx_;
         cy = pinch_cy_;
         pinch_pending_ = false;
+        return true;
+    }
+
+    // Consume swipe (returns true if a touch down->up cycle with movement
+    // happened; dx/dy = desplazamiento del dedo en px del canvas). Clears
+    // flag. Safe even if "touch down"+"touch up" llegan en un mismo batch.
+    bool consume_swipe(int& dx, int& dy) {
+        if (!swipe_pending_) return false;
+        dx = swipe_dx_;
+        dy = swipe_dy_;
+        swipe_pending_ = false;
+        return true;
+    }
+
+    // Consume drag (live pan): devuelve el desplazamiento acumulado de los
+    // eventos "touch move" desde la ultima llamada (arrastre en vivo, no solo
+    // al soltar). Acumuladores se reinician en el "touch up".
+    bool consume_drag(int& dx, int& dy) {
+        if (!drag_pending_) return false;
+        dx = drag_dx_;
+        dy = drag_dy_;
+        drag_dx_ = 0;
+        drag_dy_ = 0;
+        drag_pending_ = false;
         return true;
     }
 
@@ -82,12 +114,21 @@ protected:
     bool touch_down_ = false;
     int touch_x_ = 0;
     int touch_y_ = 0;
+    bool tap_pending_ = false;
     bool pinch_pending_ = false;
     double pinch_factor_ = 1.0;
     int pinch_cx_ = 0;
     int pinch_cy_ = 0;
+    int touch_down_x_ = 0;   // posicion donde arranco el dedo (para swipe)
+    int touch_down_y_ = 0;
+    bool swipe_pending_ = false;
+    int swipe_dx_ = 0;
+    int swipe_dy_ = 0;
+    bool drag_pending_ = false;   // desplazamiento acumulado de "touch move"
+    int drag_dx_ = 0;
+    int drag_dy_ = 0;
 
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
     sk_sp<SkSurface> sk_surface_;
     SkCanvas* sk_canvas_ = nullptr;
     void rebuild_skia_surface();
@@ -110,4 +151,4 @@ namespace draw {
 // pixels: buffer BGRA de w×h
 bool present_overlay(int socket_fd, const uint32_t* pixels, int w, int h, float overlay_scale = 1.0f);
 
-} // namespace iris
+} // namespace ac

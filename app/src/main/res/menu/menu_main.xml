@@ -49,4 +49,10 @@
 
     <item android:id="@+id/menu_item_recovery" android:title="Recovery" app:showAsAction="never" />
     <item android:id="@+id/menu_item_packages" android:title="Gestor" app:showAsAction="never" />
+
+    <!-- Aether browser -->
+    <item
+        android:id="@+id/menu_item_browser"
+        android:title="Navegador Aether"
+        app:showAsAction="never" />
 </menu>

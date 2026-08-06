@@ -8,6 +8,7 @@ import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -56,6 +57,7 @@ class CanvasSocketServer private constructor() {
     private val nextConnectionId = AtomicInteger(0)
     private val isRunning = AtomicBoolean(false)
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val clients = CopyOnWriteArrayList<android.net.LocalSocket>()
     private var serverSocket: LocalServerSocketExt? = null
     private var acceptThread: Thread? = null
 
@@ -119,7 +121,23 @@ class CanvasSocketServer private constructor() {
         val t = Thread {
             try {
                 Log.w(TAG, "Creating LocalServerSocket on '$SOCKET_NAME'...")
-                serverSocket = LocalServerSocketExt(SOCKET_NAME)
+                var bound = false
+                for (attempt in 1..10) {
+                    try {
+                        serverSocket = LocalServerSocketExt(SOCKET_NAME)
+                        bound = true
+                        break
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Bind retry $attempt: ${e.message}")
+                        Thread.sleep(200)
+                    }
+                }
+                if (!bound) {
+                    Log.e(TAG, "CanvasSocketServer failed to bind after retries")
+                    isRunning.set(false)
+                    cleanup()
+                    return@Thread
+                }
                 Log.w(TAG, "Server listening on abstract socket: $SOCKET_NAME")
                 Log.w(TAG, "Socket FD: ${serverSocket?.let { "ok" } ?: "null"}")
 
@@ -127,6 +145,7 @@ class CanvasSocketServer private constructor() {
                     val client = serverSocket?.accept() ?: break
                     val connId = nextConnectionId.getAndIncrement()
                     Log.w(TAG, "Client #$connId connected (fd=${client.fileDescriptor})")
+                    clients.add(client)
                     val handler = Thread {
                         handleClient(client, connId)
                     }
@@ -308,6 +327,7 @@ class CanvasSocketServer private constructor() {
             if (isRunning.get()) Log.e(TAG, "[#$connId] Client handler error", e)
         } finally {
             clientOutputs.remove(connId)
+            clients.remove(client)
             try { client.close() } catch (_: Exception) {}
             mainHandler.post { listener.onEnd() }
         }
@@ -337,6 +357,10 @@ class CanvasSocketServer private constructor() {
     fun stop() {
         isRunning.set(false)
         clientOutputs.clear()
+        for (c in clients) {
+            try { c.close() } catch (_: Exception) {}
+        }
+        clients.clear()
         cleanup()
         acceptThread?.interrupt()
         acceptThread = null

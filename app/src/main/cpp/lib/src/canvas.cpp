@@ -1,4 +1,4 @@
-#include "iris/canvas.h"
+#include "ac/canvas.h"
 
 #include <cstring>
 #include <cerrno>
@@ -11,13 +11,13 @@
 #include <sys/un.h>
 #include <poll.h>
 
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
 #include <SkFontMgr.h>
 #include <SkFontMgr_fontconfig.h>
 #include <SkTypeface.h>
 #endif
 
-namespace iris {
+namespace ac {
 
 Canvas::Canvas() {}
 
@@ -35,7 +35,7 @@ bool Canvas::init(int width, int height) {
     height_ = height;
     pixels_.resize(width_ * height_, 0xFF000000);
 
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
     auto info = SkImageInfo::MakeN32Premul(width_, height_);
     sk_surface_ = SkSurfaces::WrapPixels(
         info, pixels_.data(), width_ * sizeof(uint32_t));
@@ -63,7 +63,7 @@ bool Canvas::connect_overlay(const std::string& socket_name) {
 
     socket_fd_ = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     if (socket_fd_ < 0) {
-        std::cerr << "[iris] socket() failed: " << strerror(errno) << "\n";
+        std::cerr << "[ac] socket() failed: " << strerror(errno) << "\n";
         return false;
     }
 
@@ -82,7 +82,7 @@ bool Canvas::connect_overlay(const std::string& socket_name) {
     socklen_t addr_len = offsetof(struct sockaddr_un, sun_path) + 1 + name_len;
 
     if (::connect(socket_fd_, (struct sockaddr*)&addr, addr_len) < 0) {
-        std::cerr << "[iris] connect('" << socket_name << "') failed: "
+        std::cerr << "[ac] connect('" << socket_name << "') failed: "
                   << strerror(errno) << "\n";
         close(socket_fd_);
         socket_fd_ = -1;
@@ -90,7 +90,7 @@ bool Canvas::connect_overlay(const std::string& socket_name) {
     }
 
     socket_name_ = socket_name;
-    std::cerr << "[iris] Connected to overlay '" << socket_name_ << "'\n";
+    std::cerr << "[ac] Connected to overlay '" << socket_name_ << "'\n";
     return true;
 }
 
@@ -123,7 +123,7 @@ bool Canvas::present() {
         if (n < 0) {
             if (errno == EINTR) continue;
             if (errno == EPIPE) {
-                std::cerr << "[iris] Display disconnected (Android closed connection)\n";
+                std::cerr << "[ac] Display disconnected (Android closed connection)\n";
                 close(socket_fd_);
                 socket_fd_ = -1;
                 return false;
@@ -131,10 +131,10 @@ bool Canvas::present() {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 struct pollfd pfd = { socket_fd_, POLLOUT, 0 };
                 if (poll(&pfd, 1, 100) > 0) continue;
-                std::cerr << "[iris] Socket write timeout (EAGAIN)\n";
+                std::cerr << "[ac] Socket write timeout (EAGAIN)\n";
                 return false;
             }
-            std::cerr << "[iris] Socket write error: " << strerror(errno) << "\n";
+            std::cerr << "[ac] Socket write error: " << strerror(errno) << "\n";
             break;
         }
         if (n == 0) break;
@@ -152,7 +152,7 @@ bool Canvas::resize(int width, int height) {
     height_ = height;
     pixels_.resize(width_ * height_, 0xFF000000);
 
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
     rebuild_skia_surface();
 #endif
     return true;
@@ -184,13 +184,29 @@ bool Canvas::poll_commands() {
                         touch_down_ = true;
                         touch_x_ = tx;
                         touch_y_ = ty;
+                        touch_down_x_ = tx;
+                        touch_down_y_ = ty;
                     } else if (strcmp(action, "move") == 0) {
+                        if (touch_down_) {
+                            drag_dx_ += tx - touch_x_;
+                            drag_dy_ += ty - touch_y_;
+                            drag_pending_ = true;
+                        }
                         touch_x_ = tx;
                         touch_y_ = ty;
                     } else if (strcmp(action, "up") == 0) {
+                        if (touch_down_) {
+                            tap_pending_ = true;
+                            swipe_dx_ = tx - touch_down_x_;
+                            swipe_dy_ = ty - touch_down_y_;
+                            swipe_pending_ = true;
+                        }
                         touch_down_ = false;
                         touch_x_ = tx;
                         touch_y_ = ty;
+                        drag_pending_ = false;
+                        drag_dx_ = 0;
+                        drag_dy_ = 0;
                     }
                 }
             } else if (strncmp(line, "pinch ", 6) == 0) {
@@ -219,7 +235,7 @@ bool Canvas::poll_commands() {
 // ── Drawing (delegan a las standalone draw::*) ──────────────────
 
 void Canvas::clear(uint32_t color) {
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
     if (sk_canvas_) {
         SkPaint paint;
         paint.setColor(color);
@@ -232,7 +248,7 @@ void Canvas::clear(uint32_t color) {
 }
 
 void Canvas::fill_rect(int x, int y, int w, int h, uint32_t color) {
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
     if (sk_canvas_) {
         SkPaint paint;
         paint.setColor(color);
@@ -246,7 +262,7 @@ void Canvas::fill_rect(int x, int y, int w, int h, uint32_t color) {
 
 void Canvas::draw_line(int x1, int y1, int x2, int y2,
                         uint32_t color, int width) {
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
     if (sk_canvas_) {
         SkPaint paint;
         paint.setColor(color);
@@ -262,7 +278,7 @@ void Canvas::draw_line(int x1, int y1, int x2, int y2,
 
 void Canvas::draw_circle(int cx, int cy, int radius,
                           uint32_t color, bool fill) {
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
     if (sk_canvas_) {
         SkPaint paint;
         paint.setColor(color);
@@ -277,7 +293,7 @@ void Canvas::draw_circle(int cx, int cy, int radius,
 
 void Canvas::draw_text(int x, int y, const std::string& text,
                         uint32_t color, int size) {
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
     if (sk_canvas_) {
         static sk_sp<SkTypeface> s_typeface = []() {
             auto mgr = SkFontMgr_New_FontConfig(nullptr);
@@ -298,7 +314,7 @@ void Canvas::draw_text(int x, int y, const std::string& text,
     draw::draw_text(pixels_.data(), width_, height_, x, y, text, color, size);
 }
 
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
 void Canvas::rebuild_skia_surface() {
     if (width_ > 0 && height_ > 0 && !pixels_.empty()) {
         auto info = SkImageInfo::MakeN32Premul(width_, height_);
@@ -546,16 +562,16 @@ bool present_overlay(int socket_fd, const uint32_t* pixels, int w, int h, float 
         if (n < 0) {
             if (errno == EINTR) continue;
             if (errno == EPIPE) {
-                std::cerr << "[iris] Display disconnected (Android closed connection)\n";
+                std::cerr << "[ac] Display disconnected (Android closed connection)\n";
                 return false;
             }
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 struct pollfd pfd = { socket_fd, POLLOUT, 0 };
                 if (poll(&pfd, 1, 100) > 0) continue;
-                std::cerr << "[iris] present_overlay write timeout (EAGAIN)\n";
+                std::cerr << "[ac] present_overlay write timeout (EAGAIN)\n";
                 return false;
             }
-            std::cerr << "[iris] present_overlay write error: " << strerror(errno) << "\n";
+            std::cerr << "[ac] present_overlay write error: " << strerror(errno) << "\n";
             return false;
         }
         if (n == 0) break;
@@ -565,4 +581,4 @@ bool present_overlay(int socket_fd, const uint32_t* pixels, int w, int h, float 
     return true;
 }
 
-} // namespace iris
+} // namespace ac

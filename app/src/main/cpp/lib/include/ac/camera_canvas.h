@@ -1,12 +1,12 @@
 #pragma once
 
-#include "iris/canvas.h"
+#include "ac/canvas.h"
 
-namespace iris {
+namespace ac {
 
 // Extensión de Canvas para el modo servidor de cámara.
 // Añade: listen(), accept_client(), recv_frame(), rotate(), draw_minimize_btn().
-// La parte cliente (connect_overlay, present, drawing) viene de iris::Canvas base.
+// La parte cliente (connect_overlay, present, drawing) viene de ac::Canvas base.
 class CameraCanvas : public Canvas {
 public:
     CameraCanvas() = default;
@@ -27,4 +27,4 @@ private:
     int listen_fd_ = -1;
 };
 
-} // namespace iris
+} // namespace ac

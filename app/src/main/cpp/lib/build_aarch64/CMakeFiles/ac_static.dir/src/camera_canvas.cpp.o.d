@@ -1,9 +1,9 @@
-CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o: \
+CMakeFiles/ac_static.dir/src/camera_canvas.cpp.o: \
  /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/src/camera_canvas.cpp \
  /usr/aarch64-linux-gnu/include/stdc-predef.h \
- /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/include/iris/camera_canvas.h \
- /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/include/iris/canvas.h \
- /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/include/iris/types.h \
+ /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/include/ac/camera_canvas.h \
+ /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/include/ac/canvas.h \
+ /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/include/ac/types.h \
  /usr/aarch64-linux-gnu/include/c++/15.1.0/cstdint \
  /usr/aarch64-linux-gnu/include/c++/15.1.0/aarch64-linux-gnu/bits/c++config.h \
  /usr/aarch64-linux-gnu/include/c++/15.1.0/aarch64-linux-gnu/bits/os_defines.h \

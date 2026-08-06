@@ -1,0 +1,2 @@
+/usr/bin/aarch64-linux-gnu-ar qc libac_static.a CMakeFiles/ac_static.dir/src/canvas.cpp.o CMakeFiles/ac_static.dir/src/camera_canvas.cpp.o
+/usr/bin/aarch64-linux-gnu-ranlib libac_static.a

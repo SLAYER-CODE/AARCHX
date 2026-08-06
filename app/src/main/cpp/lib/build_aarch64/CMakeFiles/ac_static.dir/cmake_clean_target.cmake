@@ -1,3 +1,3 @@
 file(REMOVE_RECURSE
-  "libiris_static.a"
+  "libac_static.a"
 )

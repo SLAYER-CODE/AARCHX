@@ -1,4 +1,4 @@
-#include "iris/camera_canvas.h"
+#include "ac/camera_canvas.h"
 
 #include <cstring>
 #include <cerrno>
@@ -10,7 +10,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-namespace iris {
+namespace ac {
 
 CameraCanvas::~CameraCanvas() {
     if (listen_fd_ >= 0) {
@@ -154,7 +154,7 @@ bool CameraCanvas::recv_frame() {
 
     frame_id_ = static_cast<int>(header.frame_id);
 
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
     rebuild_skia_surface();
 #endif
 
@@ -280,7 +280,7 @@ bool CameraCanvas::rotate(int degrees) {
     }
 
 rebuild:
-#ifdef MANDELA_USE_SKIA
+#ifdef AC_USE_SKIA
     rebuild_skia_surface();
 #endif
     return true;
@@ -311,4 +311,4 @@ void CameraCanvas::draw_minimize_btn(int x, int y, int size) {
     }
 }
 
-} // namespace iris
+} // namespace ac

@@ -1,2 +1,0 @@
-/usr/bin/aarch64-linux-gnu-ar qc libiris_static.a CMakeFiles/iris_static.dir/src/canvas.cpp.o CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o
-/usr/bin/aarch64-linux-gnu-ranlib libiris_static.a

@@ -30,8 +30,11 @@ import org.aarchdroid.dragonterminal.frontend.component.ComponentManager
 import org.aarchdroid.dragonterminal.frontend.config.DefaultValues
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.TermCompleteListener
+import org.aarchdroid.dragonterminal.backend.AetherControlServer
 import org.aarchdroid.dragonterminal.backend.CameraControlServer
 import org.aarchdroid.dragonterminal.backend.CanvasSocketServer
+import org.aarchdroid.dragonterminal.backend.FlexAudioServer
+import org.aarchdroid.dragonterminal.backend.MicServer
 import org.aarchdroid.dragonterminal.backend.TerminalSession
 import org.aarchdroid.dragonterminal.frontend.terminal.CanvasOverlayView
 import org.aarchdroid.dragonterminal.frontend.terminal.TerminalView
@@ -49,6 +52,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         private val VIEW_TYPE_TERM = VIEW_TYPE_COUNT++
         private val VIEW_TYPE_X = VIEW_TYPE_COUNT++
         private val VIEW_TYPE_CANVAS = VIEW_TYPE_COUNT++
+        private val VIEW_TYPE_WEB = VIEW_TYPE_COUNT++
 
         @Volatile
         private var cameraControlServer: CameraControlServer? = null
@@ -93,6 +97,16 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
             }
 
             VIEW_TYPE_CANVAS -> {
+                FrameLayout(context).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    setBackgroundColor(Color.BLACK)
+                }
+            }
+
+            VIEW_TYPE_WEB -> {
                 FrameLayout(context).apply {
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -257,6 +271,19 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                 }
                 ov.enterFullscreenTab()
             }
+
+            VIEW_TYPE_WEB -> {
+                val webTab = tab as AetherTab
+                val wv = webTab.webView
+                // Move the browser into the tab's content view
+                if (wv.parent != view) {
+                    (wv.parent as? ViewGroup)?.removeView(wv)
+                    (view as? ViewGroup)?.addView(wv, ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    ))
+                }
+            }
         }
     }
 
@@ -332,16 +359,19 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
             val socketServer = CanvasSocketServer.getInstance()
 
             // onNewConnection: cada conexión obtiene su propio overlay view.
-            // Always reassign — new activity needs fresh context references.
-            val ctx = context
+            // Se resuelve la activity VIVA al momento de la conexión (holder
+            // en NeoTermActivity) en vez de capturar `context` aquí: si la
+            // activity se recrea sin que onShowTab re-corra, un ctx capturado
+            // apuntaría a una jerarquía muerta y el overlay quedaría invisible.
             socketServer.onNewConnection = lambda@{ connId ->
+                val act = NeoTermActivity.currentNeoTermActivity ?: return@lambda null
                 val latch = java.util.concurrent.CountDownLatch(1)
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    val container = ctx.findViewById<FrameLayout>(R.id.terminal_container) ?: return@post
+                    val container = act.findViewById<FrameLayout>(R.id.terminal_container) ?: return@post
                     val tag = "overlay_$connId"
                     var v = container.findViewWithTag<CanvasOverlayView>(tag)
                     if (v == null) {
-                        v = CanvasOverlayView(ctx)
+                        v = CanvasOverlayView(act)
                         container.addView(v, FrameLayout.LayoutParams(
                             FrameLayout.LayoutParams.MATCH_PARENT,
                             FrameLayout.LayoutParams.MATCH_PARENT
@@ -351,12 +381,12 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                         v.initialOffsetY = 20f
                         v.tag = tag
                         v.onToggleFullscreen = { enter ->
-                            val ts = ctx.findViewById<TabSwitcher>(R.id.tab_switcher)
-                            val container = ctx.findViewById<FrameLayout>(R.id.terminal_container)
+                            val ts = act.findViewById<TabSwitcher>(R.id.tab_switcher)
+                            val container = act.findViewById<FrameLayout>(R.id.terminal_container)
                             if (enter) {
-                                val imm = ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-                                imm.hideSoftInputFromWindow(ctx.window?.decorView?.windowToken, 0)
-                                ctx.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
+                                val imm = act.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                                imm.hideSoftInputFromWindow(act.window?.decorView?.windowToken, 0)
+                                act.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
 
                                 val ct = CanvasTab("Canvas", v)
                                 ts.addTab(ct, 0, SwipeAnimation.Builder().create())
@@ -369,18 +399,22 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                                         FrameLayout.LayoutParams.MATCH_PARENT
                                     ))
                                 }
+                                var wasSelected = false
                                 for (i in 0 until ts.count) {
                                     val tab = ts.getTab(i)
                                     if (tab is CanvasTab && tab.overlayView === v) {
+                                        wasSelected = ts.selectedTab === tab
                                         ts.removeTab(tab)
                                         break
                                     }
                                 }
-                                for (i in 0 until ts.count) {
-                                    val tab = ts.getTab(i)
-                                    if (tab is TermTab) {
-                                        ts.selectTab(tab)
-                                        break
+                                if (wasSelected) {
+                                    for (i in 0 until ts.count) {
+                                        val tab = ts.getTab(i)
+                                        if (tab is TermTab) {
+                                            ts.selectTab(tab)
+                                            break
+                                        }
                                     }
                                 }
                                 container?.postInvalidate()
@@ -392,7 +426,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
                     latch.countDown()
                 }
                 latch.await()
-                val container = ctx.findViewById<FrameLayout>(R.id.terminal_container)
+                val container = act.findViewById<FrameLayout>(R.id.terminal_container)
                 val ov = container?.findViewWithTag<CanvasOverlayView>("overlay_$connId") ?: return@lambda null
                 val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
                 object : CanvasSocketServer.CanvasFrameListener {
@@ -419,6 +453,15 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         // Start camera control server (iris se conecta a cam-ctrl → restartCamera)
         startCameraServer(context)
 
+        // Start audio server (flex/echo envían PCM s16le al socket @flex_audio)
+        FlexAudioServer.getInstance().start()
+
+        // Start mic server (mifo recibe PCM s16le del socket @mic-0)
+        MicServer.getInstance().start(context)
+
+        // Start aether control server (tool aether del chroot comanda la WebView via @ac-webview)
+        AetherControlServer.getInstance().start()
+
         if (NeoPreference.loadBoolean(R.string.key_general_auto_completion, false)) {
             if (termData.onAutoCompleteListener == null) {
                 termData.onAutoCompleteListener = createAutoCompleteListener(termView)
@@ -444,6 +487,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
             is TermTab -> VIEW_TYPE_TERM
             is XSessionTab -> VIEW_TYPE_X
             is CanvasTab -> VIEW_TYPE_CANVAS
+            is AetherTab -> VIEW_TYPE_WEB
             else -> VIEW_TYPE_TERM
         }
     }

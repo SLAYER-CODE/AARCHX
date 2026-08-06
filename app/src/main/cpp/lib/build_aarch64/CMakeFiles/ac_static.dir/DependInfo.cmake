@@ -8,8 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/src/camera_canvas.cpp" "CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o" "gcc" "CMakeFiles/iris_static.dir/src/camera_canvas.cpp.o.d"
-  "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/src/canvas.cpp" "CMakeFiles/iris_static.dir/src/canvas.cpp.o" "gcc" "CMakeFiles/iris_static.dir/src/canvas.cpp.o.d"
+  "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/src/camera_canvas.cpp" "CMakeFiles/ac_static.dir/src/camera_canvas.cpp.o" "gcc" "CMakeFiles/ac_static.dir/src/camera_canvas.cpp.o.d"
+  "/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/src/canvas.cpp" "CMakeFiles/ac_static.dir/src/canvas.cpp.o" "gcc" "CMakeFiles/ac_static.dir/src/canvas.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

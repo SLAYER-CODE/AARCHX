@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 
-namespace iris {
+namespace ac {
 
 // ── Protocolo canvas-display (20 bytes, con magic MNDL) ──────────
 // Herramienta nativa → CanvasSocketServer.kt (Android overlay)
@@ -23,4 +23,4 @@ static constexpr int MAX_FRAME_BYTES = 4 * 1920 * 1080;  // 1080p raw BGRA
 
 static constexpr int SOCKET_BACKLOG = 4;
 
-} // namespace iris
+} // namespace ac

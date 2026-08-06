@@ -73,7 +73,12 @@ import org.aarchdroid.dragonterminal.ui.term.tab.CanvasTab
 import org.aarchdroid.dragonterminal.ui.term.tab.TermTab
 import org.aarchdroid.dragonterminal.ui.term.tab.XSessionTab
 import org.aarchdroid.dragonterminal.backend.CanvasSocketServer
+import org.aarchdroid.dragonterminal.backend.FlexAudioServer
+import org.aarchdroid.dragonterminal.backend.MicServer
 import org.aarchdroid.dragonterminal.backend.HiddenOverlayRegistry
+import org.aarchdroid.dragonterminal.backend.AetherControlServer
+import org.aarchdroid.dragonterminal.frontend.web.AetherWebView
+import org.aarchdroid.dragonterminal.ui.term.tab.AetherTab
 
 import org.aarchdroid.dragonterminal.utils.FullScreenHelper
 import org.aarchdroid.dragonterminal.utils.RangedInt
@@ -97,9 +102,20 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         const val KEY_NO_RESTORE = "no_restore"
         const val REQUEST_SETUP = 22313
         const val REQUEST_CAMERA = 10088
+        const val REQUEST_MIC = 10089
         const val ACTION_ANCHOR = "aarchdroid.terminal.action.anchor"
+        const val ACTION_OPEN_BROWSER = "aarchdroid.terminal.action.open_browser"
+        const val EXTRA_URL = "aarchdroid.terminal.extra.url"
+        const val AETHER_TAG = "aether_browser"
+        const val DEFAULT_AETHER_URL = "https://www.google.com"
         const val INTERNA_TARGET = "/data/local/aarchdroid/root/Interna"
         const val EXTERNA_TARGET = "/data/local/aarchdroid/root/Externa"
+
+        // Activity viva usada por onNewConnection para anclar overlays.
+        // Se resuelve AL MOMENTO de la conexión (no se captura en bind)
+        // para que tras una recreación el callback no apunte a una activity muerta.
+        @Volatile
+        var currentNeoTermActivity: NeoTermActivity? = null
 
         private data class ToolItem(val name: String, val icon: Int, val activityClass: String)
         private val TOOLS = listOf(
@@ -237,6 +253,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         tabSwitcher.decorator = NeoTabDecorator(this)
         ViewCompat.setOnApplyWindowInsetsListener(tabSwitcher, createWindowInsetsListener())
         tabSwitcher.showToolbars(false)
+
+        registerAetherControlListener()
+
+        if (intent?.action == ACTION_OPEN_BROWSER) {
+            val url = intent.getStringExtra(EXTRA_URL)
+            tabSwitcher.post { openBrowser(url) }
+        }
 
         Log.d("AArchDroid", "NeoTermActivity: starting (foreground) and binding NeoTermService")
         val serviceIntent = Intent(this, NeoTermService::class.java)
@@ -390,6 +413,11 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 true
             }
 
+            R.id.menu_item_browser -> {
+                openBrowser()
+                true
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -499,11 +527,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         Log.d("NeoTermAct", "onPause: tabCount=${tabSwitcher.count}")
         val tab = tabSwitcher.selectedTab as NeoTab?
         tab?.onPause()
+        aetherFloatingBrowser()?.pauseWebView()
     }
 
     override fun onResume() {
         super.onResume()
         processToolExitFiles(this)
+        aetherFloatingBrowser()?.resumeWebView()
         Log.d("NeoTermAct", "onResume: tabCount=${tabSwitcher.count}, selectedTab=null? ${tabSwitcher.selectedTab == null}, termView=null? ${(tabSwitcher.selectedTab as? TermTab)?.termData?.termView == null}")
 
         // Execute pending float transfer if overlay was just granted
@@ -635,9 +665,18 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                                         FrameLayout.LayoutParams.MATCH_PARENT
                                     ))
                                 }
-                                // Restore to floating overlay (not carousel) — native tool keeps running
-                                ov.restore()
+                                // Close fullscreen cleanly — native tool keeps running
+                                if (ov.isFullscreen) {
+                                    // Tab closed directly → minimize to carousel (restore via double-tap panel)
+                                    ov.minimizeToCarousel()
+                                } else {
+                                    // Long-press already exited fullscreen → return to floating overlay
+                                    ov.restore()
+                                }
                             }
+                        } else if (tab is AetherTab) {
+                            // Cerrar el tab fullscreen → devolver el navegador a la ventana flotante
+                            restoreFloatingBrowser(tab.webView)
                         }
                         updatePlaceholderVisibility()
                     }
@@ -676,6 +715,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     override fun onStart() {
         super.onStart()
+        currentNeoTermActivity = this
         EventBus.getDefault().register(this)
         val tab = tabSwitcher.selectedTab as NeoTab?
         tab?.onStart()
@@ -693,8 +733,12 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     override fun onDestroy() {
         super.onDestroy()
+        if (currentNeoTermActivity === this) {
+            currentNeoTermActivity = null
+        }
         val tab = tabSwitcher.selectedTab as NeoTab?
         tab?.onDestroy()
+        aetherFloatingBrowser()?.destroyWebView()
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this)
         tabSwitcherListener?.let { tabSwitcher.removeListener(it) }
@@ -717,8 +761,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
         CanvasSocketServer.getInstance().apply {
             stop()
-            onNewConnection = null
         }
+        FlexAudioServer.getInstance().stop()
+        MicServer.getInstance().stop()
         HiddenOverlayRegistry.clear()
 
         if (termService != null) {
@@ -789,6 +834,14 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                     NeoTabDecorator.retryCamera()
                 } else {
                     Log.w("AArchDroid", "CAMERA permission denied")
+                }
+            }
+            REQUEST_MIC -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("AArchDroid", "RECORD_AUDIO permission granted, retrying mic")
+                    MicServer.getInstance().retry()
+                } else {
+                    Log.w("AArchDroid", "RECORD_AUDIO permission denied")
                 }
             }
         }
@@ -867,6 +920,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                 if (termService != null) {
                     processPendingAnchor()
                 }
+            }
+            ACTION_OPEN_BROWSER -> {
+                val url = intent.getStringExtra(EXTRA_URL)
+                openBrowser(url)
             }
             else -> if (termService != null) {
                 Log.d("AArchDroid", "NeoTermActivity: onNewIntent — picking up new sessions, count=" + termService!!.sessions.size)
@@ -1424,6 +1481,137 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         return postTabCreated(XSessionTab(tabTitle ?: "Dragon Terminal"))
     }
 
+    // ── Aether browser ─────────────────────────────────────────────
+    private fun registerAetherControlListener() {
+        val server = AetherControlServer.getInstance()
+        server.listener = object : AetherControlServer.Listener {
+            override fun onOpen(url: String) = openBrowser(url)
+            override fun onBack() { currentBrowser()?.goBack() }
+            override fun onForward() { currentBrowser()?.goForward() }
+            override fun onReload() { currentBrowser()?.reload() }
+            override fun onStop() { currentBrowser()?.stopLoading() }
+            override fun onExec(js: String) {
+                val browser = currentBrowser() ?: return
+                browser.execJs(js) { result -> server.notifyResult(result) }
+            }
+            override fun onQueryUrl() {
+                server.notifyUrl(currentBrowser()?.currentUrl() ?: "")
+            }
+            override fun onQueryTitle() {
+                server.notifyTitle(currentBrowser()?.currentTitle() ?: "")
+            }
+            override fun onStatus() {
+                val b = currentBrowser()
+                server.notifyStatus(
+                    b?.currentTitle() ?: "",
+                    b?.currentUrl() ?: "",
+                    b?.webView?.progress?.let { it < 100 } ?: false
+                )
+            }
+            override fun onScreenshot() {
+                val browser = currentBrowser() ?: return
+                browser.captureScreenshot { b64 -> server.notifyScreenshot(b64) }
+            }
+            override fun onMirror(enabled: Boolean, w: Int, h: Int) {}
+            override fun onClose() = closeBrowser()
+        }
+    }
+
+    /** Browser activo: primero el de un tab fullscreen, luego el flotante. */
+    private fun currentBrowser(): AetherWebView? {
+        for (i in 0 until tabSwitcher.count) {
+            val tab = tabSwitcher.getTab(i)
+            if (tab is AetherTab) return tab.webView
+        }
+        return aetherFloatingBrowser()
+    }
+
+    private fun aetherFloatingBrowser(): AetherWebView? {
+        return findViewById<FrameLayout>(R.id.terminal_container)
+            ?.findViewWithTag<AetherWebView>(AETHER_TAG)
+    }
+
+    private fun closeBrowser() {
+        for (i in 0 until tabSwitcher.count) {
+            val tab = tabSwitcher.getTab(i)
+            if (tab is AetherTab) {
+                tabSwitcher.removeTab(tab)
+                break
+            }
+        }
+        val container = findViewById<FrameLayout>(R.id.terminal_container)
+        val floating = container?.findViewWithTag<AetherWebView>(AETHER_TAG)
+        if (floating != null) {
+            container.removeView(floating)
+            floating.destroyWebView()
+        }
+    }
+
+    /** Abre (o re-muestra) el navegador como ventana flotante sobre la terminal. */
+    fun openBrowser(url: String? = null) {
+        val existing = currentBrowser()
+        if (existing != null) {
+            val container = findViewById<FrameLayout>(R.id.terminal_container)
+            if (existing.parent == container) existing.visibility = View.VISIBLE
+            if (url != null) existing.post { existing.loadUrl(url) }
+            return
+        }
+        val webView = AetherWebView(this)
+        webView.tag = AETHER_TAG
+        webView.onMinimize = { hideBrowser() }
+        webView.onExpand = { expandBrowser() }
+        val container = findViewById<FrameLayout>(R.id.terminal_container) ?: return
+        val dm = resources.displayMetrics
+        val lp = FrameLayout.LayoutParams(
+            (dm.widthPixels * 0.85f).toInt(),
+            (dm.heightPixels * 0.7f).toInt()
+        )
+        lp.gravity = Gravity.TOP or Gravity.START
+        lp.leftMargin = dp(8)
+        lp.topMargin = dp(8)
+        container.addView(webView, lp)
+        webView.post { webView.loadUrl(url ?: DEFAULT_AETHER_URL) }
+    }
+
+    /** Oculta la ventana flotante (el navegador sigue abierto). */
+    private fun hideBrowser() {
+        aetherFloatingBrowser()?.visibility = View.GONE
+    }
+
+    /** Expande a pantalla completa como tab (patrón CanvasTab). */
+    private fun expandBrowser() {
+        val container = findViewById<FrameLayout>(R.id.terminal_container) ?: return
+        val floating = container.findViewWithTag<AetherWebView>(AETHER_TAG) ?: return
+        (floating.parent as? ViewGroup)?.removeView(floating)
+        val tab = postTabCreated(AetherTab("Aether", floating))
+        tabSwitcher.addTab(tab, 0, createRevealAnimation())
+        tabSwitcher.selectTab(tab)
+    }
+
+    /** Devuelve el navegador a la ventana flotante (al cerrar el tab fullscreen). */
+    private fun restoreFloatingBrowser(browser: AetherWebView) {
+        val container = findViewById<FrameLayout>(R.id.terminal_container) ?: return
+        if (browser.parent != container) {
+            (browser.parent as? ViewGroup)?.removeView(browser)
+            val dm = resources.displayMetrics
+            val lp = FrameLayout.LayoutParams(
+                (dm.widthPixels * 0.85f).toInt(),
+                (dm.heightPixels * 0.7f).toInt()
+            )
+            lp.gravity = Gravity.TOP or Gravity.START
+            lp.leftMargin = dp(8)
+            lp.topMargin = dp(8)
+            container.addView(browser, lp)
+        }
+        browser.visibility = View.VISIBLE
+    }
+
+    private fun dp(v: Int): Int {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, v.toFloat(), resources.displayMetrics
+        ).toInt()
+    }
+
     private fun <T : NeoTab> postTabCreated(tab: T): T {
         // We must create a Bundle for each tab
         // tabs can use them to store status.
@@ -1552,6 +1740,26 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             .setPositiveButton("Permitir") { _, _ ->
                 ActivityCompat.requestPermissions(this,
                     arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    @Suppress("unused")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onMicPermissionEvent(event: MicPermissionEvent) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+            == PackageManager.PERMISSION_GRANTED) {
+            Log.d("AArchDroid", "RECORD_AUDIO already granted, retrying mic")
+            MicServer.getInstance().retry()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Acceso a micrófono")
+            .setMessage("Mifo necesita el micrófono para visualizar el sonido. ¿Permitir acceso?")
+            .setPositiveButton("Permitir") { _, _ ->
+                ActivityCompat.requestPermissions(this,
+                    arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_MIC)
             }
             .setNegativeButton("Cancelar", null)
             .show()

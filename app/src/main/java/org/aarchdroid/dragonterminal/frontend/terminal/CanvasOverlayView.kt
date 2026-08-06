@@ -117,7 +117,7 @@ class CanvasOverlayView @JvmOverloads constructor(
 
     private val longPressHandler = Handler(Looper.getMainLooper())
     private var longPressRunnable: Runnable? = null
-    private var longPressFired = false
+    private var suppressDrag = false
     private var downX = 0f
     private var downY = 0f
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
@@ -186,6 +186,16 @@ class CanvasOverlayView @JvmOverloads constructor(
             }
             postInvalidateOnAnimation()
         }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        Log.d("CanvasOV", "attached conn=$connId parent=${parent?.javaClass?.simpleName}")
+    }
+
+    override fun onDetachedFromWindow() {
+        Log.d("CanvasOV", "detached conn=$connId active=$isActive")
+        super.onDetachedFromWindow()
     }
 
     fun show(width: Int, height: Int, scale: Float = initialScale) {
@@ -361,8 +371,9 @@ class CanvasOverlayView @JvmOverloads constructor(
     }
 
     private fun exitFullscreen() {
+        val wasFs = isFullscreen
         exitFullscreenTab()
-        onToggleFullscreen?.invoke(false)
+        if (wasFs) onToggleFullscreen?.invoke(false)
     }
 
     fun toggleFullscreen() {
@@ -383,11 +394,30 @@ class CanvasOverlayView @JvmOverloads constructor(
 
     private fun startLongPress() {
         cancelPendingLongPress()
+        // Flotante: long-press entra a fullscreen. Fullscreen: long-press sale
+        // de fullscreen al dispararse el timer (700ms = tiempo determinado),
+        // SIEMPRE que el dedo no se haya movido mas del slop (ACTION_MOVE lo
+        // cancela -> swipe/pan) ni haya entrado un 2do dedo (POINTER_DOWN lo
+        // cancela -> pinch/zoom). El exit es inmediato (no al soltar): cierra el
+        // touch down pendiente con un "touch up" sintetico y marca suppressDrag
+        // para que el resto del toque no arrastre la ventana flotante.
         longPressRunnable = Runnable {
-            longPressFired = true
-            toggleFullscreen()
+            if (isFullscreen) {
+                suppressDrag = true
+                sendTouchUpSynthetic(mapScreenToFrameX(downX), mapScreenToFrameY(downY))
+                exitFullscreen()
+            } else {
+                toggleFullscreen()
+            }
         }
         longPressHandler.postDelayed(longPressRunnable!!, 700L)
+    }
+
+    /** Envia un "touch up" sintetico a la tool para cerrar un touch down sin up. */
+    private fun sendTouchUpSynthetic(fx: Float, fy: Float) {
+        if (connId >= 0) {
+            CanvasSocketServer.getInstance().sendToClient(connId, "touch up ${fx.toInt()} ${fy.toInt()}")
+        }
     }
 
     fun getFrameBitmap(): Bitmap? = frameBitmap
@@ -402,12 +432,12 @@ class CanvasOverlayView @JvmOverloads constructor(
 
         // Recalculate scale/offset in fullscreen mode to fit frame to parent
         if (isFullscreen) {
+            waitingNativeFrame = false
             val parent = parent as? ViewGroup
             val pw = parent?.width ?: 0
             val ph = parent?.height ?: 0
             if (pw > 0 && ph > 0 && w == pw && h == ph) {
                 Log.d("CanvasOV", "setFrame NATIVE MATCH -> scale=1.0")
-                waitingNativeFrame = false
                 scaleFactor = 1.0f
                 offsetX = 0f
                 offsetY = 0f
@@ -450,7 +480,6 @@ class CanvasOverlayView @JvmOverloads constructor(
         super.onDraw(canvas)
         val bmp = frameBitmap ?: return
         if (!isActive) return
-        if (waitingNativeFrame) return
 
         canvas.drawBitmap(bmp, transformMatrix, paint)
 
@@ -490,10 +519,12 @@ class CanvasOverlayView @JvmOverloads constructor(
             MotionEvent.ACTION_DOWN -> {
                 val inFrame = canvasScreenRect.contains(event.x, event.y)
                 val inBtn = btnVisible && btnScreenRect.contains(event.x, event.y)
+                Log.d("CanvasOV", "TDOWN x=${event.x} y=${event.y} inFrame=$inFrame inBtn=$inBtn fs=$isFullscreen view=${width}x${height} rect=$canvasScreenRect conn=$connId")
                 if (!inFrame && !inBtn) {
                     return false
                 }
                 touchOwned = true
+                suppressDrag = false
                 bringToFront()
                 downX = event.x
                 downY = event.y
@@ -516,6 +547,7 @@ class CanvasOverlayView @JvmOverloads constructor(
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
                 if (!touchOwned) return false
+                cancelPendingLongPress()
                 scaleDetector.onTouchEvent(event)
                 if (event.pointerCount >= 2) {
                     val dx = (event.getX(1) - event.getX(0)).toDouble()
@@ -573,7 +605,7 @@ class CanvasOverlayView @JvmOverloads constructor(
                     val dy = event.y - lastTouchY
                     lastTouchX = event.x
                     lastTouchY = event.y
-                    if (!scaleDetector.isInProgress) {
+                    if (!suppressDrag && !scaleDetector.isInProgress) {
                         offsetX += dx
                         offsetY += dy
                         updateTransform()
@@ -584,12 +616,31 @@ class CanvasOverlayView @JvmOverloads constructor(
             }
             MotionEvent.ACTION_UP -> {
                 cancelPendingLongPress()
-                longPressFired = false
+                suppressDrag = false
                 rotationActive = false
                 if (!touchOwned) return false
                 // Always feed scaleDetector
                 scaleDetector.onTouchEvent(event)
+
+                val now = SystemClock.uptimeMillis()
+                val dt = now - lastTapTime
+                val dTouch = hypot(event.x - lastTapX, event.y - lastTapY)
+                val doubleTap = dt < ViewConfiguration.getDoubleTapTimeout() && dTouch < touchSlop * 3
+                lastTapTime = now
+                lastTapX = event.x
+                lastTapY = event.y
+
                 if (isFullscreen) {
+                    if (doubleTap) {
+                        // Doble-tap en fullscreen = volver a flotante. No se
+                        // reenvia el up a la tool (evita que avance dos paginas),
+                        // pero se cierra el touch down del 2do tap con un up
+                        // sintetico para no dejar el gesto abierto en la tool.
+                        sendTouchUpSynthetic(mapScreenToFrameX(event.x), mapScreenToFrameY(event.y))
+                        exitFullscreen()
+                        touchOwned = false
+                        return true
+                    }
                     // Forward touch up to native tool
                     val fx = mapScreenToFrameX(event.x)
                     val fy = mapScreenToFrameY(event.y)
@@ -597,15 +648,9 @@ class CanvasOverlayView @JvmOverloads constructor(
                         CanvasSocketServer.getInstance().sendToClient(connId, "touch up ${fx.toInt()} ${fy.toInt()}")
                     }
                 } else {
-                    val now = SystemClock.uptimeMillis()
-                    val dt = now - lastTapTime
-                    val dTouch = hypot(event.x - lastTapX, event.y - lastTapY)
-                    lastTapTime = now
-                    lastTapX = event.x
-                    lastTapY = event.y
-
-                    if (dt < ViewConfiguration.getDoubleTapTimeout() && dTouch < touchSlop * 3) {
+                    if (doubleTap) {
                         minimize()
+                        touchOwned = false
                         return true
                     }
 
@@ -618,7 +663,7 @@ class CanvasOverlayView @JvmOverloads constructor(
             }
             MotionEvent.ACTION_CANCEL -> {
                 cancelPendingLongPress()
-                longPressFired = false
+                suppressDrag = false
                 rotationActive = false
                 if (isFullscreen && connId >= 0) {
                     val fx = mapScreenToFrameX(event.x)

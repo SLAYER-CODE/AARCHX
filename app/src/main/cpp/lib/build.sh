@@ -17,10 +17,10 @@ cmake "$SCRIPT_DIR" \
     -DCMAKE_CXX_COMPILER="$CXX" \
     -DCMAKE_FIND_ROOT_PATH=/usr/aarch64-linux-gnu \
     -DCMAKE_SYSROOT=/usr/aarch64-linux-gnu \
-    -DIRIS_USE_SKIA=OFF
+    -DAC_USE_SKIA=OFF
 
 make -j$(nproc)
 
 echo ""
-echo "=== libiris_static.a built ==="
-echo "Output: $BUILD_DIR/libiris_static.a"
+echo "=== libac_static.a built ==="
+echo "Output: $BUILD_DIR/libac_static.a"

@@ -1,3 +1,3 @@
-/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/iris_static.dir
+/home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/ac_static.dir
 /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/edit_cache.dir
 /home/Tiopaz/NewSystem/01_Proyectos/Movil/Experimentos/AndraxDevelop/AArchDroid/app/src/main/cpp/lib/build_aarch64/CMakeFiles/rebuild_cache.dir
