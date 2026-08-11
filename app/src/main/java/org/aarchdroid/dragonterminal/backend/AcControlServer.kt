@@ -12,9 +12,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Aether — servidor de control AF_UNIX abstracto "ac-webview".
+ * API ac — servidor de control AF_UNIX abstracto "ac-webview".
  *
- * La tool `aether` del chroot se conecta a este socket y comanda la WebView
+ * La tool del chroot se conecta a este socket y comanda la WebView
  * (el motor del navegador vive en la app). Protocolo por líneas de texto:
  *
  *   tool → app:  open <url>
@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger
  *
  * Mismo patrón singleton que [FlexAudioServer].
  */
-class AetherControlServer private constructor() {
+class AcControlServer private constructor() {
 
     interface Listener {
         fun onOpen(url: String)
@@ -43,15 +43,15 @@ class AetherControlServer private constructor() {
     }
 
     companion object {
-        private const val TAG = "AetherCtl"
+        private const val TAG = "AcCtl"
         private const val SOCKET_NAME = "ac-webview"
 
         @Volatile
-        private var instance: AetherControlServer? = null
+        private var instance: AcControlServer? = null
 
-        fun getInstance(): AetherControlServer {
+        fun getInstance(): AcControlServer {
             return instance ?: synchronized(this) {
-                instance ?: AetherControlServer().also { instance = it }
+                instance ?: AcControlServer().also { instance = it }
             }
         }
     }
@@ -70,7 +70,7 @@ class AetherControlServer private constructor() {
 
     /**
      * Cliente que emitió `open`. Cuando ese cliente se desconecta (p.ej. Ctrl+C
-     * en la terminal que lanzó `aether open`), el navegador se cierra.
+     * en la terminal que lanzó el navegador), éste se cierra.
      */
     private val openerId = AtomicInteger(-1)
 
@@ -94,7 +94,7 @@ class AetherControlServer private constructor() {
                     }
                 }
                 if (!bound) {
-                    Log.e(TAG, "AetherControlServer failed to bind after retries")
+                    Log.e(TAG, "AcControlServer failed to bind after retries")
                     isRunning.set(false)
                     return@Thread
                 }
@@ -107,17 +107,17 @@ class AetherControlServer private constructor() {
                         clientOutputs[connId] = client.outputStream
                     } catch (_: Exception) {}
                     val h = Thread { handleClient(client, connId) }
-                    h.name = "AetherCtl-$connId"
+                    h.name = "AcCtl-$connId"
                     h.start()
                 }
             } catch (e: Exception) {
-                if (isRunning.get()) Log.e(TAG, "AetherControlServer failed: ${e.message}", e)
+                if (isRunning.get()) Log.e(TAG, "AcControlServer failed: ${e.message}", e)
                 isRunning.set(false)
             } finally {
                 cleanup()
             }
         }
-        t.name = "AetherCtlAccept"
+        t.name = "AcCtlAccept"
         acceptThread = t
         t.start()
     }

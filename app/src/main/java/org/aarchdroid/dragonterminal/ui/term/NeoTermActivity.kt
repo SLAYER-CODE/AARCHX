@@ -76,9 +76,9 @@ import org.aarchdroid.dragonterminal.backend.CanvasSocketServer
 import org.aarchdroid.dragonterminal.backend.FlexAudioServer
 import org.aarchdroid.dragonterminal.backend.MicServer
 import org.aarchdroid.dragonterminal.backend.HiddenOverlayRegistry
-import org.aarchdroid.dragonterminal.backend.AetherControlServer
-import org.aarchdroid.dragonterminal.frontend.web.AetherWebView
-import org.aarchdroid.dragonterminal.ui.term.tab.AetherTab
+import org.aarchdroid.dragonterminal.backend.AcControlServer
+import org.aarchdroid.dragonterminal.frontend.web.AcWebView
+import org.aarchdroid.dragonterminal.ui.term.tab.AcTab
 
 import org.aarchdroid.dragonterminal.utils.FullScreenHelper
 import org.aarchdroid.dragonterminal.utils.RangedInt
@@ -106,8 +106,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         const val ACTION_ANCHOR = "aarchdroid.terminal.action.anchor"
         const val ACTION_OPEN_BROWSER = "aarchdroid.terminal.action.open_browser"
         const val EXTRA_URL = "aarchdroid.terminal.extra.url"
-        const val AETHER_TAG = "aether_browser"
-        const val DEFAULT_AETHER_URL = "https://www.google.com"
+        const val AC_TAG = "ac_browser"
+        const val DEFAULT_AC_URL = "https://www.google.com"
         const val INTERNA_TARGET = "/data/local/aarchdroid/root/Interna"
         const val EXTERNA_TARGET = "/data/local/aarchdroid/root/Externa"
 
@@ -254,7 +254,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         ViewCompat.setOnApplyWindowInsetsListener(tabSwitcher, createWindowInsetsListener())
         tabSwitcher.showToolbars(false)
 
-        registerAetherControlListener()
+        registerAcControlListener()
 
         if (intent?.action == ACTION_OPEN_BROWSER) {
             val url = intent.getStringExtra(EXTRA_URL)
@@ -527,13 +527,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         Log.d("NeoTermAct", "onPause: tabCount=${tabSwitcher.count}")
         val tab = tabSwitcher.selectedTab as NeoTab?
         tab?.onPause()
-        aetherFloatingBrowser()?.pauseWebView()
+        acFloatingBrowser()?.pauseWebView()
     }
 
     override fun onResume() {
         super.onResume()
         processToolExitFiles(this)
-        aetherFloatingBrowser()?.resumeWebView()
+        acFloatingBrowser()?.resumeWebView()
         Log.d("NeoTermAct", "onResume: tabCount=${tabSwitcher.count}, selectedTab=null? ${tabSwitcher.selectedTab == null}, termView=null? ${(tabSwitcher.selectedTab as? TermTab)?.termData?.termView == null}")
 
         // Execute pending float transfer if overlay was just granted
@@ -674,7 +674,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
                                     ov.restore()
                                 }
                             }
-                        } else if (tab is AetherTab) {
+                        } else if (tab is AcTab) {
                             // Cerrar el tab fullscreen → devolver el navegador a la ventana flotante
                             restoreFloatingBrowser(tab.webView)
                         }
@@ -738,7 +738,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
         val tab = tabSwitcher.selectedTab as NeoTab?
         tab?.onDestroy()
-        aetherFloatingBrowser()?.destroyWebView()
+        acFloatingBrowser()?.destroyWebView()
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this)
         tabSwitcherListener?.let { tabSwitcher.removeListener(it) }
@@ -908,6 +908,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         Log.d("AArchDroid", "NeoTermActivity: onNewIntent — action=" + (intent.action ?: "null"))
         when (intent.action) {
             NeoTermService.ACTION_NEW_TERMINAL -> {
@@ -1481,10 +1482,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         return postTabCreated(XSessionTab(tabTitle ?: "Dragon Terminal"))
     }
 
-    // ── Aether browser ─────────────────────────────────────────────
-    private fun registerAetherControlListener() {
-        val server = AetherControlServer.getInstance()
-        server.listener = object : AetherControlServer.Listener {
+    // ── Ac browser ─────────────────────────────────────────────
+    private fun registerAcControlListener() {
+        val server = AcControlServer.getInstance()
+        server.listener = object : AcControlServer.Listener {
             override fun onOpen(url: String) = openBrowser(url)
             override fun onBack() { currentBrowser()?.goBack() }
             override fun onForward() { currentBrowser()?.goForward() }
@@ -1518,29 +1519,29 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     }
 
     /** Browser activo: primero el de un tab fullscreen, luego el flotante. */
-    private fun currentBrowser(): AetherWebView? {
+    private fun currentBrowser(): AcWebView? {
         for (i in 0 until tabSwitcher.count) {
             val tab = tabSwitcher.getTab(i)
-            if (tab is AetherTab) return tab.webView
+            if (tab is AcTab) return tab.webView
         }
-        return aetherFloatingBrowser()
+        return acFloatingBrowser()
     }
 
-    private fun aetherFloatingBrowser(): AetherWebView? {
+    private fun acFloatingBrowser(): AcWebView? {
         return findViewById<FrameLayout>(R.id.terminal_container)
-            ?.findViewWithTag<AetherWebView>(AETHER_TAG)
+            ?.findViewWithTag<AcWebView>(AC_TAG)
     }
 
     private fun closeBrowser() {
         for (i in 0 until tabSwitcher.count) {
             val tab = tabSwitcher.getTab(i)
-            if (tab is AetherTab) {
+            if (tab is AcTab) {
                 tabSwitcher.removeTab(tab)
                 break
             }
         }
         val container = findViewById<FrameLayout>(R.id.terminal_container)
-        val floating = container?.findViewWithTag<AetherWebView>(AETHER_TAG)
+        val floating = container?.findViewWithTag<AcWebView>(AC_TAG)
         if (floating != null) {
             container.removeView(floating)
             floating.destroyWebView()
@@ -1556,8 +1557,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
             if (url != null) existing.post { existing.loadUrl(url) }
             return
         }
-        val webView = AetherWebView(this)
-        webView.tag = AETHER_TAG
+        val webView = AcWebView(this)
+        webView.tag = AC_TAG
         webView.onMinimize = { hideBrowser() }
         webView.onExpand = { expandBrowser() }
         val container = findViewById<FrameLayout>(R.id.terminal_container) ?: return
@@ -1570,26 +1571,26 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         lp.leftMargin = dp(8)
         lp.topMargin = dp(8)
         container.addView(webView, lp)
-        webView.post { webView.loadUrl(url ?: DEFAULT_AETHER_URL) }
+        webView.post { webView.loadUrl(url ?: DEFAULT_AC_URL) }
     }
 
     /** Oculta la ventana flotante (el navegador sigue abierto). */
     private fun hideBrowser() {
-        aetherFloatingBrowser()?.visibility = View.GONE
+        acFloatingBrowser()?.visibility = View.GONE
     }
 
     /** Expande a pantalla completa como tab (patrón CanvasTab). */
     private fun expandBrowser() {
         val container = findViewById<FrameLayout>(R.id.terminal_container) ?: return
-        val floating = container.findViewWithTag<AetherWebView>(AETHER_TAG) ?: return
+        val floating = container.findViewWithTag<AcWebView>(AC_TAG) ?: return
         (floating.parent as? ViewGroup)?.removeView(floating)
-        val tab = postTabCreated(AetherTab("Aether", floating))
+        val tab = postTabCreated(AcTab("Navegador", floating))
         tabSwitcher.addTab(tab, 0, createRevealAnimation())
         tabSwitcher.selectTab(tab)
     }
 
     /** Devuelve el navegador a la ventana flotante (al cerrar el tab fullscreen). */
-    private fun restoreFloatingBrowser(browser: AetherWebView) {
+    private fun restoreFloatingBrowser(browser: AcWebView) {
         val container = findViewById<FrameLayout>(R.id.terminal_container) ?: return
         if (browser.parent != container) {
             (browser.parent as? ViewGroup)?.removeView(browser)

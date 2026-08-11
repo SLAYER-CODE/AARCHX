@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PorterDuff
+import android.net.Uri
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
@@ -12,23 +13,30 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.webkit.CookieManager
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
+import java.io.ByteArrayInputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.zip.GZIPInputStream
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import org.aarchdroid.R
-import org.aarchdroid.dragonterminal.backend.AetherControlServer
+import org.aarchdroid.dragonterminal.backend.AcControlServer
 
 /**
- * Aether — navegador en overlay.
+ * API ac — navegador en overlay.
  *
  * Ventana que embebe un WebView (Chromium real de Android: HTML5, CSS, JS y
  * video con decodificación por hardware) junto a una barra de URL flotante.
- * Es la fase "motor" del navegador Aether: el motor pesado vive aquí, en la
- * app, y las tools del chroot lo controlan via el socket [AetherControlServer].
+ * Es la fase "motor" del navegador: el motor pesado vive aquí, en la
+ * app, y las tools del chroot lo controlan via el socket [AcControlServer].
  *
  * Cuando se usa como ventana flotante (directa sobre terminal_container):
  *  - barra superior: icono de redimensionar (arrastrar ajusta el tamaño;
@@ -40,7 +48,7 @@ import org.aarchdroid.dragonterminal.backend.AetherControlServer
  * No hay botón de cerrar: el navegador se cierra con el comando `close` de la
  * tool o cuando la terminal que lo lanzó (Ctrl+C) se desconecta.
  */
-class AetherWebView @JvmOverloads constructor(
+class AcWebView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -48,6 +56,7 @@ class AetherWebView @JvmOverloads constructor(
 
     lateinit var webView: WebView
     private lateinit var urlBar: EditText
+    private lateinit var userAgent: String
 
     var onMinimize: (() -> Unit)? = null
     var onExpand: (() -> Unit)? = null
@@ -69,10 +78,17 @@ class AetherWebView @JvmOverloads constructor(
             settings.useWideViewPort = true
             settings.loadWithOverviewMode = true
             settings.mediaPlaybackRequiresUserGesture = false
+            // Multi-ventana habilitado para poder interceptar y bloquear
+            // popups (window.open / target=_blank) desde onCreateWindow.
+            settings.setSupportMultipleWindows(true)
             setBackgroundColor(Color.BLACK)
             webViewClient = createClient()
-            webChromeClient = WebChromeClient()
+            webChromeClient = object : WebChromeClient() {
+                // Bloquea ventanas emergentes (window.open / target=_blank).
+                override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message): Boolean = false
+            }
         }
+        userAgent = webView.settings.userAgentString
         val webParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT
@@ -104,18 +120,108 @@ class AetherWebView @JvmOverloads constructor(
         return object : WebViewClient() {
             override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
                 if (url != null) urlBar.setText(url)
-                AetherControlServer.getInstance().notifyUrl(url ?: "")
-                AetherControlServer.getInstance().notifyLoading(true)
+                AcControlServer.getInstance().notifyUrl(url ?: "")
+                AcControlServer.getInstance().notifyLoading(true)
             }
 
             override fun onPageFinished(view: WebView, url: String?) {
                 if (url != null) urlBar.setText(url)
                 val t = view.title ?: ""
-                AetherControlServer.getInstance().notifyTitle(t)
-                AetherControlServer.getInstance().notifyUrl(url ?: "")
-                AetherControlServer.getInstance().notifyLoading(false)
+                AcControlServer.getInstance().notifyTitle(t)
+                AcControlServer.getInstance().notifyUrl(url ?: "")
+                AcControlServer.getInstance().notifyLoading(false)
+                injectAdFiltering()
+            }
+
+            // Bloqueo de anuncios por red + reescritura del HTML de YouTube
+            // (poda de respuesta estilo uBlock/Brave: el anuncio nunca se agenda).
+            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+                val url = request.url.toString()
+                if (AcAdBlocker.shouldBlock(url)) return blockedResponse()
+                if (request.isForMainFrame && AcAdBlocker.isYouTubeHost(request.url.host)) {
+                    rewrittenYouTubeDocument(view, url)?.let { return it }
+                }
+                return null
             }
         }
+    }
+
+    private fun blockedResponse(): WebResourceResponse =
+        WebResourceResponse("text/plain", "utf-8", 204, "No Content", emptyMap(), ByteArrayInputStream(ByteArray(0)))
+
+    /**
+     * Re-fetchea el HTML del frame principal de YouTube, le aplica los
+     * reemplazos de uBlock (adPlacements→no_ads) e inyecta el script de poda
+     * en el `<head>` (document-start, ANTES del bundle de YouTube).
+     */
+    private fun rewrittenYouTubeDocument(view: WebView, url: String): WebResourceResponse? {
+        return try {
+            val conn = URL(url).openConnection() as HttpURLConnection
+            try {
+                conn.requestMethod = "GET"
+                conn.connectTimeout = 10_000
+                conn.readTimeout = 15_000
+                conn.instanceFollowRedirects = true
+                conn.setRequestProperty("User-Agent", userAgent)
+                conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                conn.setRequestProperty("Accept-Encoding", "identity")
+                val cookies = CookieManager.getInstance().getCookie(url)
+                if (!cookies.isNullOrEmpty()) conn.setRequestProperty("Cookie", cookies)
+                val status = conn.responseCode
+                val enc = conn.getHeaderField("Content-Encoding")
+                if (status != HttpURLConnection.HTTP_OK) return null
+                var input = conn.inputStream
+                if ("gzip".equals(enc, ignoreCase = true)) input = GZIPInputStream(input)
+                val html = input.readBytes().toString(Charsets.UTF_8)
+                val rewritten = AcAdBlocker.youtubeHtmlReplacements(html)
+                    .let { injectHeadScript(it, AcAdBlocker.youtubePruneScriptTag()) }
+                android.util.Log.d("AcCtl", "[rewrite] status=$status html=${html.length}B -> ${rewritten.length}B adsPruned=${html.contains("adPlacements")}")
+                WebResourceResponse(
+                    "text/html", "utf-8",
+                    ByteArrayInputStream(rewritten.toByteArray(Charsets.UTF_8))
+                )
+            } finally {
+                conn.disconnect()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AcCtl", "[rewrite] ERROR: ${e.javaClass.simpleName}: ${e.message}")
+            null
+        }
+    }
+
+    /** Inserta [script] justo después de la apertura de `<head>` (o al inicio). */
+    private fun injectHeadScript(html: String, script: String): String {
+        val head = html.indexOf("<head")
+        if (head >= 0) {
+            val gt = html.indexOf('>', head)
+            if (gt >= 0) return html.substring(0, gt + 1) + script + html.substring(gt + 1)
+        }
+        return script + html
+    }
+
+    /** Inyecta el filtrado cosmético (CSS) + scriptlet de saltar anuncios. */
+    private fun injectAdFiltering() {
+        val js = "(function(){if(document.getElementById('ac-adblock'))return;" +
+            "var s=document.createElement('style');s.id='ac-adblock';" +
+            "s.textContent=" + jsStr(AcAdBlocker.cosmeticCss()) + ";" +
+            "(document.head||document.documentElement).appendChild(s);" +
+            AcAdBlocker.youtubeSkipJs() + "})();"
+        webView.evaluateJavascript(js, null)
+    }
+
+    /** String literal JS a partir de un texto arbitrario. */
+    private fun jsStr(s: String): String {
+        val b = StringBuilder("\"")
+        for (c in s) {
+            when (c) {
+                '\\' -> b.append("\\\\")
+                '"' -> b.append("\\\"")
+                '\n' -> b.append("\\n")
+                '\r' -> b.append("\\r")
+                else -> b.append(c)
+            }
+        }
+        return b.append("\"").toString()
     }
 
     private fun createToolbar(context: Context): LinearLayout {
@@ -164,13 +270,13 @@ class AetherWebView @JvmOverloads constructor(
             urlBar = bar
             addView(bar, LinearLayout.LayoutParams(0, dp(40), 1f))
 
-            addView(iconButton(R.drawable.ic_aether_clear, "Limpiar URL") {
+            addView(iconButton(R.drawable.ic_ac_clear, "Limpiar URL") {
                 urlBar.setText("")
                 urlBar.requestFocus()
                 val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
                 imm?.showSoftInput(urlBar, InputMethodManager.SHOW_IMPLICIT)
             })
-            addView(iconButton(R.drawable.ic_aether_send, "Ir") {
+            addView(iconButton(R.drawable.ic_ac_send, "Ir") {
                 loadUrl(urlBar.text?.toString() ?: "")
             })
         }
@@ -181,11 +287,11 @@ class AetherWebView @JvmOverloads constructor(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setBackgroundColor(0xFF0C1016.toInt())
-            addView(iconButton(R.drawable.ic_aether_back, "Atrás", onClick = { goBack() }, compact = true))
-            addView(iconButton(R.drawable.ic_aether_forward, "Adelante", onClick = { goForward() }, compact = true))
-            addView(iconButton(R.drawable.ic_aether_min, "Minimizar", onClick = { onMinimize?.invoke() }, compact = true))
-            addView(iconButton(R.drawable.ic_aether_expand, "Expandir", onClick = { onExpand?.invoke() }, compact = true))
-            addView(iconButton(R.drawable.ic_aether_refresh, "Recargar", onClick = { reload() }, compact = true))
+            addView(iconButton(R.drawable.ic_ac_back, "Atrás", onClick = { goBack() }, compact = true))
+            addView(iconButton(R.drawable.ic_ac_forward, "Adelante", onClick = { goForward() }, compact = true))
+            addView(iconButton(R.drawable.ic_ac_min, "Minimizar", onClick = { onMinimize?.invoke() }, compact = true))
+            addView(iconButton(R.drawable.ic_ac_expand, "Expandir", onClick = { onExpand?.invoke() }, compact = true))
+            addView(iconButton(R.drawable.ic_ac_refresh, "Recargar", onClick = { reload() }, compact = true))
             addView(View(context), LinearLayout.LayoutParams(0, 0, 1f))
             addView(createMoveGrip())
         }
@@ -193,7 +299,7 @@ class AetherWebView @JvmOverloads constructor(
 
     private fun createMoveGrip(): ImageView {
         return ImageView(context).apply {
-            setImageResource(R.drawable.ic_aether_move)
+            setImageResource(R.drawable.ic_ac_move)
             setColorFilter(0xFF39FF14.toInt(), PorterDuff.Mode.SRC_IN)
             contentDescription = "Mover ventana"
             setPadding(dp(8), dp(4), dp(8), dp(4))
@@ -220,7 +326,7 @@ class AetherWebView @JvmOverloads constructor(
 
     private fun createResizeHandle(): ImageView {
         return ImageView(context).apply {
-            setImageResource(R.drawable.ic_aether_resize)
+            setImageResource(R.drawable.ic_ac_resize)
             setColorFilter(0xFF39FF14.toInt(), PorterDuff.Mode.SRC_IN)
             contentDescription = "Redimensionar"
             setPadding(dp(8), dp(4), dp(8), dp(4))
@@ -228,8 +334,8 @@ class AetherWebView @JvmOverloads constructor(
                 when (e.actionMasked) {
                     MotionEvent.ACTION_DOWN -> {
                         // El layoutParams que cambiamos es el de la ventana
-                        // (AetherWebView), no el de este icono.
-                        val lp = this@AetherWebView.layoutParams as? FrameLayout.LayoutParams
+                        // (AcWebView), no el de este icono.
+                        val lp = this@AcWebView.layoutParams as? FrameLayout.LayoutParams
                             ?: return@setOnTouchListener false
                         if (lp.width == FrameLayout.LayoutParams.MATCH_PARENT ||
                             lp.height == FrameLayout.LayoutParams.MATCH_PARENT
@@ -293,12 +399,27 @@ class AetherWebView @JvmOverloads constructor(
 
     fun loadUrl(url: String) {
         val trimmed = url.trim()
-        if (trimmed.isEmpty()) return
+        if (trimmed.isEmpty()) {
+            // Sin URL: página de inicio (comportamiento Firefox).
+            val u = "https://www.google.com"
+            urlBar.setText(u)
+            webView.loadUrl(u)
+            return
+        }
         val u = if (trimmed.startsWith("http://") || trimmed.startsWith("https://") ||
             trimmed.startsWith("file://") || trimmed.startsWith("about:")) trimmed
-        else "https://$trimmed"
+        else if (isLikelyUrl(trimmed)) "https://$trimmed"
+        else "https://www.google.com/search?q=${Uri.encode(trimmed)}"
         urlBar.setText(u)
         webView.loadUrl(u)
+    }
+
+    /** true si el texto parece un dominio (sin espacios y con extensión TLD). */
+    private fun isLikelyUrl(text: String): Boolean {
+        if (text.any { it.isWhitespace() }) return false
+        val lastDot = text.lastIndexOf('.')
+        if (lastDot <= 0 || lastDot == text.length - 1) return false
+        return text.substring(lastDot + 1).length in 2..6
     }
 
     fun goBack() {
@@ -364,7 +485,7 @@ class AetherWebView @JvmOverloads constructor(
                         )
                         callback(b64)
                     } catch (e: Exception) {
-                        android.util.Log.w("AetherShot", "error: ${e.message}")
+                        android.util.Log.w("AcShot", "error: ${e.message}")
                         callback("")
                     }
                 }.start()
@@ -372,7 +493,7 @@ class AetherWebView @JvmOverloads constructor(
         }
     }
 
-    // ── Lifecycle (delegado desde AetherTab / NeoTermActivity) ────
+    // ── Lifecycle (delegado desde AcTab / NeoTermActivity) ────
     fun pauseWebView() {
         webView.onPause()
     }

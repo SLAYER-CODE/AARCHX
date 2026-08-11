@@ -181,9 +181,12 @@ class FlexAudioServer private constructor() {
                 .setBufferSizeInBytes(bufSize)
                 .build()
             tracks.add(track)
-            // Nueva stream: descarta audio viejo en otras tracks (seek/restart limpio)
+            // Nueva stream: pausa+flush de tracks viejas (seek/restart limpio).
+            // flush() es no-op si la track no está pausada; pause() primero para que
+            // el playbackHeadPosition se resetee a 0 y no envenene el Q del master
+            // clock de Flex (Q devuelve el max sobre TODAS las tracks).
             for (tr in tracks) {
-                if (tr !== track) { try { tr.flush() } catch (_: Exception) {} }
+                if (tr !== track) { try { tr.pause(); tr.flush() } catch (_: Exception) {} }
             }
             track.play()
             Log.w(TAG, "audio track created, routed device: ${track.routedDevice?.type ?: "none"} (id=${track.routedDevice?.id ?: -1})")

@@ -1,12 +1,12 @@
 package org.aarchdroid.dragonterminal.ui.term.tab
 
-import org.aarchdroid.dragonterminal.frontend.web.AetherWebView
+import org.aarchdroid.dragonterminal.frontend.web.AcWebView
 
 /**
- * Tab del navegador Aether. Empaqueta la [AetherWebView] como contenido
+ * Tab del navegador (API ac). Empaqueta la [AcWebView] como contenido
  * de un tab, igual que [CanvasTab] envuelve un CanvasOverlayView.
  */
-class AetherTab(title: CharSequence, val webView: AetherWebView) : NeoTab(title) {
+class AcTab(title: CharSequence, val webView: AcWebView) : NeoTab(title) {
 
     override fun onPause() {
         webView.pauseWebView()

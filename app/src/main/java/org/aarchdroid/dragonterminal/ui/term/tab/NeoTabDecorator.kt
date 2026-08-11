@@ -30,7 +30,7 @@ import org.aarchdroid.dragonterminal.frontend.component.ComponentManager
 import org.aarchdroid.dragonterminal.frontend.config.DefaultValues
 import org.aarchdroid.dragonterminal.frontend.config.NeoPreference
 import org.aarchdroid.dragonterminal.frontend.session.shell.client.TermCompleteListener
-import org.aarchdroid.dragonterminal.backend.AetherControlServer
+import org.aarchdroid.dragonterminal.backend.AcControlServer
 import org.aarchdroid.dragonterminal.backend.CameraControlServer
 import org.aarchdroid.dragonterminal.backend.CanvasSocketServer
 import org.aarchdroid.dragonterminal.backend.FlexAudioServer
@@ -273,7 +273,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
             }
 
             VIEW_TYPE_WEB -> {
-                val webTab = tab as AetherTab
+                val webTab = tab as AcTab
                 val wv = webTab.webView
                 // Move the browser into the tab's content view
                 if (wv.parent != view) {
@@ -459,8 +459,8 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
         // Start mic server (mifo recibe PCM s16le del socket @mic-0)
         MicServer.getInstance().start(context)
 
-        // Start aether control server (tool aether del chroot comanda la WebView via @ac-webview)
-        AetherControlServer.getInstance().start()
+        // Start ac control server (tool del chroot comanda la WebView via @ac-webview)
+        AcControlServer.getInstance().start()
 
         if (NeoPreference.loadBoolean(R.string.key_general_auto_completion, false)) {
             if (termData.onAutoCompleteListener == null) {
@@ -487,7 +487,7 @@ class NeoTabDecorator(val context: NeoTermActivity) : TabSwitcherDecorator() {
             is TermTab -> VIEW_TYPE_TERM
             is XSessionTab -> VIEW_TYPE_X
             is CanvasTab -> VIEW_TYPE_CANVAS
-            is AetherTab -> VIEW_TYPE_WEB
+            is AcTab -> VIEW_TYPE_WEB
             else -> VIEW_TYPE_TERM
         }
     }
